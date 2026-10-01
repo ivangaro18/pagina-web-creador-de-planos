@@ -25,6 +25,28 @@
   .app-back{max-width:1240px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:10px 0;font-size:.8rem;color:var(--muted);}
   .linkbtn{background:none;border:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:4px 0;}
 
+
+  /* ---------- system chooser ---------- */
+  #chooseView{min-height:100vh;display:flex;flex-direction:column;background:radial-gradient(1200px 500px at 15% -10%,#E3F1F8 0%,transparent 60%),radial-gradient(900px 500px at 100% 110%,#FDEBDD 0%,transparent 55%),var(--bg);}
+  .ch-top{max-width:1040px;width:100%;margin:0 auto;padding:14px 20px 0;display:flex;justify-content:space-between;align-items:center;}
+  .ch-main{max-width:1040px;width:100%;margin:0 auto;padding:36px 20px 56px;flex:1;}
+  .ch-main h1{font-size:clamp(1.7rem,3.6vw,2.5rem);letter-spacing:-.025em;line-height:1.1;margin:10px 0 8px;}
+  .ch-main .lead{color:var(--muted);font-size:1.02rem;margin:0 0 30px;max-width:560px;}
+  .ch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:22px;}
+  .ch-card{position:relative;display:flex;flex-direction:column;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:0;overflow:hidden;cursor:pointer;font:inherit;color:inherit;box-shadow:0 10px 30px -18px rgba(15,42,61,.35);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;}
+  .ch-card:hover{transform:translateY(-3px);box-shadow:0 18px 40px -20px rgba(15,42,61,.45);border-color:#A9CFE0;}
+  .ch-card:focus-visible{outline:3px solid var(--accent);outline-offset:3px;}
+  .ch-art{display:block;width:100%;aspect-ratio:16/10;background:linear-gradient(180deg,#EEF6FA,#F9FBFC);border-bottom:1px solid var(--line);}
+  .ch-card.floor .ch-art{background:linear-gradient(180deg,#FDF3EA,#FBF8F5);}
+  .ch-body{padding:20px 22px 22px;display:flex;flex-direction:column;gap:6px;}
+  .ch-body h2{margin:0;font-size:1.3rem;letter-spacing:-.015em;}
+  .ch-body p{margin:0;color:var(--muted);font-size:.93rem;line-height:1.5;}
+  .ch-go{margin-top:12px;display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--accent);font-size:.92rem;}
+  .ch-card.floor .ch-go{color:var(--muted);}
+  .ch-soon{position:absolute;top:14px;right:14px;background:#fff;border:1px solid var(--line);color:var(--warm);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:999px;}
+  .ch-card.floor{cursor:default;}
+  .ch-card.floor:hover{transform:none;border-color:var(--line);box-shadow:0 10px 30px -18px rgba(15,42,61,.35);}
+  .ch-note{margin-top:18px;min-height:1.4em;color:var(--muted);font-size:.9rem;}
   /* ---------- product site ---------- */
   .site{color:var(--ink);}
   .s-wrap{max-width:1160px;margin:0 auto;padding:0 20px;}
@@ -326,7 +348,7 @@
       <a class="brand" href="#inicio"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg1" x1="0" x2="1"><stop offset="0" stop-color="#0B7FAB"/><stop offset="1" stop-color="#EE7B3A"/></linearGradient></defs><rect x="1" y="1" width="30" height="30" rx="8" fill="#0F2A3D"/><rect x="7" y="9" width="8" height="5" rx="1" fill="url(#lg1)"/><rect x="17" y="9" width="8" height="5" rx="1" fill="url(#lg1)"/><rect x="7" y="18" width="8" height="5" rx="1" fill="url(#lg1)"/><rect x="17" y="18" width="8" height="5" rx="1" fill="url(#lg1)"/></svg>Planificador Radiante</a>
       <div class="s-links">
         <a href="#funciones">Funciones</a><a href="#como">Cómo funciona</a><a href="#precios">Precios</a><a href="#preguntas">Preguntas</a>
-        <button class="s-btn small" data-go="app">Abrir el planificador</button>
+        <button class="s-btn small" data-go="choose">Abrir el planificador</button>
       </div>
     </div>
     <div class="s-thermo"></div>
@@ -339,7 +361,7 @@
         <h1>Del plano al presupuesto de <em>techo radiante</em> en minutos</h1>
         <p class="lead">Dibuja las estancias, coloca los paneles automáticamente y obtén circuitos, colectores, metros de PEX, estructura de pladur y un informe en PDF con tu marca. Para paneles de cualquier fabricante.</p>
         <div class="ctas">
-          <button class="s-btn" data-go="app">Probar el planificador</button>
+          <button class="s-btn" data-go="choose">Probar el planificador</button>
           <a class="s-btn ghost" href="#como">Ver cómo funciona</a>
         </div>
         <div class="facts">
@@ -400,8 +422,8 @@
     <div class="s-wrap">
       <div class="s-head"><span class="kicker">Precios</span><h2>Proyectos ilimitados, sin permanencia</h2><p>Prueba gratis durante 14 días con todas las funciones.</p></div>
       <div class="prices">
-        <div class="price-card"><h3>Mensual</h3><div class="amt">59 € <small>/ mes</small></div><ul class="checks"><li>Proyectos y plantas ilimitados</li><li>Informes PDF con tu logo</li><li>Estructura de pladur y materiales</li></ul><button class="s-btn ghost" data-go="app">Empezar prueba</button></div>
-        <div class="price-card hl"><h3>Anual <span class="badge">2 meses gratis</span></h3><div class="amt">590 € <small>/ año</small></div><ul class="checks"><li>Todo lo del plan mensual</li><li>Equivale a 49 € al mes</li><li>Soporte prioritario</li></ul><button class="s-btn" data-go="app">Empezar prueba</button></div>
+        <div class="price-card"><h3>Mensual</h3><div class="amt">59 € <small>/ mes</small></div><ul class="checks"><li>Proyectos y plantas ilimitados</li><li>Informes PDF con tu logo</li><li>Estructura de pladur y materiales</li></ul><button class="s-btn ghost" data-go="choose">Empezar prueba</button></div>
+        <div class="price-card hl"><h3>Anual <span class="badge">2 meses gratis</span></h3><div class="amt">590 € <small>/ año</small></div><ul class="checks"><li>Todo lo del plan mensual</li><li>Equivale a 49 € al mes</li><li>Soporte prioritario</li></ul><button class="s-btn" data-go="choose">Empezar prueba</button></div>
       </div>
       <p class="price-note">Precios sin IVA. Precios de ejemplo para esta maqueta de la web.</p>
     </div>
@@ -416,15 +438,57 @@
         <details><summary>¿Puedo poner mi logo y mis datos en los informes?</summary><p>Sí. Los guardas una vez en «Datos de empresa» y salen en la cabecera y el pie de cada informe, como en una factura.</p></details>
         <details><summary>¿Qué pasa con las estancias que no son rectangulares?</summary><p>Puedes dibujar cualquier forma y curvar paredes. Los paneles se colocan en las zonas rectangulares más grandes de la estancia.</p></details>
       </div>
-      <div class="cta-band" style="margin-top:48px;"><div><h2>Calcula tu próxima instalación</h2><p>Empieza con la vivienda de ejemplo o dibuja la tuya desde cero.</p></div><button class="s-btn" data-go="app">Abrir el planificador</button></div>
+      <div class="cta-band" style="margin-top:48px;"><div><h2>Calcula tu próxima instalación</h2><p>Empieza con la vivienda de ejemplo o dibuja la tuya desde cero.</p></div><button class="s-btn" data-go="choose">Abrir el planificador</button></div>
     </div>
   </section>
 
   <footer class="s-foot"><div class="s-wrap"><span>© 2026 Planificador Radiante</span><span>Herramienta de cálculo para techo radiante · Estimaciones orientativas, revisa siempre en obra</span></div></footer>
 </div>
 
+<div id="chooseView" hidden>
+  <div class="ch-top"><button class="linkbtn" data-go="site">← Volver a la web</button><span style="font-size:.8rem;color:var(--muted)">Planificador Radiante</span></div>
+  <main class="ch-main">
+    <span class="kicker">Nuevo plano</span>
+    <h1>¿Qué sistema vas a calcular?</h1>
+    <p class="lead">Elige el tipo de instalación. Cada planificador tiene sus propias reglas de distribución, circuitos y materiales.</p>
+    <div class="ch-grid">
+      <button class="ch-card" data-go="app" type="button"><svg class="ch-art" viewBox="0 0 320 200" aria-hidden="true">
+  <rect x="20" y="22" width="280" height="10" fill="#1E3A4F"/>
+  <g fill="#86C3D9" stroke="#fff" stroke-width="1">
+    <rect x="34" y="32" width="58" height="12" rx="1.5"/><rect x="94" y="32" width="58" height="12" rx="1.5"/><rect x="168" y="32" width="58" height="12" rx="1.5"/><rect x="228" y="32" width="58" height="12" rx="1.5"/>
+  </g>
+  <g fill="none" stroke-width="1.6" stroke-linecap="round">
+    <path d="M40 38 H86" stroke="#D9452F"/><path d="M100 38 H146" stroke="#2563C9"/><path d="M174 38 H220" stroke="#D9452F"/><path d="M234 38 H280" stroke="#2563C9"/>
+  </g>
+  <rect x="152" y="33" width="16" height="4" fill="#F6E7C6"/><circle cx="160" cy="40" r="3" fill="#F2B53A"/>
+  <g fill="none" stroke="#EE7B3A" stroke-width="2" stroke-linecap="round" opacity=".8">
+    <path d="M52 62 q6 8 0 16 q-6 8 0 16"/><path d="M112 62 q6 8 0 16 q-6 8 0 16"/><path d="M200 62 q6 8 0 16 q-6 8 0 16"/><path d="M260 62 q6 8 0 16 q-6 8 0 16"/>
+  </g>
+  <g fill="none" stroke="#557085" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M70 168 v-26 a6 6 0 0 1 6 -6 h44 a6 6 0 0 1 6 6 v26"/><path d="M64 150 h68"/><path d="M190 168 v-34 h50 v34"/><path d="M182 134 h66"/>
+  </g>
+  <rect x="20" y="168" width="280" height="6" fill="#C9D7E1"/>
+  <rect x="20" y="22" width="6" height="152" fill="#1E3A4F"/><rect x="294" y="22" width="6" height="152" fill="#1E3A4F"/>
+</svg>
+        <span class="ch-body"><h2>Techo radiante</h2><p>Paneles en el techo, circuitos de 2 paneles, colectores, tubería PEX, estructura de pladur e informe de materiales.</p><span class="ch-go">Abrir planificador →</span></span>
+      </button>
+      <button class="ch-card floor" id="chFloor" type="button"><svg class="ch-art" viewBox="0 0 320 200" aria-hidden="true">
+  <rect x="20" y="20" width="280" height="160" rx="4" fill="#FFFDFB" stroke="#1E3A4F" stroke-width="5"/>
+  <g fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M44 172 V40 H276 V156 H64 V60 H256 V136 H84 V80 H236 V116 H104 V100 H200" stroke="#D9452F"/>
+    <path d="M54 172 V50 H266 V146 H74 V70 H246 V126 H94 V90 H226 V108 H200" stroke="#2563C9" opacity=".9"/>
+  </g>
+  <rect x="34" y="166" width="34" height="12" rx="2" fill="#0B7FAB"/>
+</svg>
+        <span class="ch-soon">Próximamente</span>
+        <span class="ch-body"><h2>Suelo radiante</h2><p>Circuitos de tubo en espiral por estancia, longitudes, colectores y materiales del suelo radiante.</p><span class="ch-go">En desarrollo</span></span>
+      </button>
+    </div>
+    <p class="ch-note" id="chNote" role="status"></p>
+  </main>
+</div>
 <div id="appView" hidden>
-<div class="app-back"><button class="linkbtn" data-go="site">← Volver a la web</button><span>Planificador Radiante</span></div>
+<div class="app-back"><button class="linkbtn" data-go="choose">← Elegir sistema</button><span>Planificador Radiante · Techo radiante</span></div>
 <div class="wrap">
   <header class="topbar">
     <div>
@@ -2012,11 +2076,12 @@
 
   // ---------------- product site ----------------
   function showView(v){
-    $("siteView").hidden = v!=="site"; $("appView").hidden = v!=="app";
+    $("siteView").hidden = v!=="site"; $("appView").hidden = v!=="app"; $("chooseView").hidden = v!=="choose"; $("chNote").textContent="";
     window.scrollTo(0,0);
     if(v==="app") update(false);
   }
   document.addEventListener("click",function(e){ var b=e.target.closest && e.target.closest("[data-go]"); if(!b) return; e.preventDefault(); showView(b.getAttribute("data-go")); });
+  $("chFloor").addEventListener("click",function(){ $("chNote").textContent="El planificador de suelo radiante estará disponible próximamente. De momento puedes usar el de techo radiante."; });
   (function heroPreview(){
     var keep={floors:S.floors,fi:S.fi,sel:S.sel,pipes:S.showPipes,str:S.showStruct};
     S.floors=[exampleFloor()]; S.fi=0; S.sel=null; S.showPipes=true; S.showStruct=false;
