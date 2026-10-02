@@ -242,6 +242,9 @@
   .plan-wrap svg{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;}
   .room-g.movable{cursor:move;}
   .p-move{fill:none;stroke:var(--warm);stroke-width:.07;stroke-dasharray:.2 .1;pointer-events:none;}
+  .p-obst{fill:#E6ECF0;stroke:#6B7B88;stroke-width:.025;pointer-events:none;}
+  .p-obst.draft{stroke:var(--warm);stroke-width:.04;stroke-dasharray:.1 .06;}
+  .p-obst-t{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:.13px;font-weight:600;fill:#4E5D69;pointer-events:none;paint-order:stroke;stroke:#fff;stroke-width:.04px;}
   .p-door-gap{stroke:var(--room-fill);stroke-width:.13;pointer-events:none;}
   .p-door{fill:none;stroke:var(--wall);stroke-width:.025;pointer-events:none;}
   .p-door.pend{stroke:var(--warm);stroke-width:.04;}
@@ -552,6 +555,7 @@
       <button class="mk-btn" type="button" data-mark="exterior"><i></i>Marcar muro exterior</button>
       <button class="mk-btn" type="button" data-mark="escalera"><i></i>Marcar escalera</button>
       <button class="mk-btn" type="button" id="doorBtn"><i style="border-top:3px solid var(--wall);width:14px;border-radius:0 0 8px 0;height:8px;border-right:2px solid var(--wall)"></i>Marcar puerta</button>
+      <button class="mk-btn" type="button" id="obstBtn"><i style="border:none;width:14px;height:10px;background:repeating-linear-gradient(45deg,#8C9BA7 0 2px,#E6ECF0 2px 4px);border:1px solid #6B7B88"></i>Añadir obstáculo</button>
       <span>Pulsa un botón y luego la pared en el plano. Otra pulsación en la pared la desmarca.</span>
     </div>
     <div class="mode-hint" id="modeHint" hidden></div>
@@ -573,6 +577,7 @@
       <span class="only-suelo"><span class="lg-mk" style="border-top:6px double #5FB8D8"></span>Ventana</span>
       <span class="only-suelo"><span class="lg-mk"></span>Muro exterior</span>
       <span class="only-suelo"><span class="lg-mk" style="border-top:5px dashed var(--ang)"></span>Escalera (no pasa tubo)</span>
+      <span class="only-suelo"><span class="sw" style="background:repeating-linear-gradient(45deg,#8C9BA7 0 2px,#E6ECF0 2px 4px);border:1px solid #6B7B88"></span>Obstáculo (ducha, bañera, inodoro, mueble fijo…): sin tubo</span>
       <span class="only-suelo">◜ Puerta: los tubos solo cruzan los tabiques por las puertas (si hay alguna marcada)</span>
       <span><span class="sw" style="background:var(--accent)"></span>Colector</span>
       <span class="pipe-lg only-techo" hidden><span class="lg-line" style="border-color:var(--ida)"></span>Ida</span>
@@ -1340,7 +1345,8 @@
   function ufRoom(room){
     var out=localOutline(room), area=Math.abs(signedArea(out)), n=room.pts.length, perim=0;
     for(var e=0;e<n;e++) perim+=edgeLength(room.pts[e],room.pts[(e+1)%n],room.bulge[e]||0);
-    return {area:area,perim:perim,sep:ufSep(room),msgs:[],dmsgs:[],bandArea:0,bands:[],panels:[],lights:[],leds:[],ledLen:0,strips:[],rects:[],groups:[],covered:0,pct:0,circuits:0,circ:[],Lr:0};
+    var obA=(room.obst||[]).reduce(function(t,b){ return t+(b.x1-b.x0)*(b.y1-b.y0); },0);
+    return {area:area,obArea:obA,perim:perim,sep:ufSep(room),msgs:[],dmsgs:[],bandArea:0,bands:[],panels:[],lights:[],leds:[],ledLen:0,strips:[],rects:[],groups:[],covered:0,pct:0,circuits:0,circ:[],Lr:0};
   }
   // which rooms touch through a wall without a staircase in between
   function ufAdjacency(fl){
@@ -1370,7 +1376,7 @@
       W.forEach(function(p){ b.x0=Math.min(b.x0,p.x); b.y0=Math.min(b.y0,p.y); b.x1=Math.max(b.x1,p.x); b.y1=Math.max(b.y1,p.y); });
       mnx=Math.min(mnx,b.x0); mny=Math.min(mny,b.y0); mxx=Math.max(mxx,b.x1); mxy=Math.max(mxy,b.y1);
       for(var e=0;e<n;e++) edges.push({pts:edgeSamples(r.pts[e],r.pts[(e+1)%n],r.bulge[e]||0,16).map(function(p){ return toW(r,p); }),mark:(r.marks||{})[e]||null});
-      return {r:r,W:W,edges:edges,b:b}; });
+      return {r:r,W:W,edges:edges,b:b,ob:r.obst||[]}; });
     mnx-=0.1; mny-=0.1; mxx+=0.1; mxy+=0.1;
     var res=0.05; if((mxx-mnx)*(mxy-mny)/(res*res)>150000) res=0.1;
     var nx=Math.ceil((mxx-mnx)/res), ny=Math.ceil((mxy-mny)/res), N=nx*ny;
@@ -1400,6 +1406,9 @@
         if(d<cc && !hd && hard(g,E,p)) hd=true;
         if(E.zone!=null && d<=zones[E.zone].w && d<bd){ bd=d; bz=E.zone; } }
       pass[idx]=hd?0:1; wd[idx]=dmin;
+      if(g.ob.length){ var lp=toL(g.r,p), om=Math.max(0.05,wall/2), inO=false, nearO=false;
+        for(var ob=0;ob<g.ob.length;ob++){ var B=g.ob[ob]; if(lp.x>=B.x0&&lp.x<=B.x1&&lp.y>=B.y0&&lp.y<=B.y1) inO=true; else if(lp.x>=B.x0-om&&lp.x<=B.x1+om&&lp.y>=B.y0-om&&lp.y<=B.y1+om) nearO=true; }
+        if(inO){ pass[idx]=0; continue; } if(nearO) continue; }
       if(g.r.active && dmin>=wall){ var z=bz>=0?bz:g.zInt; fill[idx]=1; zone[idx]=z; zones[z].n++; zones[z].sx+=p.x; zones[z].sy+=p.y; }
     }
     // in front of each door: other rooms' tubes should not block it
@@ -1652,8 +1661,15 @@
         var loB=-Infinity, hiB=Infinity; pend.forEach(function(x){ if(x.gOff>it.gOff) hiB=Math.min(hiB,x.gOff-x.w/2-0.02); else loB=Math.max(loB,x.gOff+x.w/2+0.02); });
         if(isFinite(loB)||isFinite(hiB)) for(var q4=0;q4<N;q4++){ if(R.roomOf[q4]!==g.ri) continue; var pc=V(R.x0+((q4%R.nx)+.5)*R.res,R.y0+(((q4/R.nx)|0)+.5)*R.res), rel=sub(pc,E2);
           var dep=dot(rel,eDir); if(dep<-0.05||dep>0.5) continue; var lt=dot(rel,nrm); if(lt>hiB||lt<loB) rsP[q4]=1; }
-        var dt2=ufDT(R,rsP), r2=it.w/2+0.02, k1=cellOf(it.S0);
-        var sp=k1>=0?ufPath(R,dt2,rsP,[{k:k1,d:dirOf(eDir)}],function(k){ return R.zone[k]===it.P.zi && R.fill[k] && !rsP[k]; },r2,-2,true):null;
+        var r2=it.w/2+0.02, k1=cellOf(it.S0), sp=null, tgt=function(k){ return R.zone[k]===it.P.zi && R.fill[k] && !rsP[k]; };
+        // circuits for a window / exterior band travel round the room's edge, never across the middle of the room
+        if(R.zones[it.P.zi].type!=="int" && k1>=0){
+          var rsE=rsP.slice(), maxHug=g.ws+0.2;
+          for(var qe=0;qe<N;qe++){ if(R.roomOf[qe]!==g.ri || R.wd[qe]<=maxHug || R.zone[qe]===it.P.zi) continue;
+            var pe=V(R.x0+((qe%R.nx)+.5)*R.res,R.y0+(((qe/R.nx)|0)+.5)*R.res); if(len(sub(pe,E2))>0.9) rsE[qe]=1; }
+          sp=ufPath(R,ufDT(R,rsE),rsE,[{k:k1,d:dirOf(eDir)}],function(k){ return R.zone[k]===it.P.zi && R.fill[k] && !rsE[k]; },r2,-2,true);
+        }
+        if(!sp && k1>=0) sp=ufPath(R,ufDT(R,rsP),rsP,[{k:k1,d:dirOf(eDir)}],tgt,r2,-2,true);
         if(!sp){ if(failedG.indexOf(g)<0) failedG.push(g); out.push({it:it,fail:true}); return; }
         var full=offsetPl(cl,it.tOff); sp[0]=it.S0;
         full=full.concat(sp);
@@ -1700,7 +1716,7 @@
     C.forEach(function(c){ var ps=ufCollPose(c); c._pose=ps; if(ps){ c.x=Math.round(ps.c.x*1000)/1000; c.y=Math.round(ps.c.y*1000)/1000; } else if(c.room!=null && !roomById(c.room)) c.room=null; collStats[c.id]={n:0,pex:0,rooms:[]}; });
     fl.rooms.forEach(function(r){ var res=ufRoom(r); res.col=null; res.why=null; res.st=null; res.wout=worldOutline(r); res.ctr=centroid(res.wout); results[r.id]=res; });
     if(!fl.rooms.length) return;
-    var key=JSON.stringify([fl.rooms.map(function(r){ return [r.id,r.pts,r.bulge,r.tx,r.ty,r.rot,r.active,r.marks||{},r.sep||0,r.doors||[]]; }),C.map(function(c){ return [c.id,c.room,c.edge,c.off,c.cap]; }),U]);
+    var key=JSON.stringify([fl.rooms.map(function(r){ return [r.id,r.pts,r.bulge,r.tx,r.ty,r.rot,r.active,r.marks||{},r.sep||0,r.doors||[],r.obst||[]]; }),C.map(function(c){ return [c.id,c.room,c.edge,c.off,c.cap]; }),U]);
     if(dragging && fl._uk!==key){ fl.rooms.forEach(function(r){ results[r.id].pending=true; }); return; }
     if(fl._uk===key && fl._ur){ var cached=fl._ur; Object.keys(cached.res).forEach(function(id){ results[id]=cached.res[id]; }); Object.keys(cached.cs).forEach(function(id){ collStats[id]=cached.cs[id]; }); cached.unas.forEach(function(u){ allUnassigned.push(u); }); return; }
     var R=ufRaster(fl), G=ufAdjacency(fl), live=C.filter(function(c){ return c._pose; });
@@ -1804,6 +1820,14 @@
     o+='<text class="p-colltext" x="'+f3(tp.x)+'" y="'+f3(tp.y+0.05)+'" text-anchor="middle">'+esc(c.name)+' · '+st.n+'/'+(c.cap||0)+'</text>';
     return o;
   }
+  function obstDefs(id){ return OBST_DEFS.replace('id="obstHatch"','id="'+id+'"'); }
+  var OBST_DEFS='<defs><pattern id="obstHatch" width="0.12" height="0.12" patternUnits="userSpaceOnUse"><rect width="0.12" height="0.12" fill="#E6ECF0"/><path d="M-0.03,0.03 L0.03,-0.03 M0,0.12 L0.12,0 M0.09,0.15 L0.15,0.09" stroke="#8C9BA7" stroke-width="0.022"/></pattern></defs>';
+  function ufObstSvg(r,tf,pid){ var o="";
+    (r.obst||[]).forEach(function(b){ var pts=[V(b.x0,b.y0),V(b.x1,b.y0),V(b.x1,b.y1),V(b.x0,b.y1)].map(tf), c=tf(V((b.x0+b.x1)/2,(b.y0+b.y1)/2));
+      o+='<polygon class="p-obst" style="fill:url(#'+pid+')" points="'+ptsStr(pts)+'"><title>Obstáculo '+fmt((b.x1-b.x0)*100)+' × '+fmt((b.y1-b.y0)*100)+' cm</title></polygon>';
+      if(Math.min(b.x1-b.x0,b.y1-b.y0)>0.35) o+='<text class="p-obst-t" x="'+f3(c.x)+'" y="'+f3(c.y+0.045)+'" text-anchor="middle">'+fmt((b.x1-b.x0)*100)+'×'+fmt((b.y1-b.y0)*100)+'</text>'; });
+    return o; }
+  function ufObstAt(q){ var hit=null; S.rooms.forEach(function(r){ (r.obst||[]).forEach(function(b,i){ var l=toL(r,q); if(l.x>=b.x0&&l.x<=b.x1&&l.y>=b.y0&&l.y<=b.y1) hit={r:r,i:i}; }); }); return hit; }
   function ufDoorGeom(r,d){ var n=r.pts.length, A=toW(r,r.pts[d.edge]), B=toW(r,r.pts[(d.edge+1)%n]), u=unit(sub(B,A)), nin=mul(outN(A,B),-1);
     return {A:A,B:B,u:u,n:nin,P0:add(A,mul(u,d.t-d.w/2)),P1:add(A,mul(u,d.t+d.w/2))}; }
   function ufDoorSvg(r,d,pend){
@@ -1858,6 +1882,7 @@
     }
     var o='<svg viewBox="'+vb.map(f3).join(" ")+'" xmlns="http://www.w3.org/2000/svg"'+(S.showStruct?' class="struct"':'')+(forExport?' width="'+Math.round(vb[2]*160)+'" height="'+Math.round(vb[3]*160)+'"':'')+' role="img" aria-label="Plano general de la planta con paneles">';
     if(forExport) o+='<rect x="'+f3(vb[0])+'" y="'+f3(vb[1])+'" width="'+f3(vb[2])+'" height="'+f3(vb[3])+'" fill="#ffffff"/>';
+    if(S.mode==="suelo") o+=obstDefs(forExport?"obHx":"obHp");
     rooms.forEach(function(r){ o+='<g class="room-g'+(r.id===S.moveId&&!forExport?' movable':'')+'" data-room="'+r.id+'">'+roomBody(r,results[r.id],S.colorByCircuit)+'</g>'; });
     rooms.forEach(function(r){
       var res=results[r.id], c=res.ctr;
@@ -1869,6 +1894,9 @@
     });
     var pills="";
     if(S.mode==="suelo"){
+      rooms.forEach(function(r){ o+=ufObstSvg(r,function(p){ return toW(r,p); },forExport?"obHx":"obHp"); });
+      if(S.obstDraft && !forExport){ var od=S.obstDraft; o+='<rect class="p-obst draft" x="'+f3(Math.min(od.a.x,od.b.x))+'" y="'+f3(Math.min(od.a.y,od.b.y))+'" width="'+f3(Math.abs(od.b.x-od.a.x))+'" height="'+f3(Math.abs(od.b.y-od.a.y))+'"/>';
+        o+='<text class="p-obst-t" x="'+f3((od.a.x+od.b.x)/2)+'" y="'+f3((od.a.y+od.b.y)/2+0.05)+'" text-anchor="middle">'+fmt(Math.abs(od.b.x-od.a.x)*100)+' × '+fmt(Math.abs(od.b.y-od.a.y)*100)+' cm</text>'; }
       rooms.forEach(function(r){ o+=ufMarksSvg(r,function(p){ return toW(r,p); }); (r.doors||[]).forEach(function(d){ o+=ufDoorSvg(r,d,false); }); });
       if(S.doorTool && !forExport) S.doorTool.pending.forEach(function(d){ if(rooms.indexOf(d.room)>=0) o+=ufDoorSvg(d.room,d,true); });
       if(S.markHover && !forExport){ var hr=S.markHover.room, he=S.markHover.edge, hn=hr.pts.length;
@@ -1911,7 +1939,7 @@
     var wrap=$("planWrap");
     $("zoomCtl").hidden=!S.rooms.length;
     wrap.classList.toggle("picking", !!(S.placing && S.placing.step==="target"));
-    wrap.classList.toggle("marking", !!(S.markTool||S.doorTool));
+    wrap.classList.toggle("marking", !!(S.markTool||S.doorTool||S.obstTool));
     if(!S.rooms.length){
       var anyRooms=allRooms().length>0;
       wrap.innerHTML='<div class="empty-cta">'+(anyRooms||S.floors.length>1
@@ -1937,7 +1965,7 @@
     var span=Math.max(mxx-mnx,mxy-mny,1), fs=Math.max(0.16,Math.min(0.3,span/28)), pad=fs*5;
     var o='<svg viewBox="'+[mnx-pad,mny-pad,mxx-mnx+2*pad,mxy-mny+2*pad].map(f3).join(" ")+'" xmlns="http://www.w3.org/2000/svg"'+(S.showStruct?' class="struct"':'')+' role="img" aria-label="Detalle de '+esc(room.name)+'">';
     o+='<path class="p-room'+(room.active?'':' off')+'" d="'+pathD(out)+'"/>';
-    if(S.mode==="suelo"){ var tl=function(p){ return toL(room,p); }; res.circ.forEach(function(c){ o+=ufCircSvg(c,tl); }); o+=ufMarksSvg(room,function(p){ return p; })+sideLabelsSvg(room,fs)+'</svg>'; return o; }
+    if(S.mode==="suelo"){ var tl=function(p){ return toL(room,p); }; o+=obstDefs("obHd")+ufObstSvg(room,function(p){ return p; },"obHd"); res.circ.forEach(function(c){ o+=ufCircSvg(c,tl); }); o+=ufMarksSvg(room,function(p){ return p; })+sideLabelsSvg(room,fs)+'</svg>'; return o; }
     res.rects.forEach(function(q){ o+='<rect class="p-usable" x="'+f3(q.x)+'" y="'+f3(q.y)+'" width="'+f3(q.w)+'" height="'+f3(q.h)+'"/>'; });
     res.strips.forEach(function(s){ o+='<rect class="p-strip" x="'+f3(s.x)+'" y="'+f3(s.y)+'" width="'+f3(s.w)+'" height="'+f3(s.h)+'"/>'; });
     res.panels.forEach(function(p){
@@ -1958,7 +1986,7 @@
     var res=results[room.id];
     box.innerHTML=renderDetailSvg(room,res);
     var h="";
-    if(S.mode==="suelo"){ out.innerHTML=ufDetailHtml(room,res); return; }
+    if(S.mode==="suelo"){ out.innerHTML=ufDetailHtml(room,res); var oc=$("obstClear"); if(oc) oc.addEventListener("click",function(){ room.obst=[]; update(false); }); return; }
     if(!room.active) h+='<div class="msg ok">Estancia marcada sin paneles. No suma circuitos.</div>';
     res.msgs.forEach(function(m){ h+='<div class="msg '+m.t+'">'+m.x+'</div>'; });
     h+='<div class="stats"><div class="stat"><div class="k">Superficie</div><div class="v">'+fmt(res.area,2)+'</div><div class="s">m²</div></div>'+
@@ -1988,6 +2016,7 @@
       '<div class="stat"><div class="k">Tubo</div><div class="v">'+fmt(res.pex,0)+'</div><div class="s">m con margen</div></div></div>';
     if(res.circ.length) h+='<p class="layout-line">'+res.circ.map(function(c,i){ var bad=c.inst>U.maxLen+1e-6;
       return '<b style="color:'+c.color+'">■ C'+(i+1)+(c.type!=="int"?' ('+MARKS[c.type].toLowerCase()+')':'')+'</b>: '+(bad?'<span style="color:var(--warn)">':'')+fmt(c.inst,1)+' m'+(bad?'</span>':'')+(c.col?' ('+fmt(c.inLen,1)+' en la estancia + '+fmt(c.feed,1)+' de ida y vuelta)':''); }).join(' · ')+'.</p>';
+    if(room.obst&&room.obst.length) h+='<p class="layout-line">Obstáculos: <b>'+room.obst.length+'</b> ('+fmt(res.obArea,2)+' m² sin tubo) · <button class="btn ghost small" id="obstClear">Quitar todos</button></p>';
     var mk=room.marks||{}, ml=Object.keys(mk).sort().map(function(e){ return LETTER(+e)+': '+MARKS[mk[e]].toLowerCase(); });
     if(ml.length) h+='<p class="layout-line">Muros marcados: '+ml.join(' · ')+'.'+(res.bandArea?' Franja con el tubo más junto: <b>'+fmt(res.bandArea,1)+' m²</b>.':'')+'</p>';
     if(res.circ.length) h+='<p class="layout-line">'+(res.col?'Va a <b>'+esc(res.col.name)+'</b>.':'<span style="color:var(--warn)">Sin colector: '+esc(res.why||'')+'.</span>')+'</p>';
@@ -2074,7 +2103,7 @@
     S.floors.forEach(function(fl){
       if(multi && fl.rooms.length) tb+='<tr class="floor-row"><td colspan="7">'+esc(fl.name)+'</td></tr>';
       fl.rooms.forEach(function(r){ var res=results[r.id], inL=res.circ.reduce(function(t,c){ return t+c.inLen; },0);
-        tot.area+=res.area; tot.c+=res.circuits; tot.inL+=inL; tot.pex+=res.pex; if(r.active){ tot.actA+=res.area; tot.per+=res.perim; }
+        tot.area+=res.area; tot.c+=res.circuits; tot.inL+=inL; tot.pex+=res.pex; if(r.active){ tot.actA+=Math.max(0,res.area-(res.obArea||0)); tot.per+=res.perim; }
         var warn=res.msgs.concat(res.dmsgs||[]).some(function(m){ return m.t==="warn"; })||(res.circuits&&!res.col);
         tb+='<tr class="clickable'+(r.id===S.sel?' sel':'')+'" data-room="'+r.id+'"><td>'+esc(r.name)+(warn?' <span style="color:var(--warn)" title="Revisar">●</span>':'')+'</td><td class="num">'+fmt(res.area,2)+'</td><td class="num">'+(r.active?res.sep:'—')+'</td><td class="num"><b>'+res.circuits+'</b></td><td class="num">'+(inL?fmt(inL,1):'—')+'</td><td class="num">'+(res.pex?fmt(res.pex,1):'—')+'</td><td>'+(res.col?esc(res.col.name):(res.circuits?'<span style="color:var(--warn)">Sin asignar</span>':'—'))+'</td></tr>'; });
     });
@@ -2586,6 +2615,13 @@
     if(e.button!==undefined && e.button!==0) return;
     suppressClick=false;
     if(S.placing) return;
+    if(S.mode==="suelo" && S.obstTool){
+      var oq=svgPointRaw(e.clientX,e.clientY); if(!oq) return; oq=snapPt(V(oq.x,oq.y));
+      e.preventDefault(); e.stopImmediatePropagation(); suppressClick=true;
+      if(S.obstDraft){ S.obstDraft.b=oq; obstFinish(); return; }
+      var hitO=ufObstAt(V(oq.x,oq.y)); if(hitO){ hitO.r.obst.splice(hitO.i,1); update(hitO.r.id===S.sel); return; }
+      S.obstDraft={a:oq,b:oq,drag:true,sx:e.clientX,sy:e.clientY}; renderPlan(); return;
+    }
     if(S.mode==="suelo" && S.doorTool){
       var dq=svgPointRaw(e.clientX,e.clientY);
       if(dq && doorClick(V(dq.x,dq.y))){ e.preventDefault(); e.stopImmediatePropagation(); suppressClick=true; }
@@ -2656,6 +2692,14 @@
     if(d.moved){ suppressClick=true; update(false); }
   });
   window.addEventListener("pointermove",function(e){
+    if(!S.obstDraft) return; var q=svgPointRaw(e.clientX,e.clientY); if(!q) return; S.obstDraft.b=snapPt(V(q.x,q.y));
+    if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); });
+  });
+  window.addEventListener("pointerup",function(e){
+    var d=S.obstDraft; if(!d||!d.drag) return; d.drag=false;
+    if(Math.abs(e.clientX-d.sx)>6||Math.abs(e.clientY-d.sy)>6) obstFinish();   // dragged: done; a plain click waits for the second corner
+  });
+  window.addEventListener("pointermove",function(e){
     if((!S.markTool && !S.doorTool) || S.drag || S.pan) return;
     var q=overPlan(e.clientX,e.clientY)?svgPointRaw(e.clientX,e.clientY):null, hit=q?ufHitEdge(V(q.x,q.y)):null, prev=S.markHover;
     S.markHover=hit?{room:hit.room,edge:hit.edge}:null;
@@ -2669,7 +2713,7 @@
     var md=$("markDone"); if(md) md.addEventListener("click",function(){ setMarkTool(S.markTool); });
     renderPlan();
   }
-  $("markBar").addEventListener("click",function(e){ var b=e.target.closest("[data-mark]"); if(b){ if(S.doorTool) doorCancel(true); setMarkTool(b.getAttribute("data-mark")); } });
+  $("markBar").addEventListener("click",function(e){ var b=e.target.closest("[data-mark]"); if(b){ if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); setMarkTool(b.getAttribute("data-mark")); } });
   // doors: choose a width, click every wall that has a door of that width, confirm
   function doorMenu(){
     if(S.markTool) setMarkTool(S.markTool);
@@ -2693,7 +2737,31 @@
     update(true); hint(n+' puerta'+(n===1?'':'s')+' de '+fmt((T.w)*100)+' cm guardada'+(n===1?'':'s')+'. Los tubos ya solo cruzan los tabiques por las puertas. Pulsa «Marcar puerta» para añadir puertas de otro ancho.');
   }
   function doorCancel(silent){ S.doorTool=null; S.markHover=null; $("doorBtn").classList.remove("on"); if(!silent) hint(""); renderPlan(); }
-  $("doorBtn").addEventListener("click",doorMenu);
+  $("doorBtn").addEventListener("click",function(){ if(S.obstTool) obstTool(false); doorMenu(); });
+  // obstacles: drag a rectangle (or click one corner and then the other) like in Paint; click an obstacle to remove it
+  function obstTool(on){
+    if(on){ if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); }
+    S.obstTool=!!on; S.obstDraft=null; $("obstBtn").classList.toggle("on",!!on);
+    if(on){ hint('Añadir obstáculo: pincha en una esquina y arrastra hasta la contraria (o pincha una esquina y luego la otra). Verás la medida mientras lo dibujas. Pincha un obstáculo para quitarlo. <button class="btn ghost small" id="obstDone">Terminar</button>'); $("obstDone").addEventListener("click",function(){ obstTool(false); }); }
+    else hint("");
+    renderPlan();
+  }
+  $("obstBtn").addEventListener("click",function(){ obstTool(!S.obstTool); });
+  function snapPt(q){ return V(Math.round(q.x*20)/20,Math.round(q.y*20)/20); }
+  function obstFinish(){
+    var d=S.obstDraft; S.obstDraft=null; if(!d) return;
+    var w=Math.abs(d.b.x-d.a.x), h=Math.abs(d.b.y-d.a.y); if(w<0.1||h<0.1){ renderPlan(); return; }
+    var c=V((d.a.x+d.b.x)/2,(d.a.y+d.b.y)/2), room=null;
+    S.rooms.forEach(function(r){ if(!room && pointIn(c,results[r.id].wout)) room=r; });
+    if(!room){ hint('El obstáculo tiene que estar dentro de una estancia. <button class="btn ghost small" id="obstDone">Terminar</button>',true); $("obstDone").addEventListener("click",function(){ obstTool(false); }); renderPlan(); return; }
+    var cs=[V(d.a.x,d.a.y),V(d.b.x,d.a.y),V(d.b.x,d.b.y),V(d.a.x,d.b.y)].map(function(p){ return toL(room,p); });
+    var b={x0:Math.min.apply(null,cs.map(function(p){return p.x;})),y0:Math.min.apply(null,cs.map(function(p){return p.y;})),x1:Math.max.apply(null,cs.map(function(p){return p.x;})),y1:Math.max.apply(null,cs.map(function(p){return p.y;}))};
+    // keep it inside the room
+    var lo=localOutline(room), bx0=Math.min.apply(null,lo.map(function(p){return p.x;})), by0=Math.min.apply(null,lo.map(function(p){return p.y;})), bx1=Math.max.apply(null,lo.map(function(p){return p.x;})), by1=Math.max.apply(null,lo.map(function(p){return p.y;}));
+    b.x0=Math.max(b.x0,bx0); b.y0=Math.max(b.y0,by0); b.x1=Math.min(b.x1,bx1); b.y1=Math.min(b.y1,by1); if(b.x1-b.x0<0.1||b.y1-b.y0<0.1){ renderPlan(); return; }
+    ["x0","y0","x1","y1"].forEach(function(k){ b[k]=Math.round(b[k]*1000)/1000; });
+    (room.obst=room.obst||[]).push(b); update(room.id===S.sel);
+  }
   function doorClick(q){
     var T=S.doorTool, hit=ufHitEdge(q); if(!hit) return false;
     var r=hit.room, e=hit.edge, n=r.pts.length;
@@ -2711,7 +2779,7 @@
     var cta=e.target.closest && e.target.closest("[data-cta]");
     if(cta){ var a=cta.getAttribute("data-cta"); if(a==="new") newProject(); else if(a==="example") loadExample(); else openShape(); return; }
     if(suppressClick){ suppressClick=false; return; }
-    if(S.markTool||S.doorTool) return;
+    if(S.markTool||S.doorTool||S.obstTool) return;
     if(e.target.closest && e.target.closest("[data-coll]")) return;
     var g=e.target.closest && e.target.closest("[data-room]"); if(!g) return;
     var id=+g.getAttribute("data-room");
@@ -2820,7 +2888,7 @@
   }
   function setMode(m){
     if(m===S.mode) return;
-    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); S.moveId=null;
+    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); S.moveId=null;
     S.store[S.mode]={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title};
     var d=S.store[m]||{floors:[emptyFloor("Planta baja")],fi:0,sel:null,title:"Nuevo proyecto"};
     S.floors=d.floors; S.fi=d.fi; S.sel=d.sel; S.title=d.title; S.zoom=null; S.mode=m;
@@ -2834,6 +2902,7 @@
   $("addRoom").addEventListener("click",function(){ if(S.placing) cancelPlacing(); openShape(); });
   document.addEventListener("keydown",function(e){
     if(e.key!=="Escape") return;
+    if(S.obstTool){ if(S.obstDraft){ S.obstDraft=null; renderPlan(); } else obstTool(false); return; }
     if(S.doorTool){ doorCancel(); return; }
     if(S.markTool){ setMarkTool(S.markTool); return; }
     if(!$("companyModal").hidden) closeCompany();
