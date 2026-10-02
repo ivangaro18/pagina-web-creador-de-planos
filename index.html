@@ -26,6 +26,29 @@
   .linkbtn{background:none;border:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:4px 0;}
 
 
+  /* ---------- floor heating mode ---------- */
+  body.mode-suelo .only-techo{display:none !important;}
+  body:not(.mode-suelo) .only-suelo{display:none !important;}
+  .p-tube{stroke-width:.03;stroke-linecap:round;pointer-events:none;}
+  .p-tube.ida{stroke:var(--ida);} .p-tube.ret{stroke:var(--ret);}
+  .p-feed{fill:none;stroke-width:.025;stroke-linejoin:round;pointer-events:none;opacity:.8;}
+  .p-feed.ida{stroke:var(--ida);} .p-feed.ret{stroke:var(--ret);}
+  .p-mk{fill:none;pointer-events:none;stroke-linecap:butt;stroke-linejoin:round;}
+  .p-mk.win-o{stroke:var(--wall);stroke-width:.18;}
+  .p-mk.win-i{stroke:#BFE3F2;stroke-width:.09;}
+  .p-mk.ext{stroke:var(--wall);stroke-width:.24;}
+  .p-mk.esc{stroke:var(--ang);stroke-width:.2;stroke-dasharray:.16 .08;}
+  .p-mk.hov{stroke:var(--warm);stroke-width:.22;opacity:.8;}
+  .p-ctext.uf{font-size:.15px;fill:var(--ink);font-weight:700;}
+  .plan-wrap.marking, .plan-wrap.marking .room-g{cursor:crosshair;}
+  .mark-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:.8rem;color:var(--muted);}
+  .mk-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:7px;padding:6px 11px;font:600 .8rem "IBM Plex Sans",system-ui,sans-serif;cursor:pointer;}
+  .mk-btn i{display:inline-block;width:18px;height:0;border-top:5px solid var(--wall);}
+  .mk-btn[data-mark="ventana"] i{border-top:5px double #5FB8D8;height:0;border-top-width:6px;}
+  .mk-btn[data-mark="escalera"] i{border-top:5px dashed var(--ang);}
+  .mk-btn.on{background:var(--ok-bg);border-color:var(--accent);color:var(--accent);}
+  .lg-mk{display:inline-block;width:20px;height:0;border-top:5px solid var(--wall);vertical-align:middle;margin-right:2px;}
+  select.mk-sel{font-size:.76rem;padding:3px 2px;width:84px;min-width:84px;}
   /* ---------- system chooser ---------- */
   #chooseView{min-height:100vh;display:flex;flex-direction:column;background:radial-gradient(1200px 500px at 15% -10%,#E3F1F8 0%,transparent 60%),radial-gradient(900px 500px at 100% 110%,#FDEBDD 0%,transparent 55%),var(--bg);}
   .ch-top{max-width:1040px;width:100%;margin:0 auto;padding:14px 20px 0;display:flex;justify-content:space-between;align-items:center;}
@@ -42,10 +65,7 @@
   .ch-body h2{margin:0;font-size:1.3rem;letter-spacing:-.015em;}
   .ch-body p{margin:0;color:var(--muted);font-size:.93rem;line-height:1.5;}
   .ch-go{margin-top:12px;display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--accent);font-size:.92rem;}
-  .ch-card.floor .ch-go{color:var(--muted);}
   .ch-soon{position:absolute;top:14px;right:14px;background:#fff;border:1px solid var(--line);color:var(--warm);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:999px;}
-  .ch-card.floor{cursor:default;}
-  .ch-card.floor:hover{transform:none;border-color:var(--line);box-shadow:0 10px 30px -18px rgba(15,42,61,.35);}
   .ch-note{margin-top:18px;min-height:1.4em;color:var(--muted);font-size:.9rem;}
   /* ---------- product site ---------- */
   .site{color:var(--ink);}
@@ -166,13 +186,14 @@
   .sw{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px;}
   .sw.dot{border-radius:50%;}
   .layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start;margin-top:16px;}
-  @media (max-width:900px){ .layout{grid-template-columns:1fr;} }
+  @media (max-width:900px){ .layout{grid-template-columns:minmax(0,1fr);} }
   label.lbl{display:block;font-size:.76rem;color:var(--muted);margin-bottom:4px;}
   input[type=text],input[type=number],select{width:100%;padding:7px 9px;border-radius:7px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-family:inherit;font-size:.86rem;}
   input[type=number]{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;}
   input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
   .field{margin-bottom:10px;min-width:0;}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 8px;}
+  .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 8px;}
+  .grid2 input, .grid2 select{min-width:0;}
   .check{display:flex;align-items:center;gap:7px;font-size:.82rem;color:var(--ink);margin-bottom:10px;cursor:pointer;}
   .check input{width:16px;height:16px;accent-color:var(--accent);}
   .btn{background:var(--accent);color:var(--accent-ink);border:none;border-radius:7px;padding:7px 13px;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;}
@@ -452,7 +473,7 @@
     <h1>¿Qué sistema vas a calcular?</h1>
     <p class="lead">Elige el tipo de instalación. Cada planificador tiene sus propias reglas de distribución, circuitos y materiales.</p>
     <div class="ch-grid">
-      <button class="ch-card" data-go="app" type="button"><svg class="ch-art" viewBox="0 0 320 200" aria-hidden="true">
+      <button class="ch-card" data-go="app-techo" type="button"><svg class="ch-art" viewBox="0 0 320 200" aria-hidden="true">
   <rect x="20" y="22" width="280" height="10" fill="#1E3A4F"/>
   <g fill="#86C3D9" stroke="#fff" stroke-width="1">
     <rect x="34" y="32" width="58" height="12" rx="1.5"/><rect x="94" y="32" width="58" height="12" rx="1.5"/><rect x="168" y="32" width="58" height="12" rx="1.5"/><rect x="228" y="32" width="58" height="12" rx="1.5"/>
@@ -472,7 +493,7 @@
 </svg>
         <span class="ch-body"><h2>Techo radiante</h2><p>Paneles en el techo, circuitos de 2 paneles, colectores, tubería PEX, estructura de pladur e informe de materiales.</p><span class="ch-go">Abrir planificador →</span></span>
       </button>
-      <button class="ch-card floor" id="chFloor" type="button"><svg class="ch-art" viewBox="0 0 320 200" aria-hidden="true">
+      <button class="ch-card floor" data-go="app-suelo" type="button"><svg class="ch-art" viewBox="0 0 320 200" aria-hidden="true">
   <rect x="20" y="20" width="280" height="160" rx="4" fill="#FFFDFB" stroke="#1E3A4F" stroke-width="5"/>
   <g fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M44 172 V40 H276 V156 H64 V60 H256 V136 H84 V80 H236 V116 H104 V100 H200" stroke="#D9452F"/>
@@ -480,19 +501,18 @@
   </g>
   <rect x="34" y="166" width="34" height="12" rx="2" fill="#0B7FAB"/>
 </svg>
-        <span class="ch-soon">Próximamente</span>
-        <span class="ch-body"><h2>Suelo radiante</h2><p>Circuitos de tubo en espiral por estancia, longitudes, colectores y materiales del suelo radiante.</p><span class="ch-go">En desarrollo</span></span>
+        <span class="ch-body"><h2>Suelo radiante</h2><p>Circuitos de tubo por estancia con máximo de 120 m, franjas junto a ventanas y muros exteriores, escaleras, colectores en pared e informe de materiales.</p><span class="ch-go">Abrir planificador →</span></span>
       </button>
     </div>
     <p class="ch-note" id="chNote" role="status"></p>
   </main>
 </div>
 <div id="appView" hidden>
-<div class="app-back"><button class="linkbtn" data-go="choose">← Elegir sistema</button><span>Planificador Radiante · Techo radiante</span></div>
+<div class="app-back"><button class="linkbtn" data-go="choose">← Elegir sistema</button><span id="appSys">Planificador Radiante · Techo radiante</span></div>
 <div class="wrap">
   <header class="topbar">
     <div>
-      <span class="eyebrow">Techo radiante · Planificador</span>
+      <span class="eyebrow" id="appEyebrow">Techo radiante · Planificador</span>
       <h1 id="projTitle">Nuevo proyecto</h1>
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
@@ -507,8 +527,8 @@
       <h2>Plano general</h2>
       <div class="btn-row">
         <label class="check" style="margin:0;"><input type="checkbox" id="colorByCircuit"> Colorear por circuito</label>
-        <label class="check" style="margin:0;"><input type="checkbox" id="showPipes"> Mostrar tubería</label>
-        <label class="check" style="margin:0;"><input type="checkbox" id="showStruct"> Estructura de pladur</label>
+        <label class="check" style="margin:0;"><input type="checkbox" id="showPipes"> <span class="only-techo">Mostrar tubería</span><span class="only-suelo">Tubos al colector</span></label>
+        <label class="check only-techo" style="margin:0;"><input type="checkbox" id="showStruct"> Estructura de pladur</label>
         <button class="btn small" id="addRoom">+ Estancia</button>
         <button class="btn ghost small" id="loadExample">Ver ejemplo</button>
       </div>
@@ -516,7 +536,14 @@
     <div class="floor-bar" id="floorBar"></div>
     <div class="coll-bar">
       <span class="coll-chip" id="collChip" role="button" tabindex="0" aria-label="Arrastra al plano para añadir un colector"><span class="ico"></span>Colector</span>
-      <span>Arrastra la figura al plano (o púlsala) para añadir un colector. Los colectores se mueven arrastrándolos.</span>
+      <span class="only-techo">Arrastra la figura al plano (o púlsala) para añadir un colector. Los colectores se mueven arrastrándolos.</span>
+      <span class="only-suelo">Arrastra el colector junto a una pared: al soltarlo se pega a la pared más cercana, en horizontal o vertical según la pared.</span>
+    </div>
+    <div class="mark-bar only-suelo" id="markBar">
+      <button class="mk-btn" type="button" data-mark="ventana"><i></i>Marcar ventana</button>
+      <button class="mk-btn" type="button" data-mark="exterior"><i></i>Marcar muro exterior</button>
+      <button class="mk-btn" type="button" data-mark="escalera"><i></i>Marcar escalera</button>
+      <span>Pulsa un botón y luego la pared en el plano. Otra pulsación en la pared la desmarca.</span>
     </div>
     <div class="mode-hint" id="modeHint" hidden></div>
     <div class="plan-stage">
@@ -528,13 +555,18 @@
       </div>
     </div>
     <div class="legend">
-      <span><span class="sw" style="background:var(--panel)"></span>Panel radiante</span>
-      <span><span class="sw dot" style="background:var(--light)"></span>Punto de luz sugerido</span>
-      <span><span class="lg-line" style="border-color:var(--light)"></span>Tira LED</span>
+      <span class="only-techo"><span class="sw" style="background:var(--panel)"></span>Panel radiante</span>
+      <span class="only-techo"><span class="sw dot" style="background:var(--light)"></span>Punto de luz sugerido</span>
+      <span class="only-techo"><span class="lg-line" style="border-color:var(--light)"></span>Tira LED</span>
+      <span class="only-suelo"><span class="lg-line" style="border-color:var(--ida)"></span>Tubo (ida)</span>
+      <span class="only-suelo"><span class="lg-line" style="border-color:var(--ret)"></span>Tubo (retorno)</span>
+      <span class="only-suelo"><span class="lg-mk" style="border-top:6px double #5FB8D8"></span>Ventana</span>
+      <span class="only-suelo"><span class="lg-mk"></span>Muro exterior</span>
+      <span class="only-suelo"><span class="lg-mk" style="border-top:5px dashed var(--ang)"></span>Escalera (no pasa tubo)</span>
       <span><span class="sw" style="background:var(--accent)"></span>Colector</span>
-      <span class="pipe-lg" hidden><span class="lg-line" style="border-color:var(--ida)"></span>Ida</span>
-      <span class="pipe-lg" hidden><span class="lg-line" style="border-color:var(--ret)"></span>Retorno</span>
-      <span class="pipe-lg" hidden><span class="lg-bridge"><i></i><b></b><i></i></span>Paneles unidos (mismo circuito)</span>
+      <span class="pipe-lg only-techo" hidden><span class="lg-line" style="border-color:var(--ida)"></span>Ida</span>
+      <span class="pipe-lg only-techo" hidden><span class="lg-line" style="border-color:var(--ret)"></span>Retorno</span>
+      <span class="pipe-lg only-techo" hidden><span class="lg-bridge"><i></i><b></b><i></i></span>Paneles unidos (mismo circuito)</span>
       <span class="struct-lg" hidden><span class="lg-line" style="border-color:var(--ang)"></span>Angular perimetral</span>
       <span class="struct-lg" hidden><span class="lg-line" style="border-color:var(--prim)"></span>Primario (cada 90 cm)</span>
       <span class="struct-lg" hidden><span class="lg-line" style="border-color:var(--sec);border-top-width:2px"></span>TC secundario (extremos y centro de cada panel; resto cada 40 cm)</span>
@@ -544,13 +576,13 @@
 
   <div class="layout">
     <aside class="stack">
-      <div class="card">
+      <div class="card only-techo">
         <span class="section-title">Catálogo de paneles</span>
         <table class="catalog"><thead><tr><th>Modelo</th><th class="num">Ancho cm</th><th class="num">Largo cm</th><th></th></tr></thead><tbody id="catalogBody"></tbody></table>
         <button class="btn ghost small" id="addPanel" style="margin-top:8px;">+ Añadir modelo</button>
         <p class="note">Introduce las medidas de los paneles que vayas a usar, de cualquier fabricante.</p>
       </div>
-      <div class="card">
+      <div class="card only-techo">
         <span class="section-title">Cobertura por defecto</span>
         <div class="grid2">
           <div class="field"><label class="lbl" for="gMin">% mínimo</label><input type="number" id="gMin" min="0" max="100" step="1"></div>
@@ -558,7 +590,7 @@
         </div>
         <p class="note" style="margin-top:0;">Se aplica a las estancias que no tienen un rango propio.</p>
       </div>
-      <div class="card">
+      <div class="card only-techo">
         <span class="section-title">Reglas de instalación</span>
         <div class="grid2">
           <div class="field"><label class="lbl" for="sClear">Distancia a pared (cm)</label><input type="number" id="sClear" min="0" step="1"></div>
@@ -567,7 +599,7 @@
         <div class="field"><label class="lbl" for="sStrip">Ancho franja de luz (cm)</label><input type="number" id="sStrip" min="10" step="1"></div>
         <p class="note">El tipo de iluminación se elige en cada estancia. Máx. 2 paneles por circuito y siempre el panel más grande posible. En estancias que no son rectangulares, los paneles se colocan en las zonas rectangulares más grandes.</p>
       </div>
-      <div class="card">
+      <div class="card only-techo">
         <span class="section-title">Techo de pladur</span>
         <div class="field"><label class="lbl" for="sBoard">Placa de pladur</label><select id="sBoard"><option value="1.2x2">1200 × 2000 mm</option><option value="1.2x2.5">1200 × 2500 mm</option><option value="1.2x2.6">1200 × 2600 mm</option><option value="1.2x2.8">1200 × 2800 mm</option><option value="1.2x3">1200 × 3000 mm</option></select></div>
         <div class="grid2">
@@ -578,18 +610,35 @@
         </div>
         <p class="note" style="margin-top:0;">Se calcula para las estancias con paneles. Los TC secundarios van siempre en los dos extremos y el centro de cada panel para atornillarlo; el resto del techo lleva TC cada 40 cm. Usa «Rotar estructura» en cada estancia para girarla.</p>
       </div>
+      <div class="card only-suelo">
+        <span class="section-title">Reglas del suelo radiante</span>
+        <div class="grid2">
+          <div class="field"><label class="lbl" for="uSep">Separación general (cm)</label><input type="number" id="uSep" min="5" max="30" step="5"></div>
+          <div class="field"><label class="lbl" for="uMax">Máx. por circuito (m)</label><input type="number" id="uMax" min="40" max="200" step="5"></div>
+          <div class="field"><label class="lbl" for="uSepWin">Junto a ventana (cm)</label><input type="number" id="uSepWin" min="5" max="30" step="5"></div>
+          <div class="field"><label class="lbl" for="uWinW">Franja de ventana (m)</label><input type="number" id="uWinW" min="0.1" max="2" step="0.1"></div>
+          <div class="field"><label class="lbl" for="uSepExt">Junto a muro exterior (cm)</label><input type="number" id="uSepExt" min="5" max="30" step="5"></div>
+          <div class="field"><label class="lbl" for="uExtW">Franja de muro exterior (m)</label><input type="number" id="uExtW" min="0.1" max="2" step="0.1"></div>
+          <div class="field"><label class="lbl" for="uWall">Tubo a pared (cm)</label><input type="number" id="uWall" min="0" max="30" step="1"></div>
+          <div class="field"><label class="lbl" for="uVert">Bajada al colector (m)</label><input type="number" id="uVert" min="0" max="3" step="0.1"></div>
+          <div class="field"><label class="lbl" for="uMargin">Margen de tubo (%)</label><input type="number" id="uMargin" min="0" max="30" step="1"></div>
+          <div class="field"><label class="lbl" for="uPlate">Plancha de tetones</label><select id="uPlate"></select></div>
+        </div>
+        <p class="note" style="margin-top:0;">Plancha universal de tetones: separación de 5 en 5 cm (mín. 5, máx. 30 cm). Según UNE-EN 1264, junto a ventanas y muros exteriores (zona periférica, hasta 1 m) el suelo puede llegar a 35 °C, por eso el tubo va más junto; en zonas de estancia el máximo es 29 °C (33 °C en baños). Cada circuito no pasa de la longitud máxima, contando la ida y vuelta al colector.</p>
+      </div>
       <div class="card">
-        <span class="section-title">Colectores y tubería PEX</span>
+        <span class="section-title"><span class="only-techo">Colectores y tubería PEX</span><span class="only-suelo">Colectores</span></span>
         <div id="collList"></div>
         <button class="btn ghost small" id="addColl" style="margin-bottom:8px;">+ Añadir colector</button>
         <p class="note" id="capSummary" style="margin:0 0 12px;"></p>
-        <div class="grid2">
+        <div class="grid2 only-techo">
           <div class="field"><label class="lbl" for="sVert">Subida colector–techo (m)</label><input type="number" id="sVert" min="0" step="0.1"></div>
           <div class="field"><label class="lbl" for="sMargin">Margen de tubo (%)</label><input type="number" id="sMargin" min="0" step="1"></div>
         </div>
-        <div class="field"><label class="lbl" for="sTail">Tubo del panel aprovechado por tramo (m)</label><input type="number" id="sTail" min="0" max="3" step="0.1"></div>
-        <p class="note" style="margin-top:0;">Los paneles traen un tramo de tubo propio (hasta 3 m). Esta medida se descuenta de cada tramo de ida y de retorno.</p>
-        <p class="note">Indica las salidas de cada colector. Las estancias se asignan enteras al colector más cercano con salidas suficientes.</p>
+        <div class="field only-techo"><label class="lbl" for="sTail">Tubo del panel aprovechado por tramo (m)</label><input type="number" id="sTail" min="0" max="3" step="0.1"></div>
+        <p class="note only-techo" style="margin-top:0;">Los paneles traen un tramo de tubo propio (hasta 3 m). Esta medida se descuenta de cada tramo de ida y de retorno.</p>
+        <p class="note only-techo">Indica las salidas de cada colector. Las estancias se asignan enteras al colector más cercano con salidas suficientes.</p>
+        <p class="note only-suelo">Indica las salidas de cada colector. Cada estancia va entera a un colector al que pueda llegar sin cruzar una escalera; si una escalera la separa, necesita su propio colector.</p>
       </div>
     </aside>
 
@@ -599,7 +648,7 @@
         <div class="card-head"><h2>Circuitos por estancia</h2></div>
         <div class="table-scroll">
           <table>
-            <thead><tr><th>Estancia</th><th class="num">m²</th><th class="num">Cobertura</th><th class="num">Paneles</th><th class="num">Circuitos</th><th class="num">PEX m</th><th class="num">Manguitos</th><th class="num">Uniones</th></tr></thead>
+            <thead id="roomsHead"><tr><th>Estancia</th><th class="num">m²</th><th class="num">Cobertura</th><th class="num">Paneles</th><th class="num">Circuitos</th><th class="num">PEX m</th><th class="num">Manguitos</th><th class="num">Uniones</th></tr></thead>
             <tbody id="roomsBody"></tbody>
             <tfoot id="roomsFoot"></tfoot>
           </table>
@@ -607,7 +656,7 @@
         <span class="section-title" style="margin-top:18px;">Circuitos por colector</span>
         <div class="table-scroll">
           <table>
-            <thead><tr><th>Colector</th><th>Estancias asignadas</th><th class="num">Salidas</th><th class="num">Usadas</th><th class="num">Libres</th><th class="num">PEX m</th></tr></thead>
+            <thead id="collHead"><tr><th>Colector</th><th>Estancias asignadas</th><th class="num">Salidas</th><th class="num">Usadas</th><th class="num">Libres</th><th class="num">PEX m</th></tr></thead>
             <tbody id="collBody"></tbody>
           </table>
         </div>
@@ -636,7 +685,7 @@
     <span class="section-title">Reparto por colector</span>
     <div class="table-scroll" style="margin-bottom:18px;">
       <table>
-        <thead><tr><th>Colector</th><th>Estancia</th><th class="num">Circuitos</th><th class="num">PEX m</th></tr></thead>
+        <thead><tr><th>Colector</th><th>Estancia</th><th class="num">Circuitos</th><th class="num"><span class="only-techo">PEX m</span><span class="only-suelo">Tubo m</span></th></tr></thead>
         <tbody id="reportColl"></tbody>
       </table>
     </div>
@@ -648,7 +697,8 @@
         <tfoot id="reportFoot"></tfoot>
       </table>
     </div>
-    <p class="note">Introduce tus precios de coste para obtener un aproximado de material. Cada colector se cuenta como una unidad que incluye ida y retorno. Cada circuito lleva 2 conexiones (ida y retorno): en el colector, 1 bicono completo; en el panel, 1 racor de tubo de panel a rosca 1/2", 1 racor PEX con rosca 1/2" y 1 casquillo. Los manguitos unen 2 paneles: 1 por circuito de 2 paneles, ninguno en circuitos de 1 panel.</p>
+    <p class="note only-suelo">Introduce tus precios de coste para obtener un aproximado de material. Cada colector se cuenta como una unidad completa (ida y retorno). Cada circuito lleva 2 racores eurocono (ida y retorno) y 2 curvas guía para la subida al colector. Los metros de tubo incluyen la ida y vuelta al colector y el margen indicado.</p>
+    <p class="note only-techo">Introduce tus precios de coste para obtener un aproximado de material. Cada colector se cuenta como una unidad que incluye ida y retorno. Cada circuito lleva 2 conexiones (ida y retorno): en el colector, 1 bicono completo; en el panel, 1 racor de tubo de panel a rosca 1/2", 1 racor PEX con rosca 1/2" y 1 casquillo. Los manguitos unen 2 paneles: 1 por circuito de 2 paneles, ninguno en circuitos de 1 panel.</p>
   </section>
 </div>
 
@@ -779,13 +829,22 @@
     rooms.forEach(function(r,i){ if(i>0) r.tx+=0.9; });
     return {id:nid(), name:"Planta baja", rooms:rooms, collectors:[{id:nid(),name:"Colector 1",x:4.8,y:5.35,cap:16},{id:nid(),name:"Colector 2",x:11.5,y:5.35,cap:16}]};
   }
+  function exampleFloorUF(){
+    var f=exampleFloor(), R=f.rooms, M=function(i,o){ R[i].marks=o; };
+    M(0,{0:"exterior",3:"ventana"}); M(1,{0:"ventana"}); M(2,{0:"ventana",1:"exterior"}); M(3,{2:"exterior",3:"ventana"}); M(4,{1:"exterior"});
+    M(5,{2:"ventana"}); M(6,{2:"exterior"}); M(7,{2:"ventana"}); M(8,{1:"exterior",2:"ventana"});
+    f.collectors=[{id:nid(),name:"Colector 1",cap:10,room:R[4].id,edge:0,off:2.4},{id:nid(),name:"Colector 2",cap:10,room:R[4].id,edge:0,off:8.4}];
+    return f;
+  }
   function emptyFloor(name){ return {id:nid(), name:name||"Planta baja", rooms:[], collectors:[]}; }
   var S={
     panels:[{id:nid(),name:"Panel 80×150",w:80,h:150},{id:nid(),name:"Panel 40×150",w:40,h:150},{id:nid(),name:"Panel 80×100",w:80,h:100},{id:nid(),name:"Panel 40×100",w:40,h:100}],
     gMin:30,gMax:60,clear:10,gap:2,strip:30,vert:1.5,margin:10,tail:1,secCm:40,primCm:90,bar:3,hang:1.2,board:"1.2x2.5",showStruct:false,
     colorByCircuit:false, showPipes:false, prices:{},
     floors:[emptyFloor("Planta baja")], fi:0, sel:null, drag:null, frozenVB:null,
-    title:"Nuevo proyecto", placing:null
+    title:"Nuevo proyecto", placing:null,
+    mode:"techo", store:{}, markTool:null, markHover:null,
+    uf:{sep:15,sepWin:10,winW:1,sepExt:10,extW:0.5,wallCm:10,maxLen:120,vert:0.5,margin:5,plate:"1.4x0.8"}
   };
   Object.defineProperty(S,"rooms",{get:function(){ return S.floors[S.fi].rooms; }, set:function(v){ S.floors[S.fi].rooms=v; }});
   Object.defineProperty(S,"collectors",{get:function(){ return S.floors[S.fi].collectors; }, set:function(v){ S.floors[S.fi].collectors=v; }});
@@ -1130,7 +1189,7 @@
   function manh(a,b){ return Math.abs(a.x-b.x)+Math.abs(a.y-b.y); }
   function computeAll(){
     results={}; collStats={}; allUnassigned=[];
-    S.floors.forEach(function(fl){ placeFloor(fl); computeFloor(fl); });
+    S.floors.forEach(function(fl){ placeFloor(fl); if(S.mode==="suelo") computeFloorUF(fl); else computeFloor(fl); });
     unassigned=allUnassigned.filter(function(u){ return u.floor===curFloor(); });
   }
   function computeFloor(fl){
@@ -1234,10 +1293,214 @@
     return o;
   }
 
+  // ================= SUELO RADIANTE =================
+  var MARKS={ventana:"Ventana",exterior:"Muro exterior",escalera:"Escalera"}, COLL_D=0.12;
+  var PLATES={"1.2x0.8":"1200 × 800 mm","1.4x0.8":"1400 × 800 mm","1.45x0.85":"1450 × 850 mm","1.0x1.0":"1000 × 1000 mm"};
+  function clampSep(v){ v=Math.round((+v||15)/5)*5; return Math.max(5,Math.min(30,v)); }
+  function collLen(c){ return Math.min(1.2,0.25+0.05*(c.cap||0)); }
+  function polyDist(p,poly){ var d=Infinity; for(var i=0;i+1<poly.length;i++) d=Math.min(d,segDist(p,poly[i],poly[i+1])); return d; }
+  function ufSep(room){ return clampSep(room.sep||S.uf.sep); }
+  // a floor collector hangs on a straight wall of a room: position along the wall + inward normal
+  function ufCollPose(c){
+    var R=c.room!=null?roomById(c.room):null; if(!R || !R.pts[c.edge] || R.bulge[c.edge]) return null;
+    var n=R.pts.length, A=toW(R,R.pts[c.edge]), B=toW(R,R.pts[(c.edge+1)%n]), L=len(sub(B,A)), u=unit(sub(B,A)), nin=mul(outN(A,B),-1), CL=collLen(c);
+    var off=L<CL?L/2:Math.max(CL/2,Math.min(L-CL/2,c.off==null?L/2:c.off));
+    var base=add(A,mul(u,off));
+    return {room:R,A:A,B:B,L:L,u:u,n:nin,CL:CL,off:off,base:base,c:add(base,mul(nin,COLL_D/2))};
+  }
+  // nearest straight wall to p on the current floor; centred on the wall when dropped close to its middle
+  function ufSnapColl(p,c){
+    var best=null, CL=collLen(c);
+    S.rooms.forEach(function(R){ var n=R.pts.length, W=results[R.id]?results[R.id].wout:worldOutline(R), inside=pointIn(p,W);
+      for(var e=0;e<n;e++){ if(R.bulge[e]) continue;
+        var A=toW(R,R.pts[e]), B=toW(R,R.pts[(e+1)%n]), L=len(sub(B,A)); if(L<0.3) continue;
+        var d=segDist(p,A,B)+(inside?0:0.05);
+        if(!best||d<best.d){ var u=unit(sub(B,A)), t=dot(sub(p,A),u), off=L<CL?L/2:Math.max(CL/2,Math.min(L-CL/2,t));
+          if(Math.abs(off-L/2)<0.3) off=L/2;
+          var s0=Math.max(0,off-CL/2), s1=Math.min(L,off+CL/2);
+          best={d:d,room:R.id,edge:e,off:Math.round(off*100)/100,A:add(A,mul(u,s0)),B:add(A,mul(u,s1))}; } } });
+    return best && best.d<4 ? best : null;
+  }
+  // tube layout of one room (local coordinates): bands along windows / exterior walls with closer tube, the rest at the general spacing
+  function ufRoom(room){
+    var U=S.uf, mk=room.marks||{}, key=JSON.stringify([room.pts,room.bulge,room.active,mk,room.sep||0,U.sep,U.sepWin,U.winW,U.sepExt,U.extW,U.wallCm]);
+    if(room._uk===key && room._ur) return room._ur;
+    var out=localOutline(room), area=Math.abs(signedArea(out)), n=room.pts.length;
+    var res={area:area,lines:[],Lr:0,msgs:[],dmsgs:[],sep:ufSep(room),bandArea:0,perim:0,bands:[],panels:[],lights:[],leds:[],ledLen:0,strips:[],rects:[],groups:[],covered:0,pct:0,circuits:0,circ:[]};
+    for(var e=0;e<n;e++) res.perim+=edgeLength(room.pts[e],room.pts[(e+1)%n],room.bulge[e]||0);
+    if(!room.active || area<0.3){ room._uk=key; room._ur=res; return res; }
+    var R=rasterRoom(out,Math.max(0,U.wallCm)/100), rs=R.res, bands=[];
+    for(var e2=0;e2<n;e2++){ var t=mk[e2]; if(t!=="ventana"&&t!=="exterior") continue;
+      var a=room.pts[e2], b=room.pts[(e2+1)%n];
+      bands.push({edge:e2,type:t,poly:edgeSamples(a,b,room.bulge[e2]||0,16),w:Math.max(0.1,t==="ventana"?U.winW:U.extW),s:clampSep(t==="ventana"?U.sepWin:U.sepExt)/100,u:unit(sub(b,a))}); }
+    var Z=new Int16Array(R.nx*R.ny), any0=false, bx0=Infinity,bx1=-Infinity,by0=Infinity,by1=-Infinity;
+    for(var j=0;j<R.ny;j++) for(var i=0;i<R.nx;i++){ var idx=j*R.nx+i; Z[idx]=-1; if(!R.g[idx]) continue;
+      var p=V(R.x0+(i+.5)*rs,R.y0+(j+.5)*rs), z=0, bd=Infinity;
+      for(var k=0;k<bands.length;k++){ var d=polyDist(p,bands[k].poly); if(d<=bands[k].w && d<bd){ bd=d; z=k+1; } }
+      Z[idx]=z; if(z) res.bandArea+=rs*rs; else { any0=true; bx0=Math.min(bx0,p.x); bx1=Math.max(bx1,p.x); by0=Math.min(by0,p.y); by1=Math.max(by1,p.y); } }
+    var uI= (!any0 || bx1-bx0>=by1-by0) ? V(1,0) : V(0,1), nI=V(-uI.y,uI.x);
+    function linesFor(z,u,s){
+      var nrm=V(-u.y,u.x), lo=Infinity,hi=-Infinity,ulo=Infinity,uhi=-Infinity, outL=[];
+      for(var j=0;j<R.ny;j++) for(var i=0;i<R.nx;i++){ if(Z[j*R.nx+i]!==z) continue; var p=V(R.x0+(i+.5)*rs,R.y0+(j+.5)*rs), o=dot(p,nrm), w=dot(p,u);
+        lo=Math.min(lo,o); hi=Math.max(hi,o); ulo=Math.min(ulo,w); uhi=Math.max(uhi,w); }
+      if(!isFinite(lo)) return outL;
+      lo-=rs/2; hi+=rs/2; ulo-=rs; uhi+=rs;
+      var cnt=Math.max(1,Math.round((hi-lo)/s)), st=(lo+hi)/2-(cnt-1)*s/2, step=rs/2;
+      for(var q=0;q<cnt;q++){ var o2=st+q*s, run=null;
+        var push=function(){ if(run && run.t1-run.t0>=0.15) outL.push({a:add(mul(nrm,o2),mul(u,run.t0)),b:add(mul(nrm,o2),mul(u,run.t1)),z:z,s:s}); run=null; };
+        for(var t2=ulo;t2<=uhi+1e-9;t2+=step){ var pp=add(mul(nrm,o2),mul(u,t2)), ci=Math.floor((pp.x-R.x0)/rs), cj=Math.floor((pp.y-R.y0)/rs);
+          var inz= ci>=0&&cj>=0&&ci<R.nx&&cj<R.ny && Z[cj*R.nx+ci]===z;
+          if(inz){ if(!run) run={t0:t2}; run.t1=t2; } else push(); }
+        push();
+      }
+      return outL;
+    }
+    var lines=linesFor(0,uI,res.sep/100);
+    bands.forEach(function(B,k){ lines=lines.concat(linesFor(k+1,B.u,B.s)); res.bands.push({edge:B.edge,type:B.type,w:B.w,s:B.s}); });
+    lines.forEach(function(l){ l.L=len(sub(l.b,l.a))+l.s; l.key=dot(mul(add(l.a,l.b),0.5),nI); });
+    lines.sort(function(p,q){ return p.key-q.key || p.z-q.z; });
+    res.lines=lines; res.Lr=lines.reduce(function(t,l){ return t+l.L; },0); res.uI=uI;
+    if(!lines.length) res.msgs.push({t:"warn",x:"La estancia es demasiado pequeña para colocar tubo respetando la distancia a pared."});
+    room._uk=key; room._ur=res; return res;
+  }
+  // consecutive tube lines into k circuits of similar length
+  function ufSplit(lines,k){
+    var tot=lines.reduce(function(t,l){ return t+l.L; },0), groups=[], cur=[], acc=0, gi=1;
+    lines.forEach(function(l){ cur.push(l); acc+=l.L; if(gi<k && acc>=tot*gi/k-l.L/2){ groups.push(cur); cur=[]; gi++; } });
+    if(cur.length) groups.push(cur); return groups;
+  }
+  function ufCirc(g,col,r){
+    var inL=g.reduce(function(t,l){ return t+l.L; },0), last=g[g.length-1];
+    var ends=[toW(r,g[0].a),toW(r,g[0].b),toW(r,last.a),toW(r,last.b)], e=ends[0], d=0;
+    if(col){ d=Infinity; ends.forEach(function(p){ var dd=manh(col,p); if(dd<d){ d=dd; e=p; } }); }
+    var feed=col?2*(d+S.uf.vert):0, inst=inL+feed;
+    return {lines:g,inLen:inL,feed:feed,inst:inst,len:inst*(1+S.uf.margin/100),entry:e,col:col};
+  }
+  // which rooms touch through a wall without a staircase in between
+  function ufAdjacency(fl){
+    var adj={}, touch={}, R=fl.rooms;
+    R.forEach(function(r){ adj[r.id]=[]; touch[r.id]=false; });
+    for(var i=0;i<R.length;i++) for(var j=i+1;j<R.length;j++){
+      var ri=R[i], rj=R[j], open=false, shared=false, ni=ri.pts.length, nj=rj.pts.length;
+      for(var ea=0;ea<ni;ea++){ if(ri.bulge[ea]) continue; var A=toW(ri,ri.pts[ea]), B=toW(ri,ri.pts[(ea+1)%ni]), L1=len(sub(B,A)), u1=unit(sub(B,A)), no=outN(A,B);
+        for(var eb=0;eb<nj;eb++){ if(rj.bulge[eb]) continue; var C=toW(rj,rj.pts[eb]), D=toW(rj,rj.pts[(eb+1)%nj]), u2=unit(sub(D,C));
+          if(dot(u1,u2)>-0.99 || Math.abs(dot(sub(C,A),no))>0.2) continue;
+          var t1=dot(sub(C,A),u1), t2=dot(sub(D,A),u1), lo=Math.max(0,Math.min(t1,t2)), hi=Math.min(L1,Math.max(t1,t2));
+          if(hi-lo<0.3) continue;
+          shared=true; if((ri.marks||{})[ea]!=="escalera" && (rj.marks||{})[eb]!=="escalera") open=true; } }
+      if(shared){ touch[ri.id]=touch[rj.id]=true; }
+      if(open){ adj[ri.id].push(rj.id); adj[rj.id].push(ri.id); }
+    }
+    return {adj:adj,touch:touch};
+  }
+  function computeFloorUF(fl){
+    var C=fl.collectors, U=S.uf, unas=[];
+    C.forEach(function(c){ var ps=ufCollPose(c); c._pose=ps; if(ps){ c.x=Math.round(ps.c.x*1000)/1000; c.y=Math.round(ps.c.y*1000)/1000; } else if(c.room!=null && !roomById(c.room)) c.room=null; collStats[c.id]={n:0,pex:0,rooms:[]}; });
+    fl.rooms.forEach(function(r){ var res=ufRoom(r); res.col=null; res.circ=[]; res.circuits=0; res.pex=0; res.mang=0; res.unions=0; res.why=null; res.st=null; res.dmsgs=[];
+      res.wout=worldOutline(r); res.ctr=centroid(res.wout); results[r.id]=res; });
+    var G=ufAdjacency(fl);
+    var reach=C.map(function(c){
+      var start=c._pose?c._pose.room.id:null, seen={};
+      if(start==null){ fl.rooms.forEach(function(r){ if(start==null && pointIn(c,results[r.id].wout)) start=r.id; }); }
+      if(start==null){ fl.rooms.forEach(function(r){ seen[r.id]=1; }); return seen; }
+      var q=[start]; seen[start]=1;
+      while(q.length){ var x=q.shift(); (G.adj[x]||[]).forEach(function(y){ if(!seen[y]){ seen[y]=1; q.push(y); } }); }
+      return seen; });
+    var items=[];
+    fl.rooms.forEach(function(r){ var res=results[r.id]; if(!res.Lr) return;
+      var d=[], nn=[];
+      C.forEach(function(c,ci){ var dd=manh(c,res.ctr), av=U.maxLen-2*(dd+U.vert); d.push(dd); nn.push(reach[ci][r.id] && av>5 ? Math.ceil(res.Lr/av) : Infinity); });
+      var order=C.map(function(c,ci){ return ci; }).filter(function(ci){ return isFinite(nn[ci]); }).sort(function(a,b){ return d[a]-d[b]; });
+      items.push({r:r,d:d,nn:nn,order:order,dmin:order.length?Math.min.apply(null,order.map(function(ci){ return d[ci]*nn[ci]; })):0});
+    });
+    items.sort(function(a,b){ return a.order.length-b.order.length || a.dmin-b.dmin; });
+    var m=items.length, lb=new Array(m+1); lb[m]=0; for(var q2=m-1;q2>=0;q2--) lb[q2]=lb[q2+1]+items[q2].dmin;
+    var capLeft=C.map(function(c){ return c.cap||0; }), cur=new Array(m), best={a:-1,cost:Infinity,map:null}, nodes=0;
+    function rec(i,a,cost){
+      if(++nodes>300000) return;
+      if(a+(m-i)<best.a) return;
+      if(a+(m-i)===best.a && cost+lb[i]>=best.cost) return;
+      if(i===m){ if(a>best.a||(a===best.a&&cost<best.cost)) best={a:a,cost:cost,map:cur.slice()}; return; }
+      var it=items[i];
+      for(var z=0;z<it.order.length;z++){ var ci=it.order[z], k=it.nn[ci];
+        if(capLeft[ci]>=k){ capLeft[ci]-=k; cur[i]=ci; rec(i+1,a+1,cost+it.d[ci]*k); capLeft[ci]+=k; } }
+      cur[i]=-1; rec(i+1,a,cost);
+    }
+    if(m && C.length) rec(0,0,0);
+    items.forEach(function(it,i){
+      var r=it.r, res=results[r.id], ci=best.map?best.map[i]:-1, col=ci!=null&&ci>=0?C[ci]:null;
+      var k=col?it.nn[ci]:Math.max(1,Math.ceil(res.Lr/U.maxLen)), circs, guard=0;
+      while(true){ circs=ufSplit(res.lines,k).map(function(g){ return ufCirc(g,col,r); });
+        if(!col || guard++>40 || k>=res.lines.length || circs.every(function(c){ return c.inst<=U.maxLen+1e-6; })) break; k++; }
+      res.circ=circs; res.circuits=circs.length; res.col=col; res.unions=2*circs.length;
+      res.pex=circs.reduce(function(t,c){ return t+c.len; },0);
+      if(circs.some(function(c){ return c.inst>U.maxLen+1e-6; })) res.dmsgs.push({t:"warn",x:"Algún circuito supera los "+fmt(U.maxLen)+" m: acerca el colector o reduce la superficie con tubo."});
+      if(col){ var st=collStats[col.id]; st.n+=res.circuits; st.pex+=res.pex; st.rooms.push({room:r,n:res.circuits,pex:res.pex,d:manh(col,res.ctr)}); }
+      else { var reachable=C.some(function(c,cj){ return reach[cj][r.id]; }), nearOk=it.order.length>0;
+        unas.push({room:r,n:res.circuits,res:res,floor:fl,reachable:reachable,nearOk:nearOk,touch:G.touch[r.id]}); }
+    });
+    C.forEach(function(c){ var st=collStats[c.id]; st.rooms.sort(function(a,b){ return a.d-b.d; });
+      if(st.n>(c.cap||0)) fl.rooms.forEach(function(r){ var res=results[r.id]; if(res.col===c) res.dmsgs.push({t:"warn",x:esc(c.name)+" necesita "+st.n+" salidas y tiene "+(c.cap||0)+"."}); }); });
+    var maxCap=C.reduce(function(a,c){ return Math.max(a,c.cap||0); },0), freeTot=C.reduce(function(a,c){ return a+Math.max(0,(c.cap||0)-collStats[c.id].n); },0);
+    unas.forEach(function(u){
+      u.why = !C.length ? "no hay ningún colector en esta planta" :
+        !u.reachable ? (u.touch ? "una escalera la separa de los colectores: necesita su propio colector" : "no comparte pared con las demás estancias: pégala o ponle su propio colector") :
+        !u.nearOk ? "está demasiado lejos del colector para no pasar de "+fmt(U.maxLen)+" m por circuito" :
+        u.n>maxCap ? "necesita "+u.n+" salidas y ningún colector tiene tantas" :
+        freeTot<u.n ? "faltan salidas: solo quedan "+freeTot+" libres" :
+        "quedan "+freeTot+" salidas libres, pero repartidas: ningún colector alcanzable tiene "+u.n+" libres";
+      u.res.why=u.why; allUnassigned.push(u);
+    });
+  }
+  // ---- drawing ----
+  function ufTubesSvg(r,res,tf,byCircuit,labels){
+    var o="", groups=res.circ.length?res.circ:[{lines:res.lines}];
+    groups.forEach(function(c,ci){ var colr=byCircuit?CC[ci%CC.length]:null, sx=0, sy=0;
+      c.lines.forEach(function(l,j){ var a=tf(l.a), b=tf(l.b); sx+=a.x+b.x; sy+=a.y+b.y;
+        o+='<line class="p-tube '+(j%2?'ret':'ida')+'"'+(colr?' style="stroke:'+colr+'"':'')+' x1="'+f3(a.x)+'" y1="'+f3(a.y)+'" x2="'+f3(b.x)+'" y2="'+f3(b.y)+'"/>'; });
+      if(labels && c.lines.length){ var k=c.lines.length*2, cx=sx/k, cy=sy/k;
+        o+='<rect class="p-tag" x="'+f3(cx-0.22)+'" y="'+f3(cy-0.15)+'" width="0.44" height="0.26" rx="0.05"/><text class="p-ctext uf" x="'+f3(cx)+'" y="'+f3(cy+0.05)+'" text-anchor="middle">C'+(ci+1)+'</text>'; }
+    });
+    return o;
+  }
+  function ufMarksSvg(r,tf){
+    var o="", n=r.pts.length, mk=r.marks||{};
+    for(var e=0;e<n;e++){ var t=mk[e]; if(!t) continue;
+      var pts=ptsStr(edgeSamples(r.pts[e],r.pts[(e+1)%n],r.bulge[e]||0,16).map(tf));
+      if(t==="ventana") o+='<polyline class="p-mk win-o" points="'+pts+'"/><polyline class="p-mk win-i" points="'+pts+'"/>';
+      else o+='<polyline class="p-mk '+(t==="escalera"?'esc':'ext')+'" points="'+pts+'"><title>'+MARKS[t]+'</title></polyline>';
+    }
+    return o;
+  }
+  function ufCollSvg(c){
+    var st=collStats[c.id]||{n:0}, ps=c._pose, poly, tp, h;
+    if(ps){ var u=ps.u, nn=ps.n, b=ps.base; h=ps.CL/2;
+      poly=[add(b,mul(u,-h)),add(b,mul(u,h)),add(add(b,mul(u,h)),mul(nn,COLL_D)),add(add(b,mul(u,-h)),mul(nn,COLL_D))]; tp=add(ps.c,mul(nn,0.3)); }
+    else { h=collLen(c)/2; poly=[V(c.x-h,c.y-COLL_D/2),V(c.x+h,c.y-COLL_D/2),V(c.x+h,c.y+COLL_D/2),V(c.x-h,c.y+COLL_D/2)]; tp=V(c.x,c.y+0.32); }
+    var o='<g class="coll-g" data-coll="'+c.id+'"><circle cx="'+f3(c.x)+'" cy="'+f3(c.y)+'" r="'+f3(Math.max(0.3,h))+'" style="fill:transparent"/><polygon class="p-coll" points="'+ptsStr(poly)+'"><title>'+esc(c.name)+' · arrástralo a otra pared</title></polygon></g>';
+    o+='<text class="p-colltext" x="'+f3(tp.x)+'" y="'+f3(tp.y+0.05)+'" text-anchor="middle">'+esc(c.name)+' · '+st.n+'/'+(c.cap||0)+'</text>';
+    return o;
+  }
+  function ufFeedSvg(res){
+    var o="";
+    res.circ.forEach(function(c){ if(!c.col) return; var a=c.col, e=c.entry, d='M'+f3(a.x)+' '+f3(a.y)+' H'+f3(e.x)+' V'+f3(e.y);
+      o+='<path class="p-feed ida" transform="translate(-0.025 -0.025)" d="'+d+'"/><path class="p-feed ret" transform="translate(0.025 0.025)" d="'+d+'"/>'; });
+    return o;
+  }
+  // wall under the pointer while marking
+  function ufHitEdge(q){
+    var tol=Math.max(0.2,((S.lastVB&&S.lastVB[2])||12)/70), best=null;
+    S.rooms.forEach(function(r){ var n=r.pts.length, W=results[r.id].wout, ins=pointIn(q,W);
+      for(var e=0;e<n;e++){ var pts=edgeSamples(r.pts[e],r.pts[(e+1)%n],r.bulge[e]||0,16).map(function(p){ return toW(r,p); }), d=polyDist(q,pts)-(ins?0.03:0);
+        if(d<tol && (!best||d<best.d)) best={d:d,room:r,edge:e}; } });
+    return best;
+  }
+
   // ---------------- plan rendering ----------------
   function rectPoly(r,x,y,w,h){ return [toW(r,V(x,y)),toW(r,V(x+w,y)),toW(r,V(x+w,y+h)),toW(r,V(x,y+h))]; }
   function roomBody(r,res,byCircuit){
     var o='<path class="p-room'+(r.active?'':' off')+'" d="'+pathD(res.wout)+'"/>';
+    if(S.mode==="suelo") return o+ufTubesSvg(r,res,function(p){ return toW(r,p); },byCircuit,false);
     res.strips.forEach(function(s){ o+='<polygon class="p-strip" points="'+ptsStr(rectPoly(r,s.x,s.y,s.w,s.h))+'"/>'; });
     res.panels.forEach(function(p){
       var fill=byCircuit?' style="fill:'+CC[p.circuit%CC.length]+'"':'';
@@ -1267,14 +1530,20 @@
     rooms.forEach(function(r){ o+='<g class="room-g" data-room="'+r.id+'">'+roomBody(r,results[r.id],S.colorByCircuit)+'</g>'; });
     rooms.forEach(function(r){
       var res=results[r.id], c=res.ctr;
-      var sub=r.active ? fmt(res.area,1)+" m² · "+res.circuits+" circ." : fmt(res.area,1)+" m² · sin paneles";
+      var sub=r.active ? fmt(res.area,1)+" m² · "+res.circuits+" circ." : fmt(res.area,1)+" m² · "+(S.mode==="suelo"?"sin suelo radiante":"sin paneles");
       var tw=Math.max(r.name.length*0.14, sub.length*0.105)+0.2;
       o+='<rect class="p-tag" x="'+f3(c.x-tw/2)+'" y="'+f3(c.y-0.34)+'" width="'+f3(tw)+'" height="0.56" rx="0.06"/>';
       o+='<text class="p-label" x="'+f3(c.x)+'" y="'+f3(c.y-0.08)+'" text-anchor="middle">'+esc(r.name)+'</text>';
       o+='<text class="p-sub" x="'+f3(c.x)+'" y="'+f3(c.y+0.14)+'" text-anchor="middle">'+sub+'</text>';
     });
     var pills="";
-    if(S.showPipes){
+    if(S.mode==="suelo"){
+      rooms.forEach(function(r){ o+=ufMarksSvg(r,function(p){ return toW(r,p); }); });
+      if(S.markHover && !forExport){ var hr=S.markHover.room, he=S.markHover.edge, hn=hr.pts.length;
+        o+='<polyline class="p-mk hov" points="'+ptsStr(edgeSamples(hr.pts[he],hr.pts[(he+1)%hn],hr.bulge[he]||0,16).map(function(p){ return toW(hr,p); }))+'"/>'; }
+      if(S.showPipes) rooms.forEach(function(r){ o+=ufFeedSvg(results[r.id]); });
+    }
+    else if(S.showPipes){
       rooms.forEach(function(r){
         var rt=routeRoom(r,results[r.id]); if(!rt) return;
         o+=pipeSvg(rt);
@@ -1284,6 +1553,7 @@
     }
     allUnassigned.forEach(function(u){ if(u.floor!==fl) return; o+='<path class="p-unas" d="'+pathD(results[u.room.id].wout)+'"/>'; });
     fl.collectors.forEach(function(c){
+      if(S.mode==="suelo"){ o+=ufCollSvg(c); return; }
       var st=collStats[c.id]||{n:0};
       o+='<g class="coll-g" data-coll="'+c.id+'"><rect x="'+f3(c.x-0.45)+'" y="'+f3(c.y-0.25)+'" width="0.9" height="0.5" style="fill:transparent"/><rect class="p-coll" x="'+f3(c.x-0.28)+'" y="'+f3(c.y-0.1)+'" width="0.56" height="0.2" rx="0.03"><title>'+esc(c.name)+' · arrastra para mover</title></rect></g>';
       o+='<text class="p-colltext" x="'+f3(c.x)+'" y="'+f3(c.y+0.33)+'" text-anchor="middle">'+esc(c.name)+' · '+st.n+'/'+(c.cap||0)+'</text>';
@@ -1306,6 +1576,7 @@
     var wrap=$("planWrap");
     $("zoomCtl").hidden=!S.rooms.length;
     wrap.classList.toggle("picking", !!(S.placing && S.placing.step==="target"));
+    wrap.classList.toggle("marking", !!S.markTool);
     if(!S.rooms.length){
       var anyRooms=allRooms().length>0;
       wrap.innerHTML='<div class="empty-cta">'+(anyRooms||S.floors.length>1
@@ -1331,6 +1602,7 @@
     var span=Math.max(mxx-mnx,mxy-mny,1), fs=Math.max(0.16,Math.min(0.3,span/28)), pad=fs*5;
     var o='<svg viewBox="'+[mnx-pad,mny-pad,mxx-mnx+2*pad,mxy-mny+2*pad].map(f3).join(" ")+'" xmlns="http://www.w3.org/2000/svg"'+(S.showStruct?' class="struct"':'')+' role="img" aria-label="Detalle de '+esc(room.name)+'">';
     o+='<path class="p-room'+(room.active?'':' off')+'" d="'+pathD(out)+'"/>';
+    if(S.mode==="suelo"){ var idf=function(p){ return p; }; o+=ufTubesSvg(room,res,idf,true,true)+ufMarksSvg(room,idf)+sideLabelsSvg(room,fs)+'</svg>'; return o; }
     res.rects.forEach(function(q){ o+='<rect class="p-usable" x="'+f3(q.x)+'" y="'+f3(q.y)+'" width="'+f3(q.w)+'" height="'+f3(q.h)+'"/>'; });
     res.strips.forEach(function(s){ o+='<rect class="p-strip" x="'+f3(s.x)+'" y="'+f3(s.y)+'" width="'+f3(s.w)+'" height="'+f3(s.h)+'"/>'; });
     res.panels.forEach(function(p){
@@ -1351,6 +1623,7 @@
     var res=results[room.id];
     box.innerHTML=renderDetailSvg(room,res);
     var h="";
+    if(S.mode==="suelo"){ out.innerHTML=ufDetailHtml(room,res); return; }
     if(!room.active) h+='<div class="msg ok">Estancia marcada sin paneles. No suma circuitos.</div>';
     res.msgs.forEach(function(m){ h+='<div class="msg '+m.t+'">'+m.x+'</div>'; });
     h+='<div class="stats"><div class="stat"><div class="k">Superficie</div><div class="v">'+fmt(res.area,2)+'</div><div class="s">m²</div></div>'+
@@ -1359,7 +1632,7 @@
       '<div class="stat"><div class="k">Circuitos</div><div class="v">'+res.circuits+'</div><div class="s">máx. 2 paneles</div></div></div>';
     res.groups.forEach(function(g,i){ var k=g.choice; if(!k) return;
       var lt=k.so==="v"?"franja entre columnas":k.so==="h"?"franja entre filas":"sin franja central";
-      h+='<p class="layout-line">'+(res.groups.length>1?'Zona '+(i+1)+': ':'Distribución: ')+'<b>'+k.c+' × '+k.r+' '+esc(k.v.name)+'</b>'+(k.v.rot?' (girados)':'')+', bloque de '+fmt(k.bw*100)+' × '+fmt(k.bh*100)+' cm centrado en la zona libre; '+lt+'.</p>'; });
+      h+='<p class="layout-line">'+(res.groups.length>1?'Zona '+(i+1)+': ':'Distribución: ')+(k.mp && k.mp.n!==k.c*k.r ? '<b>'+Object.keys(k.mp.tc).map(function(t){ return k.mp.tc[t]+' paneles de '+t.replace('x','×'); }).join(' + ')+'</b>' : '<b>'+k.c+' × '+k.r+' '+esc(k.v.name)+'</b>'+(k.v.rot?' (girados)':''))+', bloque de '+fmt(k.bw*100)+' × '+fmt(k.bh*100)+' cm centrado en la zona libre; '+lt+'.</p>'; });
     var il=[], nm={puntos:"puntos de luz",tira:"tira LED"};
     if(room.lc&&room.lc!=="ninguna") il.push("centro con "+nm[room.lc]); if(room.lp&&room.lp!=="ninguna") il.push("perímetro con "+nm[room.lp]);
     if(il.length) h+='<p class="layout-line">Iluminación: '+il.join(" y ")+' · <b>'+res.lights.length+' puntos</b>'+(res.leds.length?' · <b>'+fmt(res.ledLen,2)+' m de tira LED</b>':'')+'.</p>';
@@ -1368,14 +1641,31 @@
     if(res.circ.length) h+='<p class="layout-line">Tubería: <b>'+fmt(res.pex,1)+' m de PEX</b> · '+res.mang+' manguito'+(res.mang===1?'':'s')+' · '+res.unions+' conexiones'+(res.col?' · va a <b>'+esc(res.col.name)+'</b>':' · <span style="color:var(--warn)">sin colector: '+esc(res.why||'')+'</span>')+'.</p>';
     out.innerHTML=h;
   }
+  function ufDetailHtml(room,res){
+    var U=S.uf, h="";
+    if(!room.active) h+='<div class="msg ok">Estancia sin suelo radiante. No suma circuitos.</div>';
+    res.msgs.concat(res.dmsgs||[]).forEach(function(m){ h+='<div class="msg '+m.t+'">'+m.x+'</div>'; });
+    var inT=res.circ.reduce(function(t,c){ return t+c.inLen; },0);
+    h+='<div class="stats"><div class="stat"><div class="k">Superficie</div><div class="v">'+fmt(res.area,2)+'</div><div class="s">m²</div></div>'+
+      '<div class="stat"><div class="k">Separación</div><div class="v">'+res.sep+'</div><div class="s">cm'+(res.bands.length?' · franjas a '+res.bands.map(function(b){ return Math.round(b.s*100); }).filter(function(v,i,a){ return a.indexOf(v)===i; }).join("/")+' cm':'')+'</div></div>'+
+      '<div class="stat"><div class="k">Circuitos</div><div class="v">'+res.circuits+'</div><div class="s">máx. '+fmt(U.maxLen)+' m</div></div>'+
+      '<div class="stat"><div class="k">Tubo</div><div class="v">'+fmt(res.pex,0)+'</div><div class="s">m con margen</div></div></div>';
+    if(res.circ.length) h+='<p class="layout-line">'+res.circ.map(function(c,i){ var bad=c.inst>U.maxLen+1e-6;
+      return '<b>C'+(i+1)+'</b>: '+(bad?'<span style="color:var(--warn)">':'')+fmt(c.inst,1)+' m'+(bad?'</span>':'')+(c.col?' ('+fmt(c.inLen,1)+' en la estancia + '+fmt(c.feed,1)+' de ida y vuelta)':''); }).join(' · ')+'.</p>';
+    var mk=room.marks||{}, ml=Object.keys(mk).sort().map(function(e){ return LETTER(+e)+': '+MARKS[mk[e]].toLowerCase(); });
+    if(ml.length) h+='<p class="layout-line">Muros marcados: '+ml.join(' · ')+'.'+(res.bandArea?' Franja con el tubo más junto: <b>'+fmt(res.bandArea,1)+' m²</b>.':'')+'</p>';
+    if(res.circ.length) h+='<p class="layout-line">'+(res.col?'Va a <b>'+esc(res.col.name)+'</b>.':'<span style="color:var(--warn)">Sin colector: '+esc(res.why||'')+'.</span>')+'</p>';
+    return h;
+  }
   function buildEditor(){
     var card=$("detailCard"), room=S.rooms.filter(function(r){return r.id===S.sel;})[0];
     if(!room){ card.innerHTML='<p class="muted" style="margin:0;">'+(S.rooms.length?'Pulsa una estancia del plano para ver su detalle y editarla.':'Aquí verás el detalle de cada estancia.')+'</p>'; return; }
     var n=room.pts.length, rows="";
     for(var i=0;i<n;i++){
       var a=room.pts[i], b=room.pts[(i+1)%n], h=room.bulge[i]||0;
-      rows+= h ? '<tr><td><span class="letter">'+LETTER(i)+'</span></td><td class="muted">Curvo · cuerda '+fmt(len(sub(b,a)),2)+' m</td><td><input type="number" step="1" data-flecha="'+i+'" value="'+Math.round(curveDepth(a,b,h)*100)+'" aria-label="Flecha del lado '+LETTER(i)+' en cm"></td><td class="muted">cm flecha</td></tr>'
-               : '<tr><td><span class="letter">'+LETTER(i)+'</span></td><td class="muted">Recto</td><td><input type="number" step="0.01" min="0.1" data-side="'+i+'" value="'+(Math.round(len(sub(b,a))*100)/100)+'" aria-label="Longitud del lado '+LETTER(i)+' en metros"></td><td class="muted">m</td></tr>';
+      var mkc= S.mode==="suelo" ? '<td><select class="mk-sel" data-mk="'+i+'" aria-label="Tipo de muro del lado '+LETTER(i)+'"><option value="">Normal</option><option value="ventana">Ventana</option><option value="exterior">Exterior</option><option value="escalera">Escalera</option></select></td>' : '';
+      rows+= h ? '<tr><td><span class="letter">'+LETTER(i)+'</span></td><td class="muted">Curvo · cuerda '+fmt(len(sub(b,a)),2)+' m</td><td><input type="number" step="1" data-flecha="'+i+'" value="'+Math.round(curveDepth(a,b,h)*100)+'" aria-label="Flecha del lado '+LETTER(i)+' en cm"></td><td class="muted">cm flecha</td>'+mkc+'</tr>'
+               : '<tr><td><span class="letter">'+LETTER(i)+'</span></td><td class="muted">Recto</td><td><input type="number" step="0.01" min="0.1" data-side="'+i+'" value="'+(Math.round(len(sub(b,a))*100)/100)+'" aria-label="Longitud del lado '+LETTER(i)+' en metros"></td><td class="muted">m</td>'+mkc+'</tr>';
     }
     var place="";
     if(room.attach){ var T=roomById(room.attach.room);
@@ -1385,20 +1675,28 @@
     card.innerHTML='<div class="card-head"><h2 id="detailTitle"></h2><button class="btn danger small" id="delRoom">Eliminar estancia</button></div>'+
       '<div class="detail"><div>'+
         '<div class="field"><label class="lbl" for="rName">Nombre</label><input type="text" id="rName"></div>'+
-        '<label class="check"><input type="checkbox" id="rActive"> Instalar paneles en esta estancia</label>'+
-        '<span class="section-title" style="margin:2px 0 6px;">Iluminación</span><div class="grid2"><div class="field"><label class="lbl" for="rLc">Centro (entre paneles)</label><select id="rLc"><option value="ninguna">Sin luz</option><option value="puntos">Puntos de luz</option><option value="tira">Tira LED</option></select></div>'+
+        '<label class="check"><input type="checkbox" id="rActive"> '+(S.mode==="suelo"?'Instalar suelo radiante en esta estancia':'Instalar paneles en esta estancia')+'</label>'+
+        (S.mode==="suelo" ? '<div class="field"><label class="lbl" for="rSep">Separación del tubo</label><select id="rSep"><option value="0">General ('+clampSep(S.uf.sep)+' cm)</option>'+[5,10,15,20,25,30].map(function(v){ return '<option value="'+v+'">'+v+' cm</option>'; }).join("")+'</select></div>' : '')+
+        (S.mode==="suelo"?'':'<span class="section-title" style="margin:2px 0 6px;">Iluminación</span><div class="grid2"><div class="field"><label class="lbl" for="rLc">Centro (entre paneles)</label><select id="rLc"><option value="ninguna">Sin luz</option><option value="puntos">Puntos de luz</option><option value="tira">Tira LED</option></select></div>'+
         '<div class="field"><label class="lbl" for="rLp">Perímetro (junto a paredes)</label><select id="rLp"><option value="ninguna">Sin luz</option><option value="puntos">Puntos de luz</option><option value="tira">Tira LED</option></select></div></div>'+
         '<label class="check"><input type="checkbox" id="rOver"> Rango de cobertura propio</label>'+
         '<div class="grid2" id="overFields"><div class="field"><label class="lbl" for="rMin">% mínimo</label><input type="number" id="rMin" min="0" max="100"></div><div class="field"><label class="lbl" for="rMax">% máximo</label><input type="number" id="rMax" min="0" max="100"></div></div>'+
-        '<span class="section-title" style="margin:6px 0 6px;">Estructura de techo</span><div class="btn-row" style="margin-bottom:10px;"><button class="btn ghost small" id="rRotate">Rotar estructura</button><span class="note" style="margin:0;" id="rRotInfo"></span></div>'+
+        '<span class="section-title" style="margin:6px 0 6px;">Estructura de techo</span><div class="btn-row" style="margin-bottom:10px;"><button class="btn ghost small" id="rRotate">Rotar estructura</button><span class="note" style="margin:0;" id="rRotInfo"></span></div>')+
         '<span class="section-title" style="margin:6px 0 6px;">Lados</span><table class="sides"><tbody>'+rows+'</tbody></table>'+
         '<div id="sideMsg"></div><p class="note">Al cambiar un lado, la forma se recalcula para seguir cerrada y los lados contiguos se ajustan.</p>'+place+
       '</div><div><div class="detail-plan" id="detailSvg"></div><div id="detailOut"></div></div></div>';
     $("detailTitle").textContent=room.name;
-    $("rName").value=room.name; $("rActive").checked=room.active; $("rOver").checked=room.override;
-    $("rMin").value=room.minPct; $("rMax").value=room.maxPct; $("overFields").hidden=!room.override; 
+    $("rName").value=room.name; $("rActive").checked=room.active;
     $("rName").addEventListener("input",function(e){ room.name=e.target.value; $("detailTitle").textContent=room.name; update(false); });
     $("rActive").addEventListener("change",function(e){ room.active=e.target.checked; update(false); });
+    bindSideCommon(card,room);
+    if(S.mode==="suelo"){
+      $("rSep").value=String(room.sep||0); $("rSep").addEventListener("change",function(e){ room.sep=+e.target.value||null; update(false); });
+      card.querySelectorAll("[data-mk]").forEach(function(sl){ var i=+sl.getAttribute("data-mk"); sl.value=(room.marks||{})[i]||"";
+        sl.addEventListener("change",function(){ room.marks=room.marks||{}; if(sl.value) room.marks[i]=sl.value; else delete room.marks[i]; update(false); }); });
+      return;
+    }
+    $("rOver").checked=room.override; $("rMin").value=room.minPct; $("rMax").value=room.maxPct; $("overFields").hidden=!room.override;
     $("rRotInfo").textContent=room.structRot?"Secundarios cruzados a los paneles":"Secundarios a lo largo de los paneles";
     $("rRotate").addEventListener("click",function(){ room.structRot=!room.structRot; $("rRotInfo").textContent=room.structRot?"Secundarios cruzados a los paneles":"Secundarios a lo largo de los paneles"; if(!S.showStruct){ S.showStruct=true; $("showStruct").checked=true; syncStructLegend(); } update(false); });
     $("rLc").value=room.lc||"ninguna"; $("rLp").value=room.lp||"ninguna";
@@ -1406,6 +1704,8 @@
     $("rLp").addEventListener("change",function(e){ room.lp=e.target.value; update(false); });
     $("rOver").addEventListener("change",function(e){ room.override=e.target.checked; if(room.override){ room.minPct=S.gMin; room.maxPct=S.gMax; $("rMin").value=room.minPct; $("rMax").value=room.maxPct; } $("overFields").hidden=!room.override; update(false); });
     [["rMin","minPct"],["rMax","maxPct"]].forEach(function(p){ $(p[0]).addEventListener("input",function(e){ var v=parseFloat(e.target.value); if(isFinite(v)){ room[p[1]]=v; update(false);} }); });
+  }
+  function bindSideCommon(card,room){
     card.querySelectorAll("[data-side]").forEach(function(inp){ inp.addEventListener("change",function(){ editSide(room,parseInt(inp.getAttribute("data-side"),10),parseFloat(String(inp.value).replace(",","."))); }); });
     card.querySelectorAll("[data-flecha]").forEach(function(inp){ inp.addEventListener("change",function(){ var i=parseInt(inp.getAttribute("data-flecha"),10), v=parseFloat(String(inp.value).replace(",",".")), cv=room.bulge[i], c=len(sub(room.pts[(i+1)%room.pts.length],room.pts[i])); if(isFinite(v)&&Math.abs(v)>=1&&cv&&c>0){ room.bulge[i]={u:cv.u, v:v/100/c}; update(true); } }); });
     card.querySelectorAll("[data-align]").forEach(function(b){ b.addEventListener("click",function(){ var g=attachGeom(room), a=b.getAttribute("data-align"); room.attach.off= a==="start"?0 : a==="end"?Math.round((g.ab-g.cd)*100)/100 : Math.round((g.ab-g.cd)/2*100)/100; update(false); }); });
@@ -1430,8 +1730,54 @@
 
   // ---------------- tables & report ----------------
   function roomTypeCounts(res){ var t={}; res.panels.forEach(function(p){ var dims=fmt(p.tw)+"×"+fmt(p.th); var k=p.name.indexOf(dims)>=0?p.name:p.name+" ("+dims+")"; t[k]=(t[k]||0)+1; }); return Object.keys(t).map(function(k){ return t[k]+"× "+k; }).join(", "); }
-  var reportRows=[];
+  var reportRows=[], HEAD_T={rooms:null,coll:null};
+  function renderTablesUF(){
+    var U=S.uf, tb="", tot={area:0,c:0,inL:0,pex:0,actA:0,per:0}, multi=S.floors.length>1;
+    $("roomsHead").innerHTML='<tr><th>Estancia</th><th class="num">m²</th><th class="num">Sep. cm</th><th class="num">Circuitos</th><th class="num">Tubo estancia m</th><th class="num">Tubo total m</th><th>Colector</th></tr>';
+    $("collHead").innerHTML='<tr><th>Colector</th><th>Estancias asignadas</th><th class="num">Salidas</th><th class="num">Usadas</th><th class="num">Libres</th><th class="num">Tubo m</th></tr>';
+    S.floors.forEach(function(fl){
+      if(multi && fl.rooms.length) tb+='<tr class="floor-row"><td colspan="7">'+esc(fl.name)+'</td></tr>';
+      fl.rooms.forEach(function(r){ var res=results[r.id], inL=res.circ.reduce(function(t,c){ return t+c.inLen; },0);
+        tot.area+=res.area; tot.c+=res.circuits; tot.inL+=inL; tot.pex+=res.pex; if(r.active){ tot.actA+=res.area; tot.per+=res.perim; }
+        var warn=res.msgs.concat(res.dmsgs||[]).some(function(m){ return m.t==="warn"; })||(res.circuits&&!res.col);
+        tb+='<tr class="clickable'+(r.id===S.sel?' sel':'')+'" data-room="'+r.id+'"><td>'+esc(r.name)+(warn?' <span style="color:var(--warn)" title="Revisar">●</span>':'')+'</td><td class="num">'+fmt(res.area,2)+'</td><td class="num">'+(r.active?res.sep:'—')+'</td><td class="num"><b>'+res.circuits+'</b></td><td class="num">'+(inL?fmt(inL,1):'—')+'</td><td class="num">'+(res.pex?fmt(res.pex,1):'—')+'</td><td>'+(res.col?esc(res.col.name):(res.circuits?'<span style="color:var(--warn)">Sin asignar</span>':'—'))+'</td></tr>'; });
+    });
+    $("roomsBody").innerHTML=tb||'<tr><td colspan="7" class="muted">Sin estancias</td></tr>';
+    $("roomsFoot").innerHTML='<tr><td>Total</td><td class="num">'+fmt(tot.area,2)+'</td><td></td><td class="num">'+tot.c+'</td><td class="num">'+fmt(tot.inL,1)+'</td><td class="num">'+fmt(tot.pex,1)+'</td><td></td></tr>';
+    var cb=allColls().map(function(c){ var st=collStats[c.id]||{n:0,pex:0,rooms:[]}, free=(c.cap||0)-st.n, fl=floorOfColl(c);
+      return '<tr><td><b>'+esc(c.name)+'</b>'+(multi&&fl?'<span class="kit-note">'+esc(fl.name)+'</span>':'')+(c._pose?'':'<span class="kit-note" style="color:var(--warn)">Sin pared: arrástralo a una pared</span>')+'</td><td class="assign-list">'+(st.rooms.map(function(x){ return '<span class="tag">'+esc(x.room.name)+' · '+x.n+'</span>'; }).join("")||'<span class="muted">—</span>')+'</td><td class="num">'+(c.cap||0)+'</td><td class="num"><b>'+st.n+'</b></td><td class="num">'+(free===0?'<span class="pill ok">0</span>':'<span class="pill warn">'+free+'</span>')+'</td><td class="num">'+fmt(st.pex,1)+'</td></tr>'; }).join("");
+    allUnassigned.forEach(function(u){ cb+='<tr><td style="color:var(--warn)"><b>Sin asignar</b>'+(multi?'<span class="kit-note">'+esc(u.floor.name)+'</span>':'')+'</td><td class="assign-list"><span class="tag" style="color:var(--warn)">'+esc(u.room.name)+' · '+u.n+'</span> <span class="kit-note" style="color:var(--warn)">'+esc(u.why)+'</span></td><td></td><td class="num" style="color:var(--warn)">'+u.n+'</td><td></td><td></td></tr>'; });
+    $("collBody").innerHTML=cb||'<tr><td colspan="6" class="muted">Arrastra un colector a una pared del plano para repartir los circuitos.</td></tr>';
+    var capTot=S.collectors.reduce(function(a,c){ return a+(c.cap||0); },0), floorC=0;
+    S.rooms.forEach(function(r){ floorC+=results[r.id].circuits; });
+    $("capSummary").innerHTML=(multi?esc(curFloor().name)+' · ':'')+'Salidas: <b>'+capTot+'</b> · circuitos: <b>'+floorC+'</b>'+(unassigned.length?' · <span style="color:var(--warn)">'+unassigned.length+' estancia'+(unassigned.length>1?'s':'')+' sin colector</span>':'');
+    var rc="";
+    allColls().forEach(function(c){ var st=collStats[c.id]||{n:0,pex:0,rooms:[]}, fl=floorOfColl(c);
+      st.rooms.forEach(function(x,i){ rc+='<tr><td>'+(i===0?'<b>'+esc(c.name)+'</b>'+(multi&&fl?' · '+esc(fl.name):'')+' <span class="muted">('+st.n+'/'+(c.cap||0)+' salidas)</span>':'')+'</td><td>'+esc(x.room.name)+'</td><td class="num">'+x.n+'</td><td class="num">'+fmt(x.pex,1)+'</td></tr>'; });
+      if(!st.rooms.length) rc+='<tr><td><b>'+esc(c.name)+'</b></td><td class="muted">Sin estancias</td><td class="num">0</td><td class="num">0</td></tr>'; });
+    allUnassigned.forEach(function(u){ rc+='<tr><td style="color:var(--warn)"><b>Sin asignar</b></td><td>'+esc(u.room.name)+'</td><td class="num">'+u.n+'</td><td></td></tr>'; });
+    $("reportColl").innerHTML=rc||'<tr><td colspan="4" class="muted">Sin colectores</td></tr>';
+    var AR=allRooms(), active=AR.filter(function(r){ return r.active; }).length;
+    $("projTitle").textContent=(S.title||"Proyecto")+(tot.area?" · "+fmt(tot.area,0)+" m²":"");
+    $("chips").innerHTML=(multi?'<span class="chip">Plantas <b>'+S.floors.length+'</b></span>':'')+'<span class="chip">Estancias <b>'+active+'/'+AR.length+'</b></span><span class="chip">Circuitos <b>'+tot.c+'</b></span><span class="chip">Colectores <b>'+allColls().length+'</b>'+(allUnassigned.length?' <span class="pill warn">'+allUnassigned.length+' sin asignar</span>':'')+'</span><span class="chip">Tubo <b>'+fmt(Math.ceil(tot.pex))+'</b> m</span>';
+    reportRows=[];
+    var pd=String(U.plate).split("x"), pa=(parseFloat(pd[0])||1.2)*(parseFloat(pd[1])||0.8), mg=1+U.margin/100;
+    if(tot.pex) reportRows.push({key:"uf_tubo",label:"Tubo PEX 16×2 mm con barrera antioxígeno",note:fmt(tot.inL,1)+" m en estancias + ida y vuelta a colectores, con "+fmt(U.margin)+"% de margen",qty:Math.ceil(tot.pex),unit:"m"});
+    if(tot.actA) reportRows.push({key:"uf_plancha",label:"Plancha aislante de tetones "+(PLATES[U.plate]||U.plate),note:fmt(tot.actA,1)+" m² de suelo con "+fmt(U.margin)+"% de recortes",qty:Math.ceil(tot.actA/pa*mg),unit:"ud."});
+    if(tot.per) reportRows.push({key:"uf_banda",label:"Banda perimetral",note:"Perímetro de las estancias con suelo radiante",qty:Math.ceil(tot.per*mg),unit:"m"});
+    var bySize={}; allColls().forEach(function(c){ var k=c.cap||0; bySize[k]=(bySize[k]||0)+1; });
+    Object.keys(bySize).map(Number).sort(function(a,b){ return a-b; }).forEach(function(k){ reportRows.push({key:"uf_coll_"+k,label:"Colector de "+k+" salidas",note:"Ida y retorno, con caudalímetros y detentores",qty:bySize[k],unit:"ud."}); });
+    if(allColls().length) reportRows.push({key:"uf_caja",label:"Caja o armario de colector",note:"Uno por colector",qty:allColls().length,unit:"ud."});
+    if(tot.c){ reportRows.push({key:"uf_euro",label:"Racor eurocono 16×2",note:"2 por circuito (ida y retorno)",qty:tot.c*2,unit:"ud."});
+      reportRows.push({key:"uf_curva",label:"Curva guía de 90° para tubo",note:"2 por circuito, en la subida al colector",qty:tot.c*2,unit:"ud."}); }
+    $("reportBody").innerHTML=reportRows.map(function(row){ var pv=S.prices[row.key];
+      return '<tr><td>'+esc(row.label)+'<span class="kit-note">'+esc(row.note)+'</span></td><td class="num">'+fmt(row.qty,row.qty%1?1:0)+' '+row.unit+'</td><td class="num"><input class="price" type="number" min="0" step="0.01" data-key="'+row.key+'" aria-label="Precio '+esc(row.label)+'" value="'+(pv!=null&&pv!==""?pv:"")+'" placeholder="0,00"></td><td class="num" id="imp_'+row.key+'">—</td></tr>'; }).join("");
+    refreshCosts();
+  }
   function renderTables(){
+    if(HEAD_T.rooms==null){ HEAD_T.rooms=$("roomsHead").innerHTML; HEAD_T.coll=$("collHead").innerHTML; }
+    if(S.mode==="suelo") return renderTablesUF();
+    $("roomsHead").innerHTML=HEAD_T.rooms; $("collHead").innerHTML=HEAD_T.coll;
     var tb="", tot={area:0,cov:0,n:0,c:0,pex:0,mang:0,uni:0}, mat={}, matOrder=[], multi=S.floors.length>1;
     S.floors.forEach(function(fl){
       if(multi && fl.rooms.length) tb+='<tr class="floor-row"><td colspan="8">'+esc(fl.name)+'</td></tr>';
@@ -1585,16 +1931,16 @@
       lines.forEach(function(l){ doc.text(l,cx,cy,{align:"right"}); cy+=4; });
       y=Math.max(y+hLogo,cy)+3; doc.setDrawColor.apply(doc,ACC); doc.setLineWidth(0.6); doc.line(M,y,PW-M,y); y+=8;
       doc.setTextColor.apply(doc,INK); doc.setFont("helvetica","bold"); doc.setFontSize(15); doc.text("INFORME DE MATERIALES",M,y);
-      doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor.apply(doc,MUT); doc.text("Instalación de techo radiante"+(S.title?" · "+S.title:""),M,y+5);
+      doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor.apply(doc,MUT); doc.text("Instalación de "+(S.mode==="suelo"?"suelo":"techo")+" radiante"+(S.title?" · "+S.title:""),M,y+5);
       var d=new Date(), fecha=String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();
       doc.setTextColor.apply(doc,INK); doc.text("Referencia: "+(S.project.ref||"—"),PW-M,y,{align:"right"}); doc.text("Fecha: "+fecha,PW-M,y+5,{align:"right"}); y+=11;
       doc.setFillColor(236,238,235); doc.roundedRect(M,y,PW-2*M,16,2,2,"F");
       doc.setFontSize(7.5); doc.setTextColor.apply(doc,MUT); doc.text("CLIENTE",M+4,y+5); doc.text("DIRECCIÓN DE LA OBRA",M+(PW-2*M)/2,y+5);
       doc.setFontSize(10); doc.setTextColor.apply(doc,INK);
       doc.text(doc.splitTextToSize(S.project.client||"—",(PW-2*M)/2-8)[0],M+4,y+11); doc.text(doc.splitTextToSize(S.project.addr||"—",(PW-2*M)/2-8)[0],M+(PW-2*M)/2,y+11); y+=22;
-      var tot={area:0,n:0,c:0,pex:0}; allRooms().forEach(function(r){ var res=results[r.id]; tot.area+=res.area; tot.n+=res.panels.length; tot.c+=res.circuits; tot.pex+=res.pex; });
-      doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",head:[["Superficie","Estancias","Paneles","Circuitos","Colectores","Tubo PEX"]],
-        body:[[fmt(tot.area,1)+" m²",String(allRooms().length),String(tot.n),String(tot.c),String(allColls().length),fmt(Math.ceil(tot.pex))+" m"]],
+      var tot={area:0,n:0,c:0,pex:0}, UFM=S.mode==="suelo"; allRooms().forEach(function(r){ var res=results[r.id]; tot.area+=res.area; tot.n+=res.panels.length; tot.c+=res.circuits; tot.pex+=res.pex; });
+      doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",head:[UFM?["Superficie","Estancias","Circuitos","Colectores","Tubo PEX"]:["Superficie","Estancias","Paneles","Circuitos","Colectores","Tubo PEX"]],
+        body:[UFM?[fmt(tot.area,1)+" m²",String(allRooms().length),String(tot.c),String(allColls().length),fmt(Math.ceil(tot.pex))+" m"]:[fmt(tot.area,1)+" m²",String(allRooms().length),String(tot.n),String(tot.c),String(allColls().length),fmt(Math.ceil(tot.pex))+" m"]],
         styles:{fontSize:10,halign:"center",textColor:INK,lineColor:[217,221,218]},headStyles:{fillColor:ACC,textColor:255,fontSize:8,halign:"center"}});
       y=doc.lastAutoTable.finalY+6;
       plans.forEach(function(plan,k){ if(!plan) return; var pw=PW-2*M, ph=pw*plan.ratio; if(ph>120){ ph=120; pw=ph/plan.ratio; } if(y+ph+8>285){ doc.addPage(); y=18; }
@@ -1607,8 +1953,10 @@
       var rb=[];
       S.floors.forEach(function(fl){ if(multi && fl.rooms.length) rb.push([{content:fl.name,colSpan:7,styles:{fontStyle:"bold",fillColor:[229,241,235]}}]);
         fl.rooms.forEach(function(r){ var res=results[r.id];
+          if(UFM){ var mk=r.marks||{}, mt=Object.keys(mk).map(function(e){ return LETTER(+e)+": "+MARKS[mk[e]].toLowerCase(); }).join(", ");
+            rb.push([r.name+(r.active?"":" (sin suelo radiante)")+(mt?"\n"+mt:""),fmt(res.area,2),r.active?res.sep+" cm":"—",res.circ.map(function(c,i){ return "C"+(i+1)+": "+fmt(c.inst,1)+" m"; }).join("\n")||"—",String(res.circuits),res.pex?fmt(res.pex,1):"—",res.col?res.col.name:(res.circuits?"Sin asignar":"—")]); return; }
           rb.push([r.name+(r.active?"":" (sin paneles)"),fmt(res.area,2),r.active?fmt(res.pct,1)+"%":"—",r.active?roomTypeCounts(res)||"0":"—",String(res.circuits),res.pex?fmt(res.pex,1):"—",res.col?res.col.name:(res.circuits?"Sin asignar":"—")]); }); });
-      T({head:[["Estancia","m²","Cobertura","Paneles","Circuitos","PEX (m)","Colector"]],body:rb,columnStyles:{1:{halign:"right"},2:{halign:"right"},4:{halign:"right"},5:{halign:"right"}}});
+      T({head:[UFM?["Estancia","m²","Separación","Longitud por circuito","Circuitos","Tubo (m)","Colector"]:["Estancia","m²","Cobertura","Paneles","Circuitos","PEX (m)","Colector"]],body:rb,columnStyles:{1:{halign:"right"},2:{halign:"right"},4:{halign:"right"},5:{halign:"right"}}});
       section("Reparto por colector");
       var cb=[];
       allColls().forEach(function(c){ var st=collStats[c.id]||{n:0,pex:0,rooms:[]}, fl=floorOfColl(c); cb.push([c.name+(multi&&fl?"\n"+fl.name:""),String(c.cap||0),st.rooms.map(function(x){return x.room.name+": "+x.n+" circ.";}).join("\n")||"—",String(st.n),String((c.cap||0)-st.n),fmt(st.pex,1)]); });
@@ -1621,7 +1969,7 @@
       T({head:[["Concepto","Cantidad","Precio ud.","Importe"]],body:mb,foot:foot,footStyles:{fillColor:[229,241,235],textColor:INK,fontSize:9.5},columnStyles:{1:{halign:"right",cellWidth:26},2:{halign:"right",cellWidth:26},3:{halign:"right",cellWidth:28}}});
       if(y>255){ doc.addPage(); y=18; }
       doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor.apply(doc,MUT);
-      var note="Notas: cada colector incluye ida y retorno. Cada circuito lleva 2 conexiones (ida y retorno): en el colector, 1 bicono completo; en el panel, 1 racor de tubo de panel a rosca 1/2\", 1 racor PEX con rosca 1/2\" y 1 casquillo. Manguito de unión: 1 por circuito de 2 paneles. Los metros de PEX son una estimación con recorrido ortogonal, subida al techo de "+fmt(S.vert,1)+" m por tramo, descontando "+fmt(S.tail,1)+" m de tubo del propio panel por tramo, y "+fmt(S.margin)+"% de margen.";
+      var note=UFM ? "Notas: separación del tubo en plancha de tetones universal (múltiplos de 5 cm). Junto a ventanas y muros exteriores el tubo va más junto (zona periférica, UNE-EN 1264). Cada circuito tiene como máximo "+fmt(S.uf.maxLen)+" m contando la ida y vuelta al colector con recorrido ortogonal y "+fmt(S.uf.vert,1)+" m de bajada por tramo. Las estancias separadas por una escalera llevan su propio colector. Los metros de tubo incluyen un "+fmt(S.uf.margin)+"% de margen." : "Notas: cada colector incluye ida y retorno. Cada circuito lleva 2 conexiones (ida y retorno): en el colector, 1 bicono completo; en el panel, 1 racor de tubo de panel a rosca 1/2\", 1 racor PEX con rosca 1/2\" y 1 casquillo. Manguito de unión: 1 por circuito de 2 paneles. Los metros de PEX son una estimación con recorrido ortogonal, subida al techo de "+fmt(S.vert,1)+" m por tramo, descontando "+fmt(S.tail,1)+" m de tubo del propio panel por tramo, y "+fmt(S.margin)+"% de margen.";
       var nl=doc.splitTextToSize(note,PW-2*M); doc.text(nl,M,y); y+=nl.length*3.4+3;
       if(company.foot){ var fl2=doc.splitTextToSize(company.foot,PW-2*M); if(y+fl2.length*3.6>283){ doc.addPage(); y=18; } doc.setTextColor.apply(doc,INK); doc.setFontSize(8); doc.text(fl2,M,y); }
       var pages=doc.getNumberOfPages();
@@ -1901,6 +2249,13 @@
   $("planWrap").addEventListener("pointerdown",function(e){
     if(e.button!==undefined && e.button!==0) return;
     if(S.placing) return;
+    if(S.mode==="suelo" && S.markTool){
+      var mq=svgPointRaw(e.clientX,e.clientY), hit=mq?ufHitEdge(V(mq.x,mq.y)):null;
+      if(hit){ e.preventDefault(); e.stopImmediatePropagation(); var mk=hit.room.marks=hit.room.marks||{};
+        if(mk[hit.edge]===S.markTool) delete mk[hit.edge]; else mk[hit.edge]=S.markTool;
+        suppressClick=true; update(hit.room.id===S.sel); }
+      return;
+    }
     var cg=e.target.closest && e.target.closest("[data-coll]");
     if(cg){ e.preventDefault(); S.drag={coll:+cg.getAttribute("data-coll"),moved:false}; S.frozenVB=S.lastVB; document.body.classList.add("dragging"); return; }
     var g=e.target.closest && e.target.closest("[data-room]"); if(!g) return;
@@ -1917,7 +2272,9 @@
   window.addEventListener("pointermove",function(e){
     var d=S.drag; if(!d) return;
     if(d.isNew){ ghost.style.left=e.clientX+"px"; ghost.style.top=e.clientY+"px"; return; }
-    if(d.coll!=null){ var c=S.collectors.filter(function(k){return k.id===d.coll;})[0]; var q=svgPoint(e.clientX,e.clientY); if(c&&q&&(q.x!==c.x||q.y!==c.y)){ c.x=q.x; c.y=q.y; d.moved=true; scheduleUpdate(); } return; }
+    if(d.coll!=null){ var c=S.collectors.filter(function(k){return k.id===d.coll;})[0]; var q=svgPoint(e.clientX,e.clientY); if(c&&q&&(q.x!==c.x||q.y!==c.y)){
+        if(S.mode==="suelo"){ c.room=null; var sn0=ufSnapColl(q,c); S.snapHint=sn0?{a:sn0.A,b:sn0.B}:null; }
+        c.x=q.x; c.y=q.y; d.moved=true; scheduleUpdate(); } return; }
     if(d.room){
       if(!d.moved){ if(Math.abs(e.clientX-d.sx)<5&&Math.abs(e.clientY-d.sy)<5) return; d.moved=true; S.frozenVB=S.lastVB; document.body.classList.add("dragging"); }
       var q2=svgPointRaw(e.clientX,e.clientY); if(!q2) return;
@@ -1933,7 +2290,9 @@
       S.rooms.forEach(function(r){ (results[r.id]?results[r.id].wout:worldOutline(r)).forEach(function(p){ mnx=Math.min(mnx,p.x); mny=Math.min(mny,p.y); mxx=Math.max(mxx,p.x); mxy=Math.max(mxy,p.y); }); });
       if(!isFinite(mnx)){ mnx=0;mny=0;mxx=4;mxy=4; } x=Math.round((mnx+mxx)/2*20)/20; y=Math.round((mny+mxy)/2*20)/20; }
     var pending=unassigned.reduce(function(a,u){return a+u.n;},0);
-    S.collectors.push({id:nid(),name:"Colector "+(allColls().length+1),x:x,y:y,cap:pending||12});
+    var nc={id:nid(),name:"Colector "+(allColls().length+1),x:x,y:y,cap:pending||(S.mode==="suelo"?8:12)};
+    if(S.mode==="suelo"){ var sn=ufSnapColl(V(x,y),nc); if(sn){ nc.room=sn.room; nc.edge=sn.edge; nc.off=sn.off; } }
+    S.collectors.push(nc);
     renderCollectors(); update(false);
   }
   $("addColl").addEventListener("click",function(){ addCollector(); $("planWrap").scrollIntoView({behavior:"smooth",block:"center"}); });
@@ -1950,12 +2309,30 @@
       if(sn) hint('<b>'+esc(d.room.name)+'</b> pegada a <b>'+esc(sn.T.name)+'</b>. Arrástrala de nuevo para recolocarla.');
       return;
     }
+    if(d.coll!=null && d.moved && S.mode==="suelo"){ var cc=S.collectors.filter(function(k){ return k.id===d.coll; })[0], sn=cc&&ufSnapColl(V(cc.x,cc.y),cc); S.snapHint=null;
+      if(sn){ cc.room=sn.room; cc.edge=sn.edge; cc.off=sn.off; var tr=roomById(sn.room); hint('<b>'+esc(cc.name)+'</b> colocado en la pared '+LETTER(sn.edge)+' de <b>'+esc(tr?tr.name:"")+'</b>.'); } }
     if(d.moved){ suppressClick=true; update(false); }
   });
+  window.addEventListener("pointermove",function(e){
+    if(!S.markTool || S.drag || S.pan) return;
+    var q=overPlan(e.clientX,e.clientY)?svgPointRaw(e.clientX,e.clientY):null, hit=q?ufHitEdge(V(q.x,q.y)):null, prev=S.markHover;
+    S.markHover=hit?{room:hit.room,edge:hit.edge}:null;
+    if((prev&&prev.room)!==(hit&&hit.room) || (prev&&prev.edge)!==(hit&&hit.edge)){ if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); }); }
+  });
+  function setMarkTool(t){
+    S.markTool = S.markTool===t ? null : t; S.markHover=null;
+    document.querySelectorAll("#markBar [data-mark]").forEach(function(b){ b.classList.toggle("on",b.getAttribute("data-mark")===S.markTool); });
+    if(S.markTool) hint('Marcando <b>'+MARKS[S.markTool].toLowerCase()+'</b>: pulsa una pared del plano. '+(S.markTool==="escalera"?'Por esa pared no pasará ningún tubo; lo que quede al otro lado necesita su propio colector. ':S.markTool==="ventana"?'Junto a ella el tubo irá a '+clampSep(S.uf.sepWin)+' cm en una franja de '+fmt(S.uf.winW,1)+' m. ':'Junto a él el tubo irá a '+clampSep(S.uf.sepExt)+' cm en una franja de '+fmt(S.uf.extW,1)+' m. ')+'<button class="btn ghost small" id="markDone">Terminar</button>');
+    else hint("");
+    var md=$("markDone"); if(md) md.addEventListener("click",function(){ setMarkTool(S.markTool); });
+    renderPlan();
+  }
+  $("markBar").addEventListener("click",function(e){ var b=e.target.closest("[data-mark]"); if(b) setMarkTool(b.getAttribute("data-mark")); });
   $("planWrap").addEventListener("click",function(e){
     var cta=e.target.closest && e.target.closest("[data-cta]");
     if(cta){ var a=cta.getAttribute("data-cta"); if(a==="new") newProject(); else if(a==="example") loadExample(); else openShape(); return; }
     if(suppressClick){ suppressClick=false; return; }
+    if(S.markTool) return;
     if(e.target.closest && e.target.closest("[data-coll]")) return;
     var g=e.target.closest && e.target.closest("[data-room]"); if(!g) return;
     var id=+g.getAttribute("data-room");
@@ -2048,19 +2425,37 @@
     syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true); openShape();
   }
   function loadExample(){
-    S.floors=[exampleFloor()]; S.fi=0; S.sel=S.rooms[0].id; S.placing=null; S.zoom=null; S.title="Vivienda de ejemplo";
-    syncProjectInputs(); renderFloorBar(); renderCollectors(); hint("Ejemplo cargado: el salón tiene una pared curva (lado D). Pulsa cualquier estancia para ver sus lados y medidas."); update(true);
+    var uf=S.mode==="suelo";
+    S.floors=[uf?exampleFloorUF():exampleFloor()]; S.fi=0; S.sel=S.rooms[0].id; S.placing=null; S.zoom=null; S.title="Vivienda de ejemplo";
+    syncProjectInputs(); renderFloorBar(); renderCollectors();
+    hint(uf?"Ejemplo de suelo radiante: ventanas y muros exteriores ya marcados, colectores en la pared del pasillo. Prueba «Marcar escalera» en una pared o arrastra un colector a otra pared.":"Ejemplo cargado: el salón tiene una pared curva (lado D). Pulsa cualquier estancia para ver sus lados y medidas."); update(true);
+  }
+  function setMode(m){
+    if(m===S.mode) return;
+    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool);
+    S.store[S.mode]={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title};
+    var d=S.store[m]||{floors:[emptyFloor("Planta baja")],fi:0,sel:null,title:"Nuevo proyecto"};
+    S.floors=d.floors; S.fi=d.fi; S.sel=d.sel; S.title=d.title; S.zoom=null; S.mode=m;
+    document.body.classList.toggle("mode-suelo",m==="suelo");
+    var nm=m==="suelo"?"Suelo radiante":"Techo radiante";
+    $("appSys").textContent="Planificador Radiante · "+nm; $("appEyebrow").textContent=nm+" · Planificador";
+    hint(""); syncProjectInputs(); renderFloorBar(); renderCollectors(); update(true);
   }
   $("newProject").addEventListener("click",newProject);
   $("loadExample").addEventListener("click",loadExample);
   $("addRoom").addEventListener("click",function(){ if(S.placing) cancelPlacing(); openShape(); });
   document.addEventListener("keydown",function(e){
     if(e.key!=="Escape") return;
+    if(S.markTool){ setMarkTool(S.markTool); return; }
     if(!$("companyModal").hidden) closeCompany();
     else if(!$("shapeModal").hidden){ if(S.placing) cancelPlacing(); else closeShape(); }
     else if(S.placing) cancelPlacing();
   });
 
+  function bindUF(id,key){ var el=$(id); el.value=S.uf[key]; el.addEventListener("input",function(){ var v=parseFloat(el.value); if(isFinite(v)){ S.uf[key]=v; update(true);} }); }
+  bindUF("uSep","sep"); bindUF("uMax","maxLen"); bindUF("uSepWin","sepWin"); bindUF("uWinW","winW"); bindUF("uSepExt","sepExt"); bindUF("uExtW","extW"); bindUF("uWall","wallCm"); bindUF("uVert","vert"); bindUF("uMargin","margin");
+  $("uPlate").innerHTML=Object.keys(PLATES).map(function(k){ return '<option value="'+k+'">'+PLATES[k]+'</option>'; }).join("");
+  $("uPlate").value=S.uf.plate; $("uPlate").addEventListener("change",function(e){ S.uf.plate=e.target.value; renderTables(); });
   function bindNum(id,key){ var el=$(id); el.value=S[key]; el.addEventListener("input",function(){ var v=parseFloat(el.value); if(isFinite(v)){ S[key]=v; update(false);} }); }
   bindNum("gMin","gMin"); bindNum("gMax","gMax"); bindNum("sClear","clear"); bindNum("sGap","gap"); bindNum("sStrip","strip"); bindNum("sVert","vert"); bindNum("sMargin","margin"); bindNum("sTail","tail"); bindNum("sSec","secCm"); bindNum("sPrim","primCm"); bindNum("sBar","bar"); bindNum("sHang","hang");
   $("sBoard").value=S.board; $("sBoard").addEventListener("change",function(e){ S.board=e.target.value; update(false); });
@@ -2076,12 +2471,12 @@
 
   // ---------------- product site ----------------
   function showView(v){
+    if(v.indexOf("app-")===0){ setMode(v.slice(4)); v="app"; }
     $("siteView").hidden = v!=="site"; $("appView").hidden = v!=="app"; $("chooseView").hidden = v!=="choose"; $("chNote").textContent="";
     window.scrollTo(0,0);
     if(v==="app") update(false);
   }
   document.addEventListener("click",function(e){ var b=e.target.closest && e.target.closest("[data-go]"); if(!b) return; e.preventDefault(); showView(b.getAttribute("data-go")); });
-  $("chFloor").addEventListener("click",function(){ $("chNote").textContent="El planificador de suelo radiante estará disponible próximamente. De momento puedes usar el de techo radiante."; });
   (function heroPreview(){
     var keep={floors:S.floors,fi:S.fi,sel:S.sel,pipes:S.showPipes,str:S.showStruct};
     S.floors=[exampleFloor()]; S.fi=0; S.sel=null; S.showPipes=true; S.showStruct=false;
@@ -2095,7 +2490,7 @@
     S.floors=keep.floors; S.fi=keep.fi; S.sel=keep.sel; S.showPipes=keep.pipes; S.showStruct=keep.str;
     update(true);
   })();
-  try{ if(location.hash==="#planificador") showView("app"); }catch(err){}
+  try{ if(location.hash==="#planificador") showView("app-techo"); else if(location.hash==="#suelo") showView("app-suelo"); }catch(err){}
 })();
 </script>
 
