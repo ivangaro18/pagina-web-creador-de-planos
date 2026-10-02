@@ -1048,8 +1048,8 @@
     var pan=res.panels.map(function(p){ var a=sf(V(p.x,p.y),rt), b=sf(V(p.x+p.w,p.y+p.h),rt);
       return {x0:Math.min(a.x,b.x),x1:Math.max(a.x,b.x),y0:Math.min(a.y,b.y),y1:Math.max(a.y,b.y)}; });
     var sp=Math.max(0.2,(S.secCm||40)/100), psp=Math.max(0.4,(S.primCm||90)/100);
-    // TC lines where each panel is screwed: both edges and the centre
-    var req=[]; pan.forEach(function(q){ req.push(q.x0,(q.x0+q.x1)/2,q.x1); });
+    // TC lines where each panel is screwed: both edges, plus the centre on wide panels (80 cm) so they don't sag when full of water; narrow ones (40 cm) only need the edges
+    var req=[]; pan.forEach(function(q){ req.push(q.x0,q.x1); if(q.x1-q.x0>0.6) req.push((q.x0+q.x1)/2); });
     req.sort(function(a,b){return a-b;});
     var R=[]; req.forEach(function(v){ if(R.length && v-R[R.length-1].v<0.03){ var l=R[R.length-1]; l.v=(l.v*l.n+v)/(l.n+1); l.n++; } else R.push({v:v,n:1}); });
     R=R.map(function(o){ return o.v; });
