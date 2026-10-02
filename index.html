@@ -586,7 +586,7 @@
       <span class="struct-lg" hidden><span class="lg-line" style="border-color:var(--ang)"></span>Angular perimetral</span>
       <span class="struct-lg" hidden><span class="lg-line" style="border-color:var(--prim)"></span>Primario (cada 90 cm)</span>
       <span class="struct-lg" hidden><span class="lg-line" style="border-color:var(--sec);border-top-width:2px"></span>TC secundario (extremos y centro de cada panel; resto cada 40 cm)</span>
-      <span>Arrastra en cualquier punto del plano para moverte. <b>Doble clic</b> en una estancia para seleccionarla: así puedes editarla y arrastrarla a otro sitio (se pega sola al muro más cercano). Los colectores se arrastran directamente. Rueda del ratón o +/− para hacer zoom.</span>
+      <span>Arrastra en cualquier punto del plano para moverte. <b>Un clic</b> en una estancia muestra su información; <b>doble clic</b> la coge para arrastrarla a otro sitio (se pega sola al muro más cercano). Los colectores se arrastran directamente. Rueda del ratón o +/− para hacer zoom.</span>
     </div>
   </section>
 
@@ -2797,12 +2797,13 @@
       SH={step:"tEdge",pts:[],sel:{},h:[]}; $("shapeTitle").textContent="Colocar "+S.placing.room.name; $("shapeModal").hidden=false; renderShape();
       return;
     }
-    // double click (or double tap) selects the room: edit it and drag it
+    // one click (without dragging) shows the room's details; a double click picks it up to move it (details stay as they were)
     var now=Date.now();
-    if(lastTap && lastTap.id===id && now-lastTap.t<450){ lastTap=null; S.moveId=id; select(id);
+    if(lastTap && lastTap.id===id && now-lastTap.t<350){ clearTimeout(lastTap.timer); lastTap=null; S.moveId=id; renderPlan();
       var rr=S.rooms.filter(function(r){ return r.id===id; })[0];
-      hint('<b>'+esc(rr?rr.name:"")+'</b> seleccionada: arrástrala para moverla o edítala abajo. Doble clic en otra estancia para cambiar.'); }
-    else lastTap={id:id,t:now};
+      hint('<b>'+esc(rr?rr.name:"")+'</b> lista para mover: arrástrala a su sitio. Un clic en cualquier estancia muestra su información.'); }
+    else { if(lastTap) clearTimeout(lastTap.timer);
+      lastTap={id:id,t:now,timer:setTimeout(function(){ lastTap=null; if(S.moveId!==id){ S.moveId=null; } if(S.sel!==id) select(id); else renderPlan(); },360)}; }
   });
   var lastTap=null;
   $("planWrap").addEventListener("dblclick",function(e){ e.preventDefault(); });
