@@ -1403,15 +1403,15 @@
       if(g.r.active && dmin>=wall){ var z=bz>=0?bz:g.zInt; fill[idx]=1; zone[idx]=z; zones[z].n++; zones[z].sx+=p.x; zones[z].sy+=p.y; }
     }
     // in front of each door: other rooms' tubes should not block it
-    var door=new Int16Array(N), doorRooms=[]; door.fill(-1);
+    var door=new Int16Array(N), doorRooms=[], doorC=[]; door.fill(-1);
     RG.forEach(function(g,ri){ (g.r.doors||[]).forEach(function(d){ if(!g.r.pts[d.edge]) return; var dg=ufDoorGeom(g.r,d), C=add(dg.A,mul(dg.u,d.t)), pr=sub(C,mul(dg.n,0.15)), rj=-1;
       RG.forEach(function(g2,k){ if(k!==ri && pointIn(pr,g2.W)) rj=k; });
-      var di=doorRooms.length; doorRooms.push([ri,rj]); var rad=d.w/2+0.3, rc=Math.ceil(rad/res), ci=Math.floor((C.x-mnx)/res), cj=Math.floor((C.y-mny)/res);
+      var di=doorRooms.length; doorRooms.push([ri,rj]); doorC.push(C); var rad=d.w/2+0.3, rc=Math.ceil(rad/res), ci=Math.floor((C.x-mnx)/res), cj=Math.floor((C.y-mny)/res);
       for(var dj=-rc;dj<=rc;dj++) for(var dd=-rc;dd<=rc;dd++){ var ii=ci+dd, jj=cj+dj; if(ii<0||jj<0||ii>=nx||jj>=ny) continue; if(Math.hypot(dd*res,dj*res)<=rad) door[jj*nx+ii]=di; } }); });
     // bands too small for their own circuit go with the rest of the room
     zones.forEach(function(z,zi){ if(z.type!=="int" && z.n*res*res<1.5){ var to=RG[z.ri].zInt; for(var q=0;q<N;q++) if(zone[q]===zi){ zone[q]=to; zones[to].n++; zones[to].sx+=mnx+((q%nx)+.5)*res; zones[to].sy+=mny+(((q/nx)|0)+.5)*res; } z.n=0; } });
     zones.forEach(function(z){ z.area=z.n*res*res; z.ctr=z.n?V(z.sx/z.n,z.sy/z.n):null; });
-    return {res:res,nx:nx,ny:ny,x0:mnx,y0:mny,roomOf:roomOf,fill:fill,pass:pass,zone:zone,wd:wd,zones:zones,RG:RG,door:door,doorRooms:doorRooms};
+    return {res:res,nx:nx,ny:ny,x0:mnx,y0:mny,roomOf:roomOf,fill:fill,pass:pass,zone:zone,wd:wd,zones:zones,RG:RG,door:door,doorRooms:doorRooms,doorC:doorC};
   }
   function ufDT(R,resv){
     var nx=R.nx, ny=R.ny, N=nx*ny, d=new Float32Array(N), a=R.res, b=R.res*1.4142;
@@ -1429,8 +1429,8 @@
     if(n){ var i=0; while(true){ var l=2*i+1, r=l+1, m=i, mk=lk; if(l<n&&k[l]<mk){ m=l; mk=k[l]; } if(r<n&&k[r]<mk){ m=r; mk=k[r]; } if(m===i) break; k[i]=k[m]; v[i]=v[m]; i=m; } k[i]=lk; v[i]=lv; }
     return top; };
   // cheapest path for a bundle of tubes (clearance r), hugging walls and other bundles, few turns
-  function ufPath(R,dt,resv,starts,target,r,tri){
-    var nx=R.nx, ny=R.ny, N=nx*ny, dist=new Float64Array(N*4), prev=new Int32Array(N*4), H=new Heap(), a=R.res, turn=a*8, DX=[1,0,-1,0], DY=[0,1,0,-1], end=-1, it=0;
+  function ufPath(R,dt,resv,starts,target,r,tri,wallsOnly){
+    var nx=R.nx, ny=R.ny, N=nx*ny, dist=new Float64Array(N*4), prev=new Int32Array(N*4), H=new Heap(), a=R.res, turn=a*20, DX=[1,0,-1,0], DY=[0,1,0,-1], end=-1, it=0;
     dist.fill(Infinity); prev.fill(-1);
     starts.forEach(function(s){ for(var d=0;d<4;d++){ var st=s.k*4+d, c=d===s.d?0:turn; if(c<dist[st]){ dist[st]=c; H.push(c,st); } } });
     while(H.v.length){ var st=H.pop(), k=st>>2, d=st&3, cd=dist[st];
@@ -1440,8 +1440,8 @@
       for(var nd=0;nd<4;nd++){ if(nd===((d+2)&3)) continue; var ni=i+DX[nd], nj=j+DY[nd]; if(ni<0||nj<0||ni>=nx||nj>=ny) continue;
         var nk=nj*nx+ni; if(!R.pass[nk]||resv[nk]||dt[nk]<r) continue;
         // cheap right next to walls (shared ones too) or other bundles, dear across the open floor
-        var h=Math.min(dt[nk],R.wd[nk]+0.02)-r, w=a*(1+2.5*Math.max(0,Math.min(1,h/0.8)))+(nd!==d?turn:0), ns=nk*4+nd, di=R.door[nk];
-        if(di>=0 && R.doorRooms[di].indexOf(tri)<0) w+=a*5;
+        var h=(wallsOnly?R.wd[nk]+0.02:Math.min(dt[nk],R.wd[nk]+0.02))-r, w=a*(1+(wallsOnly?8:2.5)*Math.max(0,Math.min(1,h/0.8)))+(nd!==d?turn:0), ns=nk*4+nd, di=R.door[nk];
+        if(di>=0 && R.doorRooms[di].indexOf(tri)<0) w+=a*25;
         if(cd+w<dist[ns]){ dist[ns]=cd+w; prev[ns]=st; H.push(cd+w,ns); } } }
     if(end<0) return null;
     var cells=[]; for(var s2=end;s2>=0;s2=prev[s2]) cells.push(s2>>2); cells.reverse();
@@ -1468,7 +1468,8 @@
     return out;
   }
   // fill one zone with k circuits: lattice of 2s cells, fair growth from roots next to the entry, spiral spanning trees, loop around each tree
-  function ufFillZone(R,resv,zi,k,E,eDir){
+  function ufFillZone(R,resv,zi,entries){
+    var k=entries.length, E=V(0,0), md=V(0,0); entries.forEach(function(en){ E=add(E,mul(en.E,1/k)); md=add(md,en.dir); }); md=unit(md); var latN=V(-md.y,md.x);
     var z=R.zones[zi], s=z.s, qn=Math.max(2,Math.round(2*s/R.res)), nx=R.nx, i0=Infinity,j0=Infinity,i1=-1,j1=-1;
     function inReg(q){ return R.zone[q]===zi && R.fill[q] && !resv[q]; }
     for(var q=0;q<nx*R.ny;q++) if(inReg(q)){ var i=q%nx, j=(q/nx)|0; i0=Math.min(i0,i); i1=Math.max(i1,i); j0=Math.min(j0,j); j1=Math.max(j1,j); }
@@ -1488,13 +1489,13 @@
     var comp=new Uint8Array(CI*CJ), bq=[first]; comp[first]=1;
     while(bq.length){ var x=bq.shift(); for(var d=0;d<4;d++){ var y=nb(x,d); if(y>=0&&valid[y]&&!comp[y]){ comp[y]=1; bq.push(y); } } }
     var cand=[]; for(var c2=0;c2<CI*CJ;c2++) if(comp[c2]) cand.push(c2);
-    cand.sort(function(a,b){ return len(sub(cc(a),E))-len(sub(cc(b),E)); });
-    k=Math.max(1,Math.min(k,Math.floor(cand.length/2)||1));
-    var roots=[]; cand.forEach(function(c){ if(roots.length>=k) return; var I=c%CI, J=(c/CI)|0;
-      if(roots.every(function(r){ return Math.max(Math.abs(r%CI-I),Math.abs(((r/CI)|0)-J))>=2; })) roots.push(c); });
+    // each arriving circuit takes the free cell just in front of it; then roots and circuits are matched in the same side-to-side order, so the short links never cross
+    var ens=entries.map(function(en,i){ return {i:i,E:en.E,F:add(en.E,mul(en.dir,Q*0.5)),lat:dot(en.E,latN)}; }).sort(function(a,b){ return a.lat-b.lat; });
+    var taken={}, roots=[];
+    ens.forEach(function(en){ if(roots.length>=cand.length) return; var best=-1, bd=Infinity; cand.forEach(function(c){ if(taken[c]) return; var d=len(sub(cc(c),en.F)); if(d<bd){ bd=d; best=c; } }); if(best>=0){ taken[best]=1; roots.push(best); } });
+    roots.sort(function(a,b){ return dot(cc(a),latN)-dot(cc(b),latN); });
+    var rootE=roots.map(function(r,i){ return ens[i]; });
     k=roots.length;
-    // order roots across the arriving bundle so tubes don't cross
-    var side=V(-eDir.y,eDir.x); roots.sort(function(a,b){ return dot(sub(cc(a),E),side)-dot(sub(cc(b),E),side); });
     var own=new Int16Array(CI*CJ).fill(-1), size=[], qs=[], target=Math.ceil(cand.length/k);
     roots.forEach(function(r,ci){ own[r]=ci; size.push(1); qs.push([]); for(var d=0;d<4;d++){ var y=nb(r,d); if(y>=0&&comp[y]) qs[ci].push(y); } });
     [true,false].forEach(function(lim){
@@ -1505,10 +1506,10 @@
         while(cq.length){ var x=cq.shift(); if(own[x]>=0) continue; own[x]=pick; size[pick]++; got=true; for(var d=0;d<4;d++){ var y=nb(x,d); if(y>=0&&comp[y]&&own[y]<0) cq.push(y); } break; }
         if(!got) cq.length=0;
       } });
-    var circs=[];
+    var circs=entries.map(function(){ return null; });
     roots.forEach(function(r,ci){
       // entry side of the root: the side facing the arriving tubes, not shared with its own circuit
-      var rc=cc(r), sideD=-1, sv=-Infinity, want=unit(sub(E,rc));
+      var rc=cc(r), sideD=-1, sv=-Infinity, want=unit(sub(rootE[ci].E,rc));
       for(var d=0;d<4;d++){ var y=nb(r,d), v=DX[d]*want.x+DY[d]*want.y-(y>=0&&own[y]===ci?2:0); if(v>sv){ sv=v; sideD=d; } }
       var forb=nb(r,sideD);
       // spiral spanning tree: keep going straight, else turn right, else left (outside stays on the left)
@@ -1538,7 +1539,7 @@
       var pts=path.map(pos), simp=[pts[0]];
       for(var q2=1;q2<pts.length-1;q2++){ var A=simp[simp.length-1], B=pts[q2], C=pts[q2+1]; if(Math.abs((B.x-A.x)*(C.y-B.y)-(B.y-A.y)*(C.x-B.x))>1e-9) simp.push(B); }
       simp.push(pts[pts.length-1]);
-      circs.push({pts:simp,cells:size[ci],ok:cur===ends[1]});
+      circs[rootE[ci].i]={pts:simp,cells:size[ci],ok:cur===ends[1]};
     });
     return circs;
   }
@@ -1547,73 +1548,117 @@
     var U=S.uf, N=R.nx*R.ny, resv=new Uint8Array(N), out=[];
     function cellOf(p){ var i=Math.floor((p.x-R.x0)/R.res), j=Math.floor((p.y-R.y0)/R.res); return (i<0||j<0||i>=R.nx||j>=R.ny)?-1:j*R.nx+i; }
     function dirOf(v){ return Math.abs(v.x)>Math.abs(v.y)?(v.x>0?0:2):(v.y>0?1:3); }
-    // one trunk per collector and room: all the room's circuits travel together (through its door) and split once inside
+    // one trunk per collector and room: all the room's circuits travel together (through its door) and fan out once inside, one branch per circuit
     var groups={};
-    plan.forEach(function(P){ P.w=2*P.k*LANE; var key=P.col.id+"_"+P.room.id;
-      (groups[key]=groups[key]||{col:P.col,room:P.room,ri:R.zones[P.zi].ri,zs:[]}).zs.push(P); });
+    plan.forEach(function(P){ var key=P.col.id+"_"+P.room.id, g=groups[key]=groups[key]||{col:P.col,room:P.room,ri:R.zones[P.zi].ri,items:[]};
+      for(var c=0;c<P.k;c++) g.items.push({P:P,c:c,w:2*LANE}); });
     var G=Object.keys(groups).map(function(k){ return groups[k]; }), byCol={};
-    G.forEach(function(g){ g.w=g.zs.reduce(function(t,P){ return t+P.w; },0)+0.05*(g.zs.length-1); var ps=g.col._pose, rc=results[g.room.id].ctr;
-      g.lat=dot(sub(rc,ps.base),ps.u); g.dist=manh(g.col,rc); (byCol[g.col.id]=byCol[g.col.id]||[]).push(g); });
-    // outlets: trunks leave each collector side by side, ordered by where they go
-    Object.keys(byCol).forEach(function(id){ var L=byCol[id], W=L.reduce(function(t,g){ return t+g.w+0.03; },0), acc=-W/2;
-      L.sort(function(a,b){ return a.lat-b.lat; }); L.forEach(function(g){ g.slot=acc+g.w/2; acc+=g.w+0.03; }); });
-    G.sort(function(a,b){ return b.dist-a.dist; });
+    G.forEach(function(g){ g.w=g.items.length*2*LANE; g.ws=g.items.length*2*LANE+0.06*(g.items.length-1); g.sd=Math.max(0.15,(g.ws-g.w)/2+0.1); var ps=g.col._pose, rc=results[g.room.id].ctr;
+      // direction the trunk will leave in: towards the room's nearest door (or the room itself), measured as an angle around the collector
+      var ent=rc, bd=Infinity; R.doorRooms.forEach(function(dr,di){ if(dr.indexOf(g.ri)<0) return; var d=manh(g.col,R.doorC[di]); if(d<bd){ bd=d; ent=R.doorC[di]; } });
+      var v=sub(ent,ps.c), vx=dot(v,ps.u), vy=dot(v,ps.n), th=Math.atan2(vy,vx); if(vy<0&&vx<0) th+=2*Math.PI;
+      g.th=th; g.dist=manh(g.col,rc); (byCol[g.col.id]=byCol[g.col.id]||[]).push(g); });
+    // outlets: trunks leave each collector side by side, in the same order as the directions they take (fan)
+    var FRONT=COLL_D+0.1;
+    Object.keys(byCol).forEach(function(id){ var L=byCol[id], ps=L[0].col._pose, W=L.reduce(function(t,g){ return t+g.w+0.08; },0)-0.08;
+      var lo=-ps.off+0.15, hi=ps.L-ps.off-0.15, ctr=W>hi-lo?(lo+hi)/2:Math.max(lo+W/2,Math.min(hi-W/2,0));
+      // keep the outlet fan clear of doors in the same wall (either side)
+      var blk=[]; fl.rooms.forEach(function(r){ (r.doors||[]).forEach(function(d){ if(!r.pts[d.edge]) return; var dg=ufDoorGeom(r,d), C=add(dg.A,mul(dg.u,d.t));
+        if(Math.abs(dot(sub(C,ps.base),V(-ps.u.y,ps.u.x)))<0.1 && Math.abs(dot(dg.u,ps.u))>0.99){ var t=dot(sub(C,ps.base),ps.u); blk.push([t-d.w/2-0.05,t+d.w/2+0.05]); } }); });
+      if(blk.length && W<=hi-lo){ var bestC=null; for(var sd=0;sd<=hi-lo;sd+=0.05){ [ctr+sd,ctr-sd].forEach(function(cv){ if(bestC!==null||cv-W/2<lo-1e-9||cv+W/2>hi+1e-9) return;
+          var a0=cv-W/2, a1=cv+W/2; if(blk.every(function(b){ return b[1]<=a0||b[0]>=a1; })) bestC=cv; }); if(bestC!==null) break; }
+        if(bestC!==null) ctr=bestC; }
+      var acc=ctr-W/2;
+      L.sort(function(a,b){ return b.th-a.th; }); L.forEach(function(g){ g.slot=acc+g.w/2; g.fan=Math.abs(g.slot-ctr); acc+=g.w+0.08; });
+      L.lo=ctr-W/2; L.hi=ctr+W/2; });
+    G.forEach(function(g){ var ps=g.col._pose, r=g.w/2+0.02; g.P0=add(add(ps.base,mul(ps.u,g.slot)),mul(ps.n,FRONT)); g.P1=add(g.P0,mul(ps.n,r+0.05));
+      g.stub=new Uint8Array(N); ufReserve(R,g.stub,[g.P0,g.P1],g.w/2+0.01); });
+    // outermost outlets first: they turn away close to the collector, the inner ones pass beyond them, so the fan never crosses itself
+    G.sort(function(a,b){ return (b.fan-a.fan) || (b.dist-a.dist); });
     // trunks that find no way through get routed first on a retry
-    var failedG=[];
+    var failedG=[], pendG=[];
     for(var att=0;att<3;att++){
       resv=new Uint8Array(N); out=[]; failedG=[];
+      // the space between each collector and its outlets is only for the fan of tubes
+      Object.keys(byCol).forEach(function(id){ var L=byCol[id], ps=L[0].col._pose; ufReserve(R,resv,[add(add(ps.base,mul(ps.u,Math.min(L.lo,-ps.CL/2))),mul(ps.n,FRONT/2)),add(add(ps.base,mul(ps.u,Math.max(L.hi,ps.CL/2))),mul(ps.n,FRONT/2))],FRONT/2); });
+      pendG=G.slice();
       G.forEach(routeGroup);
       if(!failedG.length) break;
       var bad=failedG.slice(); G=bad.concat(G.filter(function(g){ return bad.indexOf(g)<0; }));
     }
+    function pendHas(q,pend){ for(var i=0;i<pend.length;i++) if(pend[i].stub[q]) return true; return false; }
     function routeGroup(g){
-      var dt=ufDT(R,resv), r=g.w/2+0.02, ps=g.col._pose, front=COLL_D+0.12, starts=[], seen={};
-      for(var dep=Math.max(front,r+0.1);dep<=Math.max(front,r+0.1)+0.8&&starts.length<1;dep+=0.05)
-      for(var t=-ps.CL/2-1.5;t<=ps.CL/2+1.5+1e-9;t+=R.res/2){ var k=cellOf(add(add(ps.base,mul(ps.u,t)),mul(ps.n,dep)));
-        if(k<0||seen[k]||!R.pass[k]||resv[k]||dt[k]<r) continue; seen[k]=1; starts.push({k:k,d:dirOf(ps.n),t:t}); }
-      starts.sort(function(a,b){ return Math.abs(a.t-g.slot)-Math.abs(b.t-g.slot); });
-      starts=starts.slice(0,1);
-      var path=starts.length?ufPath(R,dt,resv,starts,function(k){ return R.roomOf[k]===g.ri && R.wd[k]>=Math.min(r+0.03,0.6); },r,g.ri):null;
-      if(!path){ failedG.push(g); g.zs.forEach(function(P){ out.push({P:P,fail:true}); }); return; }
-      // lanes leave the collector straight out from its face
-      var p0=path[0], tt=dot(sub(p0,ps.base),ps.u), lip=add(add(ps.base,mul(ps.u,Math.max(-ps.CL/2,Math.min(ps.CL/2,tt)))),mul(ps.n,COLL_D));
-      var cl=[lip]; if(len(sub(p0,lip))>1e-6){ var mid=add(lip,mul(ps.n,dot(sub(p0,lip),ps.n))); if(len(sub(mid,lip))>1e-6&&len(sub(mid,p0))>1e-6) cl.push(mid); }
-      cl=cl.concat(path);
+      pendG=pendG.filter(function(x){ return x!==g; });
+      var rsG=resv.slice(); pendG.forEach(function(x){ for(var q=0;q<N;q++) if(x.stub[q]) rsG[q]=1; });
+      var dt=ufDT(R,rsG), r=g.w/2+0.02, ps=g.col._pose, k0=cellOf(g.P1);
+      var path=k0>=0?ufPath(R,dt,rsG,[{k:k0,d:dirOf(ps.n)}],function(k){ return R.roomOf[k]===g.ri && R.wd[k]>=Math.min(Math.max(r,g.ws/2)+0.05,0.8) && R.wd[k]>=Math.min(g.sd+0.1,0.8); },r,g.ri):null;
+      if(!path){ failedG.push(g); g.items.forEach(function(it){ out.push({it:it,fail:true}); }); return; }
+      path[0]=g.P1; var cl=[g.P0].concat(path);
       var tm=new Uint8Array(N); ufReserve(R,tm,cl,g.w/2+0.005);
       for(var q=0;q<N;q++) if(tm[q]) resv[q]=1;
-      // inside the room each zone gets its share of the trunk and its own short branch
+      // inside the room: one branch per circuit, ordered side to side like the zones they serve
       var E=cl[cl.length-1], eDir=cl.length>1?unit(sub(E,cl[cl.length-2])):ps.n, nrm=V(-eDir.y,eDir.x);
-      var zc=function(P){ return R.zones[P.zi].ctr; };
-      g.zs.sort(function(a,b){ return dot(sub(zc(a),E),nrm)-dot(sub(zc(b),E),nrm); });
-      var acc=-g.w/2; g.zs.forEach(function(P){ P.gOff=acc+P.w/2; acc+=P.w+0.05; });
+      var zc=function(it){ return R.zones[it.P.zi].ctr; };
+      // bands go on the outer sides of the fan (they run along the walls), the room's own circuits in the middle
+      // side of each band: where the band lies across the fan, or, for a band spanning both sides, the side whose end is nearer
+      var ext={}; g.items.forEach(function(it){ ext[it.P.zi]={lo:Infinity,hi:-Infinity}; });
+      for(var q5=0;q5<N;q5++){ var zz=R.zone[q5]; if(zz<0||!ext[zz]) continue; var lt5=dot(sub(V(R.x0+((q5%R.nx)+.5)*R.res,R.y0+(((q5/R.nx)|0)+.5)*R.res),E),nrm); ext[zz].lo=Math.min(ext[zz].lo,lt5); ext[zz].hi=Math.max(ext[zz].hi,lt5); }
+      g.items.forEach(function(it){ var lat=dot(sub(zc(it),E),nrm), x=ext[it.P.zi], sd=(x.lo>=0)?1:(x.hi<=0)?-1:(Math.abs(x.hi)<Math.abs(x.lo)?1:-1);
+        it.key=R.zones[it.P.zi].type==="int"?lat*0.001:sd*(1000+Math.abs(lat)); });
+      g.items.sort(function(a,b){ return (a.key-b.key) || (a.P.zi-b.P.zi) || (a.c-b.c); });
+      // the trunk opens into an ordered fan inside the room: each circuit keeps its place from side to side
+      var acc=-g.w/2, acc2=-g.ws/2, E2=add(E,mul(eDir,g.sd));
+      g.items.forEach(function(it){ it.tOff=acc+it.w/2; acc+=it.w; it.gOff=acc2+it.w/2; acc2+=it.w+0.06; it.T=add(E,mul(nrm,it.tOff)); it.S0=add(E2,mul(nrm,it.gOff)); });
       var rs=resv.slice(); for(var q2=0;q2<N;q2++) if(tm[q2]&&R.roomOf[q2]===g.ri) rs[q2]=0;
-      // keep every branch's starting point free until that branch has been routed
-      g.zs.forEach(function(P){ P.S0=add(E,mul(nrm,P.gOff)); P.stub=new Uint8Array(N); ufReserve(R,P.stub,[P.S0,add(P.S0,mul(eDir,0.05))],P.w/2+0.01); });
-      var pend=g.zs.slice();
-      g.zs.slice().sort(function(a,b){ return len(sub(zc(b),E))-len(sub(zc(a),E)); }).forEach(function(P){
-        pend=pend.filter(function(x){ return x!==P; });
+      g.items.forEach(function(it){ ufReserve(R,rs,[it.T,it.S0],it.w/2); ufReserve(R,resv,[it.T,it.S0],it.w/2); });
+      g.items.forEach(function(it){ it.stub=new Uint8Array(N); ufReserve(R,it.stub,[it.S0,add(it.S0,mul(eDir,0.08))],it.w/2+0.01); });
+      // the start of each branch must stay usable: clear its own spot when it is routed
+      var pend=g.items.slice();
+      g.items.slice().sort(function(a,b){ return (Math.abs(b.gOff)-Math.abs(a.gOff)) || (len(sub(zc(b),E))-len(sub(zc(a),E))); }).forEach(function(it){
+        pend=pend.filter(function(x){ return x!==it; });
         var rsP=rs.slice(); pend.forEach(function(x){ for(var q=0;q<N;q++) if(x.stub[q]) rsP[q]=1; });
-        var dt2=ufDT(R,rsP), r2=P.w/2+0.02, S0=P.S0, k0=cellOf(S0);
-        var sp=k0>=0?ufPath(R,dt2,rsP,[{k:k0,d:dirOf(eDir)}],function(k){ return R.zone[k]===P.zi && R.fill[k] && !rsP[k]; },r2,g.ri):null;
-        if(!sp){ if(failedG.indexOf(g)<0) failedG.push(g); out.push({P:P,fail:true}); return; }
-        var full=offsetPl(cl,P.gOff); sp[0]=full[full.length-1];
-        full=full.concat(sp.slice(1));
-        ufReserve(R,rs,sp,P.w/2+0.005); ufReserve(R,resv,sp,P.w/2+0.005);
-        out.push({P:P,cl:full});
+        var own=new Uint8Array(N); ufReserve(R,own,[it.S0,add(it.S0,mul(eDir,0.08))],it.w/2+0.01); for(var q3=0;q3<N;q3++) if(own[q3]&&!pendHas(q3,pend)) rsP[q3]=0;
+        // an outer branch never swings across the circuits still waiting inside it: it keeps to its own side of the fan
+        var loB=-Infinity, hiB=Infinity; pend.forEach(function(x){ if(x.gOff>it.gOff) hiB=Math.min(hiB,x.gOff-x.w/2-0.02); else loB=Math.max(loB,x.gOff+x.w/2+0.02); });
+        if(isFinite(loB)||isFinite(hiB)) for(var q4=0;q4<N;q4++){ if(R.roomOf[q4]!==g.ri) continue; var pc=V(R.x0+((q4%R.nx)+.5)*R.res,R.y0+(((q4/R.nx)|0)+.5)*R.res), rel=sub(pc,E2);
+          var dep=dot(rel,eDir); if(dep<-0.05||dep>0.5) continue; var lt=dot(rel,nrm); if(lt>hiB||lt<loB) rsP[q4]=1; }
+        var dt2=ufDT(R,rsP), r2=it.w/2+0.02, k1=cellOf(it.S0);
+        var sp=k1>=0?ufPath(R,dt2,rsP,[{k:k1,d:dirOf(eDir)}],function(k){ return R.zone[k]===it.P.zi && R.fill[k] && !rsP[k]; },r2,g.ri,true):null;
+        if(!sp){ if(failedG.indexOf(g)<0) failedG.push(g); out.push({it:it,fail:true}); return; }
+        var full=offsetPl(cl,it.tOff); sp[0]=it.S0;
+        full=full.concat(sp);
+        ufReserve(R,rs,sp,it.w/2+0.005); ufReserve(R,resv,sp,it.w/2+0.005);
+        out.push({it:it,cl:full});
       });
     }
-    out.forEach(function(o){ if(o.fail) return;
-      var P=o.P, cl=o.cl, E=cl[cl.length-1], eDir=unit(sub(E,cl[cl.length-2]||cl[0]));
-      var fills=ufFillZone(R,resv,P.zi,P.k,E,eDir), m=2*fills.length;
-      o.circs=fills.map(function(f,ci){
-        var la=offsetPl(cl,(2*ci-(m-1)/2)*LANE), lb=offsetPl(cl,(2*ci+1-(m-1)/2)*LANE), ea=la[la.length-1], eb=lb[lb.length-1];
+    // fill each zone with its circuits
+    var byZone={}, res=[];
+    plan.forEach(function(P){ byZone[P.zi]={P:P,ok:[],failed:0}; });
+    out.forEach(function(o){ var z=byZone[o.it.P.zi]; if(o.fail) z.failed++; else z.ok.push(o); });
+    var circAll=[];
+    Object.keys(byZone).forEach(function(zi){ var Z=byZone[zi], P=Z.P, ent=Z.ok.map(function(o){ var cl=o.cl, E=cl[cl.length-1]; return {E:E,dir:unit(sub(E,cl[cl.length-2]||cl[0]))}; });
+      var fills=ent.length?ufFillZone(R,resv,P.zi,ent):[], circs=[];
+      Z.ok.forEach(function(o,i){ var f=fills[i]; if(!f) return;
+        var cl=o.cl, la=offsetPl(cl,-LANE/2), lb=offsetPl(cl,LANE/2), ea=la[la.length-1], eb=lb[lb.length-1];
         var A=f.pts[0], B=f.pts[f.pts.length-1], pts;
         if(len(sub(ea,A))+len(sub(eb,B))<=len(sub(ea,B))+len(sub(eb,A))) pts=la.concat(f.pts).concat(lb.slice().reverse());
         else pts=la.concat(f.pts.slice().reverse()).concat(lb.slice().reverse());
-        var feed=plLen(la)+plLen(lb)+len(sub(ea,f.pts[0]))+len(sub(eb,f.pts[f.pts.length-1])), total=plLen(pts);
-        return {pts:pts,inLen:total-feed,feed:feed+2*U.vert,inst:total+2*U.vert,col:P.col,zone:P.zi,type:R.zones[P.zi].type,ok:f.ok};
-      });
+        var c={pts:pts,feedRaw:plLen(la)+plLen(lb)+Math.min(len(sub(ea,A))+len(sub(eb,B)),len(sub(ea,B))+len(sub(eb,A))),col:P.col,zone:P.zi,type:R.zones[P.zi].type,ok:f.ok};
+        circs.push(c); circAll.push(c); });
+      res.push({P:P,circs:circs,fail:!circs.length,partial:Z.failed>0||circs.length<Z.ok.length});
     });
+    // at each collector the outlets follow the same order as the tubes arriving at the outlet line: a fan with no crossings
+    var colIds={}; circAll.forEach(function(c){ (colIds[c.col.id]=colIds[c.col.id]||[]).push(c); });
+    Object.keys(colIds).forEach(function(id){ var L=colIds[id], ps=L[0].col._pose, ends=[];
+      L.forEach(function(c){ ends.push({c:c,first:true,p:c.pts[0]}); ends.push({c:c,first:false,p:c.pts[c.pts.length-1]}); });
+      ends.sort(function(a,b){ return dot(sub(a.p,ps.base),ps.u)-dot(sub(b.p,ps.base),ps.u); });
+      var n=ends.length, span=Math.min(ps.CL-0.06,n*0.05);
+      ends.forEach(function(e,i){ var o=add(add(ps.base,mul(ps.u,-span/2+(i+.5)*span/n)),mul(ps.n,COLL_D)), mid=add(e.p,mul(ps.n,-Math.min(0.05,FRONT-COLL_D)*0));
+        if(e.first) e.c.pts.unshift(o); else e.c.pts.push(o); });
+    });
+    res.forEach(function(o){ o.circs.forEach(function(c){ var total=plLen(c.pts), feed=c.feedRaw+len(sub(c.pts[0],c.pts[1]))+len(sub(c.pts[c.pts.length-1],c.pts[c.pts.length-2]));
+      c.inLen=total-feed; c.feed=feed+2*U.vert; c.inst=total+2*U.vert; }); });
+    out=res;
     return out;
   }
   function computeFloorUF(fl){
@@ -1664,6 +1709,7 @@
     }
     var colour=0;
     routed.forEach(function(o){ var res=results[o.P.room.id];
+      if(o.partial && !o.fail) res.dmsgs.push({t:"warn",x:"Algún circuito de esta estancia no ha encontrado hueco para llegar: revisa las puertas o mueve el colector."});
       if(o.fail){ res.dmsgs.push({t:"warn",x:"No hay hueco para llevar los tubos desde "+esc(o.P.col.name)+" hasta "+(R.zones[o.P.zi].type==="int"?"esta estancia":"la franja de "+MARKS[R.zones[o.P.zi].type].toLowerCase())+": la puerta es estrecha o la tapan los tubos de otra estancia. Prueba a mover la puerta o el colector, o a ensanchar la puerta."}); return; }
       o.circs.forEach(function(c){ c.color=UFC[colour++%UFC.length]; res.circ.push(c); });
       res.col=o.P.col; });
