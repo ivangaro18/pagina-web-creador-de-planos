@@ -1658,6 +1658,7 @@
     function crossOf(k,x){ var o=[]; path[k][x].forEach(function(s){ if(s.b && s.b.kind==="conn") o.push(s.b.conn); }); return o; }
     // each room's own floor meets its outline at one place: the bundles passing through keep to the other side of it
     var ownIt=RG.map(function(g,x){ if(comp[x]<0) return null; return addIt({kind:"own",ri:x,t:0,C:V(0,0),n:V(1,0)}); });
+    var fixGap={};
     function placeOwn(flows){ // flows: [{k,x,w}]
       var segs=RG.map(function(){ return []; });
       flows.forEach(function(f){ path[f.k][f.x].forEach(function(s){ if(s.b) segs[s.ri].push({a:s.a.t,b:s.b.t,w:f.w}); }); });
@@ -1678,11 +1679,15 @@
         // a room with its own circuits: its own floor touches the wall right beside the entrance (so the fewest bundles have to go round)
         if(entry){ var ew=entry.kind==="conn"?entry.conn.w/2:Math.max(entry.ps.CL/2,flows.filter(function(f){ return f.k===colIt.indexOf(entry); }).reduce(function(t,f){ return t+f.w; },0)/2+0.05);
           cand=cand.concat([(entry.t+ew+0.06)%B.P,(entry.t-ew-0.06+B.P)%B.P]); }
+        // the own floor may be told which gap between the room's openings it must sit in (so the walk round the tree changes)
+        if(fixGap[x]!=null && its.length>1){ var gi=fixGap[x]%its.length, ga=its[gi], gb=its[(gi+1)%its.length], span=ufFwd(B,ga.t,gb.t)||B.P;
+          var inGap=cand.filter(function(o){ var d=ufFwd(B,ga.t,o); return d>0.02 && d<span-0.02; });
+          cand=inGap.length?inGap:[(ga.t+span/2)%B.P]; }
         cand.forEach(function(o){ var c=(!entry&&rayBad(o))?1e6:0; segs[x].forEach(function(sg){ c+=sg.w*ufArcAvoid(B,sg.a,sg.b,o); });
           var gap=Infinity; its.forEach(function(it){ gap=Math.min(gap,ufFwd(B,it.t,o),ufFwd(B,o,it.t)); }); c-=Math.min(gap,1)*0.001;
           if(entry) c+=0.0005*Math.min(ufFwd(B,entry.t,o),ufFwd(B,o,entry.t));
           scored.push({o:o,c:c}); if(c<bc-1e-9){ bc=c; bestO=o; } });
-        var fl2=forbid['flip_'+g.r.id]||0; if(fl2){ scored.sort(function(a,b){ return a.c-b.c; }); var pick=scored[Math.min(fl2,scored.length-1)]; if(pick && pick.c<1e5) bestO=pick.o; }
+        var fl2=fixGap[x]!=null?0:(forbid['flip_'+g.r.id]||0); if(fl2){ scored.sort(function(a,b){ return a.c-b.c; }); var pick=scored[Math.min(fl2,scored.length-1)]; if(pick && pick.c<1e5) bestO=pick.o; }
         var at=ufAt(B,bestO); O.t=bestO; O.C=at.p; O.n=at.n; });
     }
     // the walk round each tree: the order of collectors and rooms' own floors
@@ -1736,6 +1741,20 @@
       var nf=[]; RG.forEach(function(g,x){ if(assign[x]>=0) nf.push({k:assign[x],x:x,w:kk[x]*W1}); });
       var same=nf.length===flows.length && nf.every(function(f,i){ return flows[i].k===f.k&&flows[i].x===f.x&&flows[i].w===f.w; });
       flows=nf; if(same) break; }
+    // rooms still left out because of outlets or full doors: where each room's own floor meets its outline changes the walk
+    // round the tree, and so which rooms can share a collector without crossing. Try the other gaps, keep what serves more.
+    function nServed(){ var n=0, c=0; RG.forEach(function(g,x){ if(assign[x]>=0){ n++; c+=kk[x]*feed[assign[x]][x]; } }); return n*1e6-c; }
+    function leftOut(){ return RG.some(function(g,x){ var w=why[x]; return need[x] && comp[x]>=0 && assign[x]<0 && (w==="cap" || w==="route" || (w && w.door)); }); }
+    if(leftOut() && live.length>1 && !forbid.nogap){ var bestS=nServed(), trials=0;
+      for(var pass=0; pass<2 && leftOut(); pass++){ var improved=false;
+        RG.forEach(function(g,y){ if(!ownIt[y] || trials>80) return;
+          var ny=items[y].filter(function(it){ return it.kind==="coll" || (it.kind==="conn" && treeE[it.conn.id]); }).length; if(ny<2) return;
+          var keep=fixGap[y], bestG=keep;
+          for(var gg=0; gg<ny; gg++){ trials++; fixGap[y]=gg; placeOwn(flows); walkAll(); assignAll(); var sc=nServed(); if(sc>bestS+1e-6){ bestS=sc; bestG=gg; improved=true; } }
+          if(bestG==null) delete fixGap[y]; else fixGap[y]=bestG; });
+        if(!improved) break; }
+      for(var lp2=0;lp2<3;lp2++){ placeOwn(flows); walkAll(); assignAll(); var nf2=[]; RG.forEach(function(g,x){ if(assign[x]>=0) nf2.push({k:assign[x],x:x,w:kk[x]*W1}); }); flows=nf2; }
+      placeOwn(flows); walkAll(); assignAll(); }
     // ---- the tubes themselves: one ribbon per room served, made of its circuits side by side
     var ribs=[]; RG.forEach(function(g,x){ if(assign[x]<0) return; var k=assign[x]; ribs.push({x:x,k:k,col:colIt[k].col,n:kk[x],w:kk[x]*W1,path:path[k][x],lc:colIt[k].leaf,lo:ownIt[x].leaf,cp:comp[x]}); });
     var slots={}; // item id -> [{rb, p}]
@@ -1807,7 +1826,8 @@
         var rr0=results[RG[x].r.id], narrow0=rr0 && rr0.perim>0 && 2*rr0.area/rr0.perim<1.25;
         curt=narrow0 ? bfsMark(kE,cellOf(add(pO,mul(O.n,0.08)))) : (bfsMark(kE,kmid) && bfsMark(kmid,cellOf(add(pO,mul(O.n,0.08))))); }
       if(!curt && ownRb) for(var sd=0.08;sd<6;sd+=res/2){ var p=add(pO,mul(O.n,sd)), k=cellOf(p); if(k<0||R.roomOf[k]!==x) break; if(sd>0.3 && R.wd[k]<prevW-1e-6) break; prevW=R.wd[k]; barMark(k); }
-      bl.forEach(function(b){
+      var bOwn=new Int16Array(N).fill(-1);
+      bl.forEach(function(b,bi){
         var A=b.A, Bt=b.B, la=slots[A.id]||[], lb=slots[Bt.id]||[];
         var mem=la.filter(function(s){ return b.m.some(function(z){ return z.rb===s.rb; }); });
         if(!mem.length){ return; }
@@ -1818,22 +1838,38 @@
         var r=Wb/2+0.015, dA=A.kind==='coll'?r+0.02:Math.max(0.1,Wb/2-0.01), dB=Bt.kind==='coll'?r+0.02:Math.max(0.1,Wb/2-0.01), sA=add(cA,mul(A.n,dA)), sB=add(cB,mul(Bt.n,dB)), k0=cellOf(sA), kt=cellOf(sB);
         var blk=new Uint8Array(N); for(var q2=0;q2<N;q2++) blk[q2]=(!R.pass[q2]||resv[q2]||!inX[q2])?1:0;
         var dt=ufDTmask(R,blk), allow=new Uint8Array(N); for(var q3=0;q3<N;q3++) allow[q3]=(R.roomOf[q3]===x&&R.pass[q3]&&!resv[q3]&&!bar[q3])?1:0;
+        // the cut that keeps the room's own floor reachable may start right in front of this bundle's slots: leave it room to set off
+        if(!forbid.classic) [sA,sB].forEach(function(sp){ var ci2=Math.floor((sp.x-R.x0)/res), cj2=Math.floor((sp.y-R.y0)/res), rc2=Math.ceil((r+0.03)/res);
+          for(var dj3=-rc2;dj3<=rc2;dj3++) for(var di3=-rc2;di3<=rc2;di3++){ var i4=ci2+di3, j4=cj2+dj3; if(i4<0||j4<0||i4>=R.nx||j4>=R.ny) continue; var k4=j4*R.nx+i4;
+            if(bar[k4] && R.roomOf[k4]===x && R.pass[k4] && !resv[k4] && len(sub(V(R.x0+(i4+.5)*res,R.y0+(j4+.5)*res),sp))<=r+0.03) allow[k4]=1; } });
+        var hd=null; { var hm=new Uint8Array(N), fA=ufFwd(B,A.t,Bt.t), fO=ufFwd(B,A.t,O.t), fwdArc=fO>=fA, t0=fwdArc?A.t:Bt.t, Larc=fwdArc?fA:B.P-fA;
+            for(var ta=0;ta<=Larc;ta+=res/2){ var pa=ufAt(B,t0+ta), ka=cellOf(add(pa.p,mul(pa.n,0.03))); if(ka>=0) hm[ka]=1; }
+            // hug the wall of its own side and the bundles already laid inside its arc, not the bundles of the other side
+            b.t0=t0; b.L=Larc; var inside=bl.map(function(o){ if(o.t0==null||o===b) return false; var f0=ufFwd(B,t0,o.t0), f1=ufFwd(B,t0,(o.t0+o.L)%B.P); return f0<=Larc+0.02 && f1<=Larc+0.02 && f0<=f1+0.02; });
+            for(var qh2=0;qh2<N;qh2++) if(resv[qh2]&&R.roomOf[qh2]===x && (bOwn[qh2]<0 || inside[bOwn[qh2]])) hm[qh2]=1; hd=ufDTmask(R,hm); }
         // the plain square shape (straight, L, S or U) when it is free; otherwise the cheapest path on the grid
         var sq=(function(){ var dAB=sub(cB,cA), cr0=A.n.x*Bt.n.y-A.n.y*Bt.n.x, mid, dm=Math.max(0.1,Wb/2-0.01), dA=dm, dB=dm, skA=A.kind==='coll'?r+0.03:dm, skB=Bt.kind==='coll'?r+0.03:dm;
             if(Math.abs(cr0)>0.9){ var tt=(dAB.x*Bt.n.y-dAB.y*Bt.n.x)/cr0, ss=(dAB.x*A.n.y-dAB.y*A.n.x)/cr0; if(tt<dA-1e-6||ss<dB-1e-6) return null; mid=[add(cA,mul(A.n,tt))]; }
-            else if(dot(A.n,Bt.n)<-0.9){ var dep=dot(dAB,A.n); if(dep<dA+dB-1e-6) return null; var lat=Math.abs(dot(dAB,V(-A.n.y,A.n.x))); mid=lat<1e-6?[]:[add(cA,mul(A.n,dep/2)),sub(cB,mul(A.n,dep/2))]; }
+            else if(dot(A.n,Bt.n)<-0.9){ var dep=dot(dAB,A.n); if(dep<dA+dB-1e-6) return null; var lat=Math.abs(dot(dAB,V(-A.n.y,A.n.x)));
+              if(lat<1e-6) mid=[];
+              else { // the cross run of an S: next to its own side's wall when that is free (so other bundles still get by), else in the middle
+                var bestS=null, bsc=Infinity; [dA+0.02,dep-dB-0.02,dep/2].forEach(function(dd){ if(dd<dA-1e-6||dd>dep-dB+1e-6) return; var m2=[add(cA,mul(A.n,dd)),sub(cB,mul(A.n,dep-dd))], pl2=[cA].concat(m2).concat([cB]);
+                  if(!okPl(pl2)) return; var sc=0, a2=m2[0], b2=m2[1], n2=Math.max(1,Math.ceil(len(sub(b2,a2))/res)); for(var t2=0;t2<=n2;t2++){ var k2=cellOf(add(a2,mul(sub(b2,a2),t2/n2))); sc+=k2>=0&&hd?hd[k2]:0; } sc/=(n2+1);
+                  if(sc<bsc-1e-9){ bsc=sc; bestS=pl2; } });
+                return bestS; } }
             else { var m0=Math.max(dA,dB+dot(dAB,A.n)); mid=[add(cA,mul(A.n,m0)),add(cB,mul(Bt.n,m0-dot(dAB,A.n)))]; }
-            var pl=[cA].concat(mid).concat([cB]), Lt=plLen(pl), acc=0;
+            var pl=[cA].concat(mid).concat([cB]);
+            return okPl(pl)?pl:null;
+            function okPl(pl){ var Lt=plLen(pl), acc=0;
             for(var i=0;i+1<pl.length;i++){ var a=pl[i], b=pl[i+1], Lg=len(sub(b,a)), ns=Math.max(1,Math.ceil(Lg/(res/2)));
               for(var t=0;t<=ns;t++){ var p=add(a,mul(sub(b,a),t/ns)), ds=acc+Lg*t/ns, near=(ds<skA-0.01||Lt-ds<skB-0.01), k=cellOf(p); if(ds<0.03||Lt-ds<0.03) continue; if(k<0||!allow[k]) return null; if(!near && dt[k]<r-0.012) return null;
                 // never straight across the open floor of a room: that would cut its own floor in two
-                if(!near && dt[k]>r+0.45) return null; }
+                if(!near && dt[k]>r+0.45) return false;
+                // nor away from its own side: a shape through the middle of a corridor leaves no way past for the bundles that come after
+                if(!near && hd && !forbid.classic && hd[k]>r+0.15) return false; }
               acc+=Lg; }
-            return pl; })();
+            return true; } })();
         // the bundle keeps to the walls of its own side of the room (and to the bundles already laid there), not to whatever wall is nearest
-        var hd=null; if(!sq){ var hm=new Uint8Array(N), fA=ufFwd(B,A.t,Bt.t), fO=ufFwd(B,A.t,O.t), fwdArc=fO>=fA, t0=fwdArc?A.t:Bt.t, Larc=fwdArc?fA:B.P-fA;
-            for(var ta=0;ta<=Larc;ta+=res/2){ var pa=ufAt(B,t0+ta), ka=cellOf(add(pa.p,mul(pa.n,0.03))); if(ka>=0) hm[ka]=1; }
-            for(var qh2=0;qh2<N;qh2++) if(resv[qh2]&&R.roomOf[qh2]===x) hm[qh2]=1; hd=ufDTmask(R,hm); }
         var pp=sq?null:((k0>=0&&kt>=0)?ufBPath(R,allow,dt,k0,dirOf(A.n),kt,r,hd):null);
         if(sq) pp=[sq[1]||cB];
         if(!pp){ pp=(k0>=0&&kt>=0)?ufBPath(R,allow,dt,k0,dirOf(A.n),kt,Wb/2+0.004,hd):null; }
@@ -1869,11 +1905,11 @@
           var okS=true, nS=Math.ceil(len(sub(P1,P0))/0.02); for(var t=0;t<=nS&&okS;t++){ var p=add(P0,mul(sub(P1,P0),t/nS)), k=cellOf(p); if(k<0) okS=false; else if(R.roomOf[k]===x && (!allow[k] || (dt[k]<r-0.012 && len(sub(p,cA))>=r+0.06 && len(sub(p,cB))>=r+0.06))) okS=false; }
           if(okS){ if(L0>=L2) cl[i]=P0; else cl[i+1]=P1; } } })();
         // reserve the bundle, but only on this room's side of its openings
-        var rho=Math.max(0.026,Wb/2-0.02), tmpR=new Uint8Array(N); ufReserve(R,tmpR,cl,rho); for(var q8=0;q8<N;q8++) if(tmpR[q8]&&R.roomOf[q8]===x) resv[q8]=1;
+        var rho=Math.max(0.026,Wb/2-0.02), tmpR=new Uint8Array(N); ufReserve(R,tmpR,cl,rho); for(var q8=0;q8<N;q8++) if(tmpR[q8]&&R.roomOf[q8]===x){ if(!resv[q8]) bOwn[q8]=bi; resv[q8]=1; }
         var nA=V(-A.n.y,A.n.x);
         mem.forEach(function(s){ var d=dot(sub(s.p,cA),nA), pl=offsetPl(cl,d), z=b.m.filter(function(z){ return z.rb===s.rb; })[0];
           // each ribbon's own path is reserved too, so the outside of a bend is covered
-          var tq=new Uint8Array(N); ufReserve(R,tq,pl,Math.max(0.026,s.rb.w/2-0.02)); for(var q9=0;q9<N;q9++) if(tq[q9]&&R.roomOf[q9]===x) resv[q9]=1;
+          var tq=new Uint8Array(N); ufReserve(R,tq,pl,Math.max(0.026,s.rb.w/2-0.02)); for(var q9=0;q9<N;q9++) if(tq[q9]&&R.roomOf[q9]===x){ if(!resv[q9]) bOwn[q9]=bi; resv[q9]=1; }
           if(z.a!==A) pl=pl.slice().reverse(); (pieces[ribs.indexOf(s.rb)]=pieces[ribs.indexOf(s.rb)]||{})[x]=pl; });
       });
     });
@@ -1980,7 +2016,21 @@
     var served=out.filter(function(o){ return o.circs.length; }).length;
     // a door too narrow for every tube: try the tree again avoiding it (only kept if it serves more rooms)
     if(!hints.length && !fails.length) doorHints.forEach(function(h){ hints.push(h); });
-    return {routed:out,assign:assign,why:why,hints:hints,fails:fails.map(function(rb){ return rb.busy?'own_'+RG[rb.x].r.id:rb.col.id+"_"+RG[rb.x].r.id; }),failRooms:fails.map(function(rb){ return rb.x; }),served:served,
+    // ---- for each room left without circuits: what stops each collector from taking it, with the plan as it stands
+    var used=colIt.map(function(){ return 0; }), load={}, per={}, nmin={};
+    out.forEach(function(o){ if(!o.circs.length) return; var k=-1, x=-1; colIt.forEach(function(ci,j){ if(ci&&ci.col===o.P.col) k=j; }); RG.forEach(function(g,j){ if(g.r===o.P.room) x=j; }); if(k<0||x<0) return;
+      used[k]+=o.P.k; crossOf(k,x).forEach(function(c){ load[c.id]=(load[c.id]||0)+o.P.k*W1; }); });
+    RG.forEach(function(g,x){ if(zoneOf[x]<0 || comp[x]<0 || out.some(function(o){ return o.P.room===g.r && (o.circs.length||o.small); })) return;
+      var lst=[], z=R.zones[zoneOf[x]], n0=Math.max(1,Math.ceil(z.L/U.maxLen));
+      colIt.forEach(function(ci,k){ if(!ci || feed[k][x]==null) return; var n=kOf(zoneOf[x],k,x), e={col:ci.col,n:n,n0:n0};
+        if(isFinite(n)) nmin[x]=Math.min(nmin[x]||Infinity,n);
+        if(!isFinite(n)) e.t="far";
+        else if(n>(ci.col.cap||0)-used[k]) { e.t="cap"; e.free=Math.max(0,(ci.col.cap||0)-used[k]); }
+        else { crossOf(k,x).forEach(function(c){ if(!e.t && !c.virt && (load[c.id]||0)+n*W1>c.w-0.1+1e-6){ e.t="door"; e.door=c; e.fits=Math.max(0,Math.floor((c.w-0.1)/W1+1e-6)); } });
+          if(!e.t) e.t=(forbid[ci.col.id+"_"+g.r.id] || out.some(function(o){ return o.P.room===g.r && o.P.col===ci.col; }))?"route":"cross"; }
+        lst.push(e); });
+      per[x]=lst; });
+    return {routed:out,per:per,nmin:nmin,assign:assign,why:why,hints:hints,fails:fails.map(function(rb){ return rb.busy?'own_'+RG[rb.x].r.id:rb.col.id+"_"+RG[rb.x].r.id; }),failRooms:fails.map(function(rb){ return rb.x; }),served:served,
       score:served*1e6-out.reduce(function(t,o){ return t+o.circs.reduce(function(s,c){ return s+c.inst; },0); },0),conns:conns,feed:feed,colIt:colIt,comp:comp,need:need};
   }
   function computeFloorUF(fl){
@@ -1994,15 +2044,21 @@
     var R=ufRaster(fl), G=ufAdjacency(fl), live=C.filter(function(c){ return c._pose; });
     R.zones.forEach(function(z){ z.L=(z.area-z.bandA)/z.s+z.bandL; });
     // plan, and plan again while some room cannot get its tubes through (that pair is taken out) or a circuit passes the maximum length
-    var forbid={}, extra={}, best=null, fu=[];
-    for(var iter=0; live.length && iter<14; iter++){
-      var PL=ufPlan(fl,R,live,extra,forbid);
-      if(!best || PL.served>best.served || (PL.served===best.served && !PL.fails.length && !PL.hints.length)) best=PL;
-      var nf=false; PL.hints.forEach(function(h){ forbid[h]=(forbid[h]||0)+1; nf=true; });
-      PL.fails.forEach(function(f){ if(!forbid[f]){ forbid[f]=1; nf=true; } }); if(nf) continue;
-      var again=false; PL.routed.forEach(function(o){ if(o.circs.some(function(c){ return c.inst>U.maxLen+1e-6; })){ extra[o.P.zi]=(extra[o.P.zi]||0)+1; again=true; } });
-      if(!again) break;
-    }
+    var best=null, fu=[], forbid={};
+    function planLoop(base){ var fb={}, extra={}, bst=null; Object.keys(base).forEach(function(k){ fb[k]=base[k]; });
+      for(var iter=0; live.length && iter<14; iter++){
+        var PL=ufPlan(fl,R,live,extra,fb);
+        if(!bst || PL.served>bst.served || (PL.served===bst.served && !PL.fails.length && !PL.hints.length)) bst=PL;
+        var nf=false; PL.hints.forEach(function(h){ fb[h]=(fb[h]||0)+1; nf=true; });
+        PL.fails.forEach(function(f){ if(!fb[f]){ fb[f]=1; nf=true; } }); if(nf) continue;
+        var again=false; PL.routed.forEach(function(o){ if(o.circs.some(function(c){ return c.inst>U.maxLen+1e-6; })){ extra[o.P.zi]=(extra[o.P.zi]||0)+1; again=true; } });
+        if(!again) break; }
+      if(bst) bst.forbid=fb; return bst; }
+    function nOut(P){ return P ? P.need.filter(function(v,x){ return v && !P.routed.some(function(o){ return o.P.room===fl.rooms[x] && (o.circs.length||o.small); }); }).length : 0; }
+    best=planLoop({});
+    // rooms still left out: plan again a different way (each room's own floor kept where it first went; bundles laid the plain way), keep the best
+    [{nogap:1},{classic:1}].forEach(function(v){ if(best && nOut(best)){ var alt=planLoop(v); if(alt && alt.served>best.served) best=alt; } });
+    if(best) forbid=best.forbid;
     var colour=0, served={};
     if(best) best.routed.forEach(function(o){ var res=results[o.P.room.id];
       if(o.small){ res.dmsgs.push({t:"ok",x:"Esta estancia queda casi entera ocupada por los tubos que pasan hacia otras estancias: no lleva circuito propio (ya la calientan esos tubos)."}); res.col=o.P.col; served[o.P.room.id]=1; return; }
@@ -2019,12 +2075,26 @@
       var col=res.col;
       if(col){ var st=collStats[col.id]; st.n+=res.circuits; st.pex+=res.pex; st.rooms.push({room:r,n:res.circuits,pex:res.pex,d:manh(col,res.ctr)}); return; }
       var zs=R.zones.filter(function(z){ return z.ri===x && z.n; }); if(!zs.length) return;
-      var nEst=0; zs.forEach(function(z){ nEst+=Math.max(1,Math.ceil(z.L/U.maxLen)); }); res.circuits=nEst;
-      var w=best?best.why[x]:null, why;
+      var nEst=0; zs.forEach(function(z){ nEst+=Math.max(1,Math.ceil(z.L/U.maxLen)); }); if(best && best.nmin[x]) nEst=best.nmin[x]; res.circuits=nEst;
+      var w=best?best.why[x]:null, why, per=best?best.per[x]:null;
       if(!C.length) why="no hay ningún colector en esta planta";
       else if(!live.length) why="coloca el colector en una pared";
       else if(w==="unreach" || (best && best.comp[x]<0)) why=G.touch[r.id] ? "una escalera (o falta de puerta) la separa de los colectores: necesita su propio colector o una puerta" : "no comparte pared con las demás estancias: pégala o ponle su propio colector";
       else if(w==="busy"){ res.dmsgs.push({t:"ok",x:"Esta estancia queda casi entera ocupada por los tubos que pasan hacia otras estancias: no lleva circuito propio (ya la calientan esos tubos)."}); res.circuits=0; return; }
+      else if(per && per.length && per.some(function(e){ return e.t!=="far"; })){
+        // one sentence per collector: why that one cannot take it
+        per.forEach(function(e){ if(e.t==="cross" && forbid[e.col.id+"_"+r.id]) e.t="route"; });
+        var zL=Math.round(zs.reduce(function(t,z){ return t+z.L; },0)), more=null, parts=per.map(function(e){ var nm=e.col.name, nc=e.n+" circuito"+(e.n>1?"s":"");
+          if(e.t!=="far" && e.n>e.n0 && !more) more=e;
+          if(e.t==="far") return "desde "+nm+" está demasiado lejos (pasaría de "+fmt(U.maxLen)+" m por circuito)";
+          if(e.t==="cap") return "desde "+nm+" necesita "+nc+" y solo le "+(e.free===1?"queda 1 salida libre":e.free?"quedan "+e.free+" salidas libres":"quedan 0 salidas libres");
+          if(e.t==="door") return "desde "+nm+(e.n>1?" sus "+nc+" tendrían":" su circuito tendría")+" que pasar por la puerta entre "+fl.rooms[e.door.ra].name+" y "+fl.rooms[e.door.rb].name+" ("+fmt(e.door.w*100)+" cm), que ya va llena (caben "+e.fits+" circuitos)";
+          if(e.t==="route") return "desde "+nm+" no queda hueco libre para pasar sus tubos (por donde tendrían que ir ya van los de otras estancias)";
+          return "desde "+nm+" sus tubos tendrían que cruzarse con los de otras estancias que van a otro colector"; });
+        if(more) parts.push("son "+more.n+" circuitos y no "+more.n0+" porque lleva unos "+zL+" m de tubo y, sumando la ida y vuelta al colector, con "+more.n0+" cada circuito pasaría de "+fmt(U.maxLen)+" m");
+        var fix=[]; per.forEach(function(e){ if(e.t==="cap") fix.push("dar "+(e.n-e.free)+" salida"+(e.n-e.free>1?"s":"")+" más a "+e.col.name); if(e.t==="door") fix.push("ensanchar o añadir una puerta entre "+fl.rooms[e.door.ra].name+" y "+fl.rooms[e.door.rb].name); });
+        fix.push("mover un colector");
+        why=parts.join("; ")+". Para resolverlo: "+fix.filter(function(f,i){ return fix.indexOf(f)===i; }).join(", ").replace(/, ([^,]*)$/," o $1");}
       else if(w==="far") why="está demasiado lejos del colector para no pasar de "+fmt(U.maxLen)+" m por circuito: acerca el colector o pon otro";
       else if(w==="cap") why=nEst>maxCap ? "necesita "+nEst+" salidas y ningún colector tiene tantas" : "el colector que le corresponde no tiene salidas libres para ella: añade salidas o pon otro colector";
       else if(w && w.door){ var dr=w.door, nm=fl.rooms[dr.ra].name+" y "+fl.rooms[dr.rb].name; why="la puerta entre "+nm+" ("+fmt(dr.w*100)+" cm) ya va llena de tubos de otras estancias: caben "+Math.max(0,Math.floor((dr.w-0.1)/(2*LANE)+1e-6))+" circuitos. Ensancha esa puerta, añade otra o mueve el colector"; }
