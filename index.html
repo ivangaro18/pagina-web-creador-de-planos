@@ -372,6 +372,33 @@
   .closure{font-size:.78rem;border-radius:8px;padding:6px 9px;}
   .closure.ok{background:var(--ok-bg);color:var(--accent);}
   .closure.warn{background:var(--warn-bg);color:var(--warn);}
+
+  /* ---- guided tour ---- */
+  .tour-ask .modal-card{max-width:460px;margin-top:12vh;padding:22px 22px 18px;}
+  .tour-ask .ta-ico{width:44px;height:44px;border-radius:12px;background:var(--ok-bg);display:grid;place-items:center;margin-bottom:12px;}
+  .tour-ask p{color:var(--muted);font-size:.9rem;line-height:1.5;margin:6px 0 0;}
+  .tour-ask .modal-actions{margin-top:18px;}
+  .tour-ask .modal-actions .btn{padding:9px 15px;font-size:.85rem;}
+  .tour-block{position:fixed;inset:0;z-index:90;background:transparent;}
+  .tour-spot{position:fixed;z-index:91;border-radius:10px;pointer-events:none;box-shadow:0 0 0 9999px rgba(12,24,34,.58);outline:2px solid #fff;
+    transition:top .28s ease,left .28s ease,width .28s ease,height .28s ease;}
+  .tour-spot.center{outline:none;}
+  .tour-tip{position:fixed;z-index:92;width:min(360px,calc(100vw - 32px));background:var(--surface);color:var(--ink);border-radius:12px;padding:16px 16px 12px;
+    box-shadow:0 12px 32px rgba(10,20,30,.28);transition:top .28s ease,left .28s ease;}
+  .tour-tip .tt-arrow{position:absolute;width:14px;height:14px;background:var(--surface);transform:rotate(45deg);}
+  .tour-tip .tt-step{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;color:var(--accent);font-weight:600;letter-spacing:.02em;}
+  .tour-tip h3{font-size:1rem;margin:4px 0 6px;}
+  .tour-tip p{font-size:.86rem;line-height:1.5;color:var(--ink);margin:0;}
+  .tour-tip p + p{margin-top:6px;}
+  .tour-tip ul{margin:6px 0 0;padding-left:18px;font-size:.84rem;line-height:1.45;}
+  .tour-tip .tt-bar{height:3px;background:var(--surface-2);border-radius:2px;margin:12px 0 10px;overflow:hidden;}
+  .tour-tip .tt-bar i{display:block;height:100%;background:var(--accent);border-radius:2px;transition:width .28s ease;}
+  .tour-tip .tt-nav{display:flex;align-items:center;gap:8px;}
+  .tour-tip .tt-skip{margin-right:auto;background:none;border:none;color:var(--muted);font:inherit;font-size:.8rem;cursor:pointer;padding:6px 2px;}
+  .tour-tip .tt-skip:hover{color:var(--ink);text-decoration:underline;}
+  .tour-tip.sheet{width:calc(100vw - 32px);}
+  .tour-tip.sheet .tt-arrow{display:none;}
+  @media (prefers-reduced-motion:reduce){ .tour-spot,.tour-tip{transition:none;} }
 </style>
 
 <div id="siteView" class="site">
@@ -530,13 +557,14 @@
       <div class="chips" id="chips"></div>
       <button class="btn small" id="newProject">Nuevo proyecto</button>
       <button class="btn ghost small" id="openCompany">Datos de empresa</button>
+      <button class="btn ghost small" id="tourBtn" title="Ver el tutorial paso a paso">? Tutorial</button>
     </div>
   </header>
 
   <section class="card">
     <div class="card-head">
       <h2>Plano general</h2>
-      <div class="btn-row">
+      <div class="btn-row" id="planTools">
         <label class="check only-techo" style="margin:0;"><input type="checkbox" id="colorByCircuit"> Colorear por circuito</label>
         <label class="check only-techo" style="margin:0;"><input type="checkbox" id="showPipes"> Mostrar tubería</label>
         <label class="check only-techo" style="margin:0;"><input type="checkbox" id="showStruct"> Estructura de pladur</label>
@@ -592,13 +620,13 @@
 
   <div class="layout">
     <aside class="stack">
-      <div class="card only-techo">
+      <div class="card only-techo" id="catalogCard">
         <span class="section-title">Catálogo de paneles</span>
         <table class="catalog"><thead><tr><th>Modelo</th><th class="num">Ancho cm</th><th class="num">Largo cm</th><th></th></tr></thead><tbody id="catalogBody"></tbody></table>
         <button class="btn ghost small" id="addPanel" style="margin-top:8px;">+ Añadir modelo</button>
         <p class="note">Introduce las medidas de los paneles que vayas a usar, de cualquier fabricante.</p>
       </div>
-      <div class="card only-techo">
+      <div class="card only-techo" id="coverCard">
         <span class="section-title">Cobertura por defecto</span>
         <div class="grid2">
           <div class="field"><label class="lbl" for="gMin">% mínimo</label><input type="number" id="gMin" min="0" max="100" step="1"></div>
@@ -615,7 +643,7 @@
         <div class="field"><label class="lbl" for="sStrip">Ancho franja de luz (cm)</label><input type="number" id="sStrip" min="10" step="1"></div>
         <p class="note">El tipo de iluminación se elige en cada estancia. Máx. 2 paneles por circuito y siempre el panel más grande posible. En estancias que no son rectangulares, los paneles se colocan en las zonas rectangulares más grandes.</p>
       </div>
-      <div class="card only-techo">
+      <div class="card only-techo" id="pladurCard">
         <span class="section-title">Techo de pladur</span>
         <div class="field"><label class="lbl" for="sBoard">Placa de pladur</label><select id="sBoard"><option value="1.2x2">1200 × 2000 mm</option><option value="1.2x2.5">1200 × 2500 mm</option><option value="1.2x2.6">1200 × 2600 mm</option><option value="1.2x2.8">1200 × 2800 mm</option><option value="1.2x3">1200 × 3000 mm</option></select></div>
         <div class="grid2">
@@ -626,7 +654,7 @@
         </div>
         <p class="note" style="margin-top:0;">Se calcula para las estancias con paneles. Los TC secundarios van siempre en los dos extremos y el centro de cada panel para atornillarlo; el resto del techo lleva TC cada 40 cm. Usa «Rotar estructura» en cada estancia para girarla.</p>
       </div>
-      <div class="card only-suelo">
+      <div class="card only-suelo" id="ufRulesCard">
         <span class="section-title">Reglas del suelo radiante</span>
         <div class="grid2">
           <div class="field"><label class="lbl" for="uSep">Separación general (cm)</label><input type="number" id="uSep" min="5" max="30" step="5"></div>
@@ -642,7 +670,7 @@
         </div>
         <p class="note" style="margin-top:0;">Plancha universal de tetones: separación de 5 en 5 cm (mín. 5, máx. 30 cm). Según UNE-EN 1264, junto a ventanas y muros exteriores (zona periférica, hasta 1 m) el suelo puede llegar a 35 °C, por eso el tubo va más junto; en zonas de estancia el máximo es 29 °C (33 °C en baños). Cada circuito no pasa de la longitud máxima, contando la ida y vuelta al colector.</p>
       </div>
-      <div class="card">
+      <div class="card" id="collCard">
         <span class="section-title"><span class="only-techo">Colectores y tubería PEX</span><span class="only-suelo">Colectores</span></span>
         <div id="collList"></div>
         <button class="btn ghost small" id="addColl" style="margin-bottom:8px;">+ Añadir colector</button>
@@ -660,7 +688,7 @@
 
     <main class="stack">
       <section class="card" id="detailCard"></section>
-      <section class="card">
+      <section class="card" id="tablesCard">
         <div class="card-head"><h2>Circuitos por estancia</h2></div>
         <div class="table-scroll">
           <table>
@@ -720,6 +748,17 @@
 
 </div>
 
+<div class="modal tour-ask" id="tourAsk" hidden role="dialog" aria-modal="true" aria-labelledby="tourAskTitle">
+  <div class="modal-card">
+    <div class="ta-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B7FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.9"/><path d="M12 17h.01"/></svg></div>
+    <h2 id="tourAskTitle">¿Es la primera vez que usas el planificador?</h2>
+    <p id="tourAskText">Te enseñamos en un par de minutos dónde está cada cosa, paso a paso. Puedes saltarlo cuando quieras y repetirlo más tarde con el botón «? Tutorial».</p>
+    <div class="modal-actions">
+      <button class="btn ghost" id="tourNo">Ya sé usar la herramienta</button>
+      <button class="btn" id="tourYes">Ver tutorial</button>
+    </div>
+  </div>
+</div>
 <div class="modal" id="shapeModal" hidden role="dialog" aria-modal="true" aria-labelledby="shapeTitle">
   <div class="modal-card xl">
     <h2 id="shapeTitle">Nueva estancia</h2>
@@ -3253,7 +3292,7 @@
     window.scrollTo(0,0);
     if(v==="app") update(false);
   }
-  document.addEventListener("click",function(e){ var b=e.target.closest && e.target.closest("[data-go]"); if(!b) return; e.preventDefault(); showView(b.getAttribute("data-go")); });
+  document.addEventListener("click",function(e){ var b=e.target.closest && e.target.closest("[data-go]"); if(!b) return; e.preventDefault(); var g=b.getAttribute("data-go"); showView(g); if(g.indexOf("app-")===0) tourOffer(g.slice(4)); });
   (function heroPreview(){
     var keep={floors:S.floors,fi:S.fi,sel:S.sel,pipes:S.showPipes,str:S.showStruct};
     S.floors=[exampleFloor()]; S.fi=0; S.sel=null; S.showPipes=true; S.showStruct=false;
@@ -3267,6 +3306,110 @@
     S.floors=keep.floors; S.fi=keep.fi; S.sel=keep.sel; S.showPipes=keep.pipes; S.showStruct=keep.str;
     update(true);
   })();
+
+  // ---------------- guided tour (first visit from the chooser, or the "? Tutorial" button) ----------------
+  var TOUR=null, TOUR_SEEN={};
+  function tourSeen(m){ if(TOUR_SEEN[m]) return true; try{ return localStorage.getItem("prTour_"+m)==="1"; }catch(e){ return false; } }
+  function tourMark(m){ TOUR_SEEN[m]=1; try{ localStorage.setItem("prTour_"+m,"1"); }catch(e){} }
+  function tourOffer(m){
+    if(tourSeen(m)) return;
+    $("tourAskTitle").textContent="¿Es la primera vez que usas el planificador de "+(m==="suelo"?"suelo":"techo")+" radiante?";
+    $("tourAsk").hidden=false; setTimeout(function(){ $("tourYes").focus(); },30);
+  }
+  $("tourNo").addEventListener("click",function(){ $("tourAsk").hidden=true; tourMark(S.mode); });
+  $("tourYes").addEventListener("click",function(){ $("tourAsk").hidden=true; tourMark(S.mode); tourStart(); });
+  $("tourBtn").addEventListener("click",function(){ tourStart(); });
+  function tourSteps(m,loaded){
+    var suelo=m==="suelo", st=[];
+    st.push({t:"Bienvenido al planificador de "+(suelo?"suelo":"techo")+" radiante",
+      x:"<p>En unos pasos te enseñamos dónde está cada cosa y cómo se trabaja: dibujas la vivienda, colocas los colectores y el programa calcula "+(suelo?"los circuitos":"los paneles, los circuitos y la estructura")+" y el material.</p>"+
+        (loaded?"<p>Hemos cargado una <b>vivienda de ejemplo</b> para que lo veas funcionando. Al terminar puedes empezar la tuya con «Nuevo proyecto».</p>":"")+
+        "<p style='color:var(--muted);font-size:.8rem'>Puedes avanzar también con las flechas del teclado.</p>"});
+    st.push({el:"#addRoom",t:"1. Añade las estancias",x:"<p>Pulsa <b>+ Estancia</b> para dibujar cada habitación: eliges la forma (rectángulo, en L o a mano sobre la cuadrícula) y escribes la medida real de cada lado.</p><p>Desde la segunda, eliges a qué pared de otra estancia se pega y la vivienda se va montando sola.</p>"});
+    st.push({el:"#loadExample",t:"¿Quieres practicar antes?",x:"<p><b>Ver ejemplo</b> carga una vivienda completa para probar sin miedo a estropear nada.</p>"});
+    st.push({el:".plan-stage",t:"El plano",x:"<ul><li><b>Un clic</b> en una estancia abre su ficha.</li><li><b>Doble clic</b> la coge para moverla (se pega sola al muro más cercano).</li><li><b>Arrastra</b> el fondo para desplazarte y usa la <b>rueda</b> o los botones <b>+ / −</b> para el zoom.</li></ul>"+
+      (suelo?"<p>Cada color es un circuito y las flechas marcan el sentido del agua.</p>":"")});
+    st.push({el:"#floorBar",t:"Plantas",x:"<p>Si la vivienda tiene varias plantas, añádelas aquí y cambia de una a otra. Cada planta lleva sus propios colectores.</p>"});
+    st.push({el:"#collChip",t:"2. Coloca los colectores",x:suelo?"<p>Arrastra el colector hasta una pared del plano: al soltarlo se pega a la pared más cercana. Después puedes moverlo arrastrándolo.</p><p>Cada vez que cambias algo, el cálculo se rehace al momento.</p>":"<p>Arrastra el colector al plano (o púlsalo) y muévelo arrastrándolo. Las estancias se asignan enteras al colector más cercano con salidas libres.</p>"});
+    if(suelo){
+      st.push({el:"#markBar",t:"3. Marca lo que afecta a los tubos",x:"<p>Pulsa un botón y luego la pared (o la zona) en el plano:</p><ul><li><b>Ventana</b> y <b>muro exterior</b>: ahí el tubo va más junto.</li><li><b>Escalera</b>: por esa pared no pasa tubo.</li><li><b>Puerta</b>: los tubos solo cruzan los tabiques por las puertas.</li><li><b>Obstáculo</b>: ducha, bañera, muebles fijos… ahí no va tubo.</li></ul>"});
+      st.push({el:"#ufRulesCard",t:"Reglas del suelo",x:"<p>Separación del tubo, longitud máxima por circuito (120 m por defecto), franjas junto a ventanas y muros, margen de tubo… Cambia cualquier valor y el plano se recalcula.</p>"});
+      st.push({el:"#collCard",t:"Salidas de cada colector",x:"<p>Indica cuántas salidas tiene cada colector. El programa reparte las estancias entre los colectores sin que ningún circuito se cruce con otro.</p>"});
+      st.push({el:"#detailCard",t:"Ficha de la estancia",x:"<p>Nombre, medida y tipo de cada pared, y separación propia del tubo si la quieres distinta.</p><p>Si una estancia se queda sin circuito, aquí te explica el motivo y qué cambiar para resolverlo.</p>"});
+    } else {
+      st.push({el:"#planTools",t:"Qué ver en el plano",x:"<p>Colorea los paneles por circuito, muestra la tubería de ida y retorno o dibuja la estructura de pladur encima del plano.</p>"});
+      st.push({el:"#catalogCard",t:"3. Tus paneles",x:"<p>Escribe las medidas de los paneles que uses, de cualquier fabricante. El programa coloca siempre el panel más grande que quepa, con un máximo de 2 paneles por circuito.</p>"});
+      st.push({el:"#coverCard",t:"Cobertura",x:"<p>Qué porcentaje del techo quieres cubrir con paneles. Cada estancia puede tener su propio rango desde su ficha.</p>"});
+      st.push({el:"#pladurCard",t:"Techo de pladur",x:"<p>Placa, separación de perfiles y cuelgues: con esto se calcula la estructura completa del techo.</p>"});
+      st.push({el:"#collCard",t:"Colectores y tubería",x:"<p>Salidas de cada colector, subida del colector al techo y margen de tubo para el cálculo del PEX.</p>"});
+      st.push({el:"#detailCard",t:"Ficha de la estancia",x:"<p>Medidas de cada lado, iluminación (puntos de luz o tira LED), cobertura propia y giro de la estructura.</p>"});
+    }
+    st.push({el:"#tablesCard",t:"Resumen de circuitos",x:"<p>Circuitos y metros de tubo por estancia y por colector, con las salidas usadas y las libres.</p>"});
+    st.push({el:"#report",t:"4. Material e informe",x:"<p>Lista de material con cantidades. Escribe tus precios de coste para tener el importe aproximado, rellena cliente y obra, y descarga el <b>informe en PDF</b>.</p>",top:true});
+    st.push({el:"#openCompany",t:"Tus datos de empresa",x:"<p>Nombre, logotipo y datos de contacto: aparecen en la cabecera del informe.</p>"});
+    st.push({el:"#tourBtn",t:"¡Listo!",x:"<p>Puedes repetir este tutorial cuando quieras desde este botón.</p><p>Para empezar tu propia obra, pulsa <b>Nuevo proyecto</b> y añade la primera estancia.</p>"});
+    return st;
+  }
+  function tourStart(){
+    if(TOUR) tourEnd(true);
+    $("tourAsk").hidden=true;
+    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false);
+    var loaded=false; if(!allRooms().length){ loadExample(); loaded=true; }
+    var bl=document.createElement("div"), sp=document.createElement("div"), tp=document.createElement("div");
+    bl.className="tour-block"; sp.className="tour-spot"; tp.className="tour-tip"; tp.setAttribute("role","dialog"); tp.setAttribute("aria-live","polite");
+    document.body.appendChild(bl); document.body.appendChild(sp); document.body.appendChild(tp);
+    TOUR={i:0,steps:tourSteps(S.mode,loaded),bl:bl,sp:sp,tp:tp};
+    tp.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b||!TOUR) return; var a=b.getAttribute("data-t"); if(a==="next") tourGo(TOUR.i+1,1); else if(a==="prev") tourGo(TOUR.i-1,-1); else if(a==="end") tourEnd(); });
+    bl.addEventListener("wheel",function(e){ e.preventDefault(); },{passive:false});
+    window.addEventListener("resize",tourPlace); window.addEventListener("scroll",tourPlace,true); document.addEventListener("keydown",tourKey,true);
+    tourGo(0,1);
+  }
+  function tourKey(e){ if(!TOUR) return; var k=e.key;
+    if(k==="Escape"){ e.preventDefault(); e.stopPropagation(); tourEnd(); }
+    else if(k==="ArrowRight"){ e.preventDefault(); e.stopPropagation(); tourGo(TOUR.i+1,1); }
+    else if(k==="ArrowLeft"){ e.preventDefault(); e.stopPropagation(); tourGo(TOUR.i-1,-1); } }
+  function tourEl(st){ if(!st.el) return null; var el=document.querySelector(st.el); if(!el || !el.getClientRects().length) return null; var r=el.getBoundingClientRect(); return (r.width>0&&r.height>0)?el:null; }
+  function tourGo(i,dir){
+    var T=TOUR; if(!T) return;
+    while(i>0 && i<T.steps.length && T.steps[i].el && !tourEl(T.steps[i])) i+=dir; // a step whose element is not shown is passed over
+    if(i>=T.steps.length){ tourEnd(); return; } if(i<0) i=0;
+    T.i=i; var st=T.steps[i], el=tourEl(st), n=T.steps.length, last=i===n-1;
+    T.tp.innerHTML='<div class="tt-arrow"></div><div class="tt-step">'+(i+1)+' de '+n+'</div><h3>'+st.t+'</h3>'+st.x+
+      '<div class="tt-bar"><i style="width:'+Math.round((i+1)/n*100)+'%"></i></div><div class="tt-nav">'+
+      (last?'':'<button class="tt-skip" type="button" data-t="end">Saltar tutorial</button>')+(i>0?'<button class="btn ghost small" type="button" data-t="prev">Anterior</button>':'')+
+      '<button class="btn small" type="button" data-t="'+(last?'end':'next')+'"'+(last?' style="margin-left:auto"':'')+'>'+(last?'Terminar':(i===0?'Empezar':'Siguiente'))+'</button></div>';
+    if(el){ // bring it into view, clear of the sticky top bar
+      var r=el.getBoundingClientRect(), tb=document.querySelector(".topbar"), top=(tb && !$("appView").hidden)?tb.getBoundingClientRect().bottom:0, vh=window.innerHeight, room=vh-top;
+      var want=(st.top || r.height>room-240) ? r.top-top-16 : r.top-top-Math.max(16,(room-r.height)/2-90);
+      if(st.top || r.top<top+8 || r.bottom>vh-200) window.scrollBy({top:want,behavior:"smooth"});
+    }
+    tourPlace(); setTimeout(tourPlace,350); setTimeout(tourPlace,700);
+    var nb=T.tp.querySelector('.btn[data-t="next"],.btn[data-t="end"]'); if(nb) nb.focus({preventScroll:true});
+  }
+  function tourPlace(){
+    var T=TOUR; if(!T) return; var st=T.steps[T.i], el=tourEl(st), sp=T.sp, tp=T.tp, vw=document.documentElement.clientWidth, vh=window.innerHeight, ar=tp.querySelector(".tt-arrow");
+    if(!el){ sp.classList.add("center"); sp.style.left=(vw/2)+"px"; sp.style.top=(vh/2)+"px"; sp.style.width="0px"; sp.style.height="0px";
+      tp.classList.remove("sheet"); tp.style.left=Math.max(16,(vw-tp.offsetWidth)/2)+"px"; tp.style.top=Math.max(16,(vh-tp.offsetHeight)/2)+"px"; if(ar) ar.style.display="none"; return; }
+    sp.classList.remove("center");
+    var r=el.getBoundingClientRect(), pad=6, x0=Math.max(4,r.left-pad), y0=Math.max(4,r.top-pad), x1=Math.min(vw-4,r.right+pad), y1=Math.min(vh-4,r.bottom+pad);
+    sp.style.left=x0+"px"; sp.style.top=y0+"px"; sp.style.width=Math.max(0,x1-x0)+"px"; sp.style.height=Math.max(0,y1-y0)+"px";
+    var gap=14, narrow=vw<640; tp.classList.toggle("sheet",narrow);
+    var th=tp.offsetHeight, tw=tp.offsetWidth, below=vh-y1, above=y0;
+    var placeBelow=below>=th+gap+8 ? (below>=above || above<th+gap+8) : false;
+    var fits=placeBelow || above>=th+gap+8;
+    if(narrow || !fits){ // small screen or no room beside it: the card sits at the bottom of the screen (or at the top if the target is down there)
+      if(ar) ar.style.display="none"; tp.style.left="16px";
+      var lowTarget=(y0+y1)/2>vh*0.55; tp.style.top=(lowTarget?16:Math.max(16,vh-th-16))+"px"; return; }
+    var cx=(x0+x1)/2, left=Math.min(vw-16-tw,Math.max(16,cx-tw/2)), top=placeBelow?y1+gap:y0-gap-th;
+    tp.style.left=left+"px"; tp.style.top=top+"px";
+    if(ar){ ar.style.display=""; ar.style.left=Math.min(tw-24,Math.max(10,cx-left-7))+"px"; if(placeBelow){ ar.style.top="-7px"; ar.style.bottom=""; } else { ar.style.top=""; ar.style.bottom="-7px"; } }
+  }
+  function tourEnd(quiet){
+    var T=TOUR; if(!T) return; TOUR=null;
+    [T.bl,T.sp,T.tp].forEach(function(n){ if(n.parentNode) n.parentNode.removeChild(n); });
+    window.removeEventListener("resize",tourPlace); window.removeEventListener("scroll",tourPlace,true); document.removeEventListener("keydown",tourKey,true);
+    tourMark(S.mode); if(!quiet) window.scrollTo({top:0,behavior:"smooth"});
+  }
   try{ if(location.hash==="#planificador") showView("app-techo"); else if(location.hash==="#suelo") showView("app-suelo"); }catch(err){}
 })();
 </script>
