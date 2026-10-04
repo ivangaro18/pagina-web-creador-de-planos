@@ -399,6 +399,29 @@
   .tour-tip.sheet{width:calc(100vw - 32px);}
   .tour-tip.sheet .tt-arrow{display:none;}
   @media (prefers-reduced-motion:reduce){ .tour-spot,.tour-tip{transition:none;} }
+  .tour-spot.live{box-shadow:0 0 0 9999px rgba(12,24,34,.30);outline:3px solid #F2B53A;animation:tourPulse 1.4s ease-in-out infinite;}
+  @keyframes tourPulse{0%,100%{outline-offset:0;outline-color:#F2B53A;}50%{outline-offset:4px;outline-color:rgba(242,181,58,.55);}}
+  .tour-tip .tt-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .tour-tip .tt-badges{display:flex;gap:4px;}
+  .tour-tip .tt-badges i{width:10px;height:10px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);}
+  .tour-tip .tt-badges i.on{background:#F2B53A;border-color:#D99A1E;}
+  .tour-tip .tt-badges i.sk{background:#C9D7E1;border-color:#AFC0CC;}
+  .tour-tip .tt-list{list-style:none;padding:0;margin:10px 0 10px;}
+  .tour-tip .tt-list li{display:flex;gap:8px;align-items:center;padding:4px 0;color:var(--muted);font-size:.86rem;}
+  .tour-tip .tt-list li span{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);font-size:.75rem;font-weight:700;}
+  .tour-tip .tt-list li.on{color:var(--ink);}
+  .tour-tip .tt-list li.on span{background:#F2B53A;color:#fff;}
+  .tour-tip .tt-list em{color:var(--muted);font-style:normal;font-size:.78rem;}
+  .tour-toast{position:fixed;z-index:95;left:50%;top:18px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:#0F2A3D;color:#fff;border-radius:12px;padding:10px 16px 10px 12px;box-shadow:0 10px 28px rgba(10,20,30,.3);font-size:.86rem;line-height:1.35;pointer-events:none;}
+  .tour-toast .ic{width:36px;height:36px;border-radius:50%;background:#F2B53A;color:#0F2A3D;display:grid;place-items:center;flex:none;}
+  .tour-toast.show{animation:tourPop .45s cubic-bezier(.2,1.4,.4,1);}
+  @keyframes tourPop{0%{transform:translateX(-50%) scale(.6);opacity:0;}100%{transform:translateX(-50%) scale(1);opacity:1;}}
+  @media (prefers-reduced-motion:reduce){ .tour-spot.live,.tour-toast.show{animation:none;} }
+  .tour-tip .tt-min{margin-left:6px;width:24px;height:24px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:600 .9rem/1 inherit;cursor:pointer;flex:none;}
+  .tour-tip .tt-min:hover{color:var(--ink);}
+  .tour-tip .tt-head .tt-badges{margin-left:auto;}
+  .tour-tip.min .tt-body,.tour-tip.min .tt-nav{display:none;}
+  .tour-tip.min h3{margin-bottom:0;font-size:.9rem;}
 </style>
 
 <div id="siteView" class="site">
@@ -752,7 +775,7 @@
   <div class="modal-card">
     <div class="ta-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B7FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.9"/><path d="M12 17h.01"/></svg></div>
     <h2 id="tourAskTitle">¿Es la primera vez que usas el planificador?</h2>
-    <p id="tourAskText">Te enseñamos en un par de minutos dónde está cada cosa, paso a paso. Puedes saltarlo cuando quieras y repetirlo más tarde con el botón «? Tutorial».</p>
+    <p id="tourAskText">Te guiamos mientras dibujas una vivienda de práctica: tú haces cada paso y vas consiguiendo logros. Puedes saltarlo cuando quieras y repetirlo más tarde con el botón «? Tutorial».</p>
     <div class="modal-actions">
       <button class="btn ghost" id="tourNo">Ya sé usar la herramienta</button>
       <button class="btn" id="tourYes">Ver tutorial</button>
@@ -3307,7 +3330,7 @@
     update(true);
   })();
 
-  // ---------------- guided tour (first visit from the chooser, or the "? Tutorial" button) ----------------
+  // ---------------- guided tutorial: the user does each thing on a practice project, mission by mission ----------------
   var TOUR=null, TOUR_SEEN={};
   function tourSeen(m){ if(TOUR_SEEN[m]) return true; try{ return localStorage.getItem("prTour_"+m)==="1"; }catch(e){ return false; } }
   function tourMark(m){ TOUR_SEEN[m]=1; try{ localStorage.setItem("prTour_"+m,"1"); }catch(e){} }
@@ -3319,95 +3342,229 @@
   $("tourNo").addEventListener("click",function(){ $("tourAsk").hidden=true; tourMark(S.mode); });
   $("tourYes").addEventListener("click",function(){ $("tourAsk").hidden=true; tourMark(S.mode); tourStart(); });
   $("tourBtn").addEventListener("click",function(){ tourStart(); });
-  function tourSteps(m,loaded){
-    var suelo=m==="suelo", st=[];
-    st.push({t:"Bienvenido al planificador de "+(suelo?"suelo":"techo")+" radiante",
-      x:"<p>En unos pasos te enseñamos dónde está cada cosa y cómo se trabaja: dibujas la vivienda, colocas los colectores y el programa calcula "+(suelo?"los circuitos":"los paneles, los circuitos y la estructura")+" y el material.</p>"+
-        (loaded?"<p>Hemos cargado una <b>vivienda de ejemplo</b> para que lo veas funcionando. Al terminar puedes empezar la tuya con «Nuevo proyecto».</p>":"")+
-        "<p style='color:var(--muted);font-size:.8rem'>Puedes avanzar también con las flechas del teclado.</p>"});
-    st.push({el:"#addRoom",t:"1. Añade las estancias",x:"<p>Pulsa <b>+ Estancia</b> para dibujar cada habitación: eliges la forma (rectángulo, en L o a mano sobre la cuadrícula) y escribes la medida real de cada lado.</p><p>Desde la segunda, eliges a qué pared de otra estancia se pega y la vivienda se va montando sola.</p>"});
-    st.push({el:"#loadExample",t:"¿Quieres practicar antes?",x:"<p><b>Ver ejemplo</b> carga una vivienda completa para probar sin miedo a estropear nada.</p>"});
-    st.push({el:".plan-stage",t:"El plano",x:"<ul><li><b>Un clic</b> en una estancia abre su ficha.</li><li><b>Doble clic</b> la coge para moverla (se pega sola al muro más cercano).</li><li><b>Arrastra</b> el fondo para desplazarte y usa la <b>rueda</b> o los botones <b>+ / −</b> para el zoom.</li></ul>"+
-      (suelo?"<p>Cada color es un circuito y las flechas marcan el sentido del agua.</p>":"")});
-    st.push({el:"#floorBar",t:"Plantas",x:"<p>Si la vivienda tiene varias plantas, añádelas aquí y cambia de una a otra. Cada planta lleva sus propios colectores.</p>"});
-    st.push({el:"#collChip",t:"2. Coloca los colectores",x:suelo?"<p>Arrastra el colector hasta una pared del plano: al soltarlo se pega a la pared más cercana. Después puedes moverlo arrastrándolo.</p><p>Cada vez que cambias algo, el cálculo se rehace al momento.</p>":"<p>Arrastra el colector al plano (o púlsalo) y muévelo arrastrándolo. Las estancias se asignan enteras al colector más cercano con salidas libres.</p>"});
+  var TROPHY='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>';
+  function tPhone(){ return document.documentElement.clientWidth<640; }
+  function tHas(sel){ var el=document.querySelector(sel); return !!(el && el.getClientRects().length); }
+  function tDoors(){ var n=0; S.rooms.forEach(function(r){ n+=(r.doors||[]).length; }); return n; }
+  function tModalStep(){ return (SH && !$("shapeModal").hidden) ? SH.step : null; }
+  // ---- what the user practises, in order. Each mission: steps picked by when(), done() ends it, skip() does it for them
+  function tourPlan(m){
+    var suelo=m==="suelo", P=[];
+    P.push({info:true,t:"Aprende haciéndolo",x:"<p>Vamos a dibujar juntos una vivienda pequeña: <b>dos estancias</b>"+(suelo?", una <b>ventana</b>, una <b>puerta</b>":"")+" y un <b>colector</b>. Tú haces cada paso y yo te voy diciendo dónde pulsar.</p><p>Cada misión superada es un <b>logro</b>. Si alguna se te atasca puedes saltarla y la hago yo.</p>"+
+      (TOUR.hadOwn?"<p style='color:var(--muted)'>Practicarás en un proyecto aparte: el tuyo se guarda y podrás volver a él al terminar.</p>":""),btn:"Empezar"});
+    // 1. first room
+    P.push({mission:true,t:"Crea tu primera estancia",badge:"Primera estancia",
+      start:function(T){ T.base=S.rooms.length; },
+      done:function(T){ return S.rooms.length>T.base && !S.placing && $("shapeModal").hidden; },
+      after:function(T){ T.salon=S.rooms[S.rooms.length-1].id; },
+      skip:function(T){ closeShape(); var r=rectRoom("Salón",0,0,5,4); S.rooms.push(r); S.sel=r.id; update(true); },
+      steps:[
+        {when:function(){ return tModalStep()==="draw"; },el:"#shRect",place:"left",x:"<p>Esta es la ventana para dibujar la estancia. Puedes pulsar los puntos de la cuadrícula uno a uno para dibujar cualquier forma, o usar una forma hecha.</p><p>Para este ejemplo pulsa <b>Rectángulo</b>.</p>"},
+        {when:function(){ return tModalStep()==="curves"; },el:"#shSkip",x:"<p>Aquí marcarías las paredes curvas pulsando sobre ellas. Las de esta estancia son rectas: pulsa <b>Omitir</b>.</p>"},
+        {when:function(){ return tModalStep()==="bend"; },el:"#shapeCanvas",x:"<p>Arrastra el punto verde para darle la curva a la pared y luego pulsa <b>Continuar</b>.</p>"},
+        {when:function(){ return tModalStep()==="measures"; },el:"#shapeSide",place:"left",x:"<p>Ahora las medidas reales. Escribe:</p><ul><li>Nombre: <b>Salón</b></li><li>Lados <b>A</b> y <b>C</b>: <b>5</b> m</li><li>Lados <b>B</b> y <b>D</b>: <b>4</b> m</li></ul><p>El aviso verde te dice si la forma cierra. Después pulsa <b>Crear estancia</b>.</p>"},
+        {when:function(){ return true; },el:"#addRoom",x:"<p>Todo empieza aquí. Pulsa <b>+ Estancia</b>.</p>"}
+      ]});
+    // 2. second room glued to the first
+    P.push({mission:true,t:"Pega una segunda estancia",badge:"Vivienda en marcha",
+      start:function(T){ T.base=S.rooms.length; },
+      after:function(T){ T.dorm=S.rooms[S.rooms.length-1].id; },
+      done:function(T){ return S.rooms.length>T.base && !S.placing && $("shapeModal").hidden; },
+      skip:function(T){ cancelPlacing(); var a=roomById(T.salon)||S.rooms[0], W=a?worldOutline(a):[V(0,0)], mx=Math.max.apply(null,W.map(function(p){ return p.x; })), my=Math.min.apply(null,W.map(function(p){ return p.y; })), r=rectRoom("Dormitorio",mx,my,3,4); S.rooms.push(r); S.sel=r.id; update(true); },
+      steps:[
+        {when:function(){ return tModalStep()==="draw"; },el:"#shRect",place:"left",x:"<p>Otra vez <b>Rectángulo</b>.</p>"},
+        {when:function(){ return tModalStep()==="curves"; },el:"#shSkip",x:"<p>Paredes rectas: pulsa <b>Omitir</b>.</p>"},
+        {when:function(){ return tModalStep()==="bend"; },el:"#shapeCanvas",x:"<p>Da forma a la curva y pulsa <b>Continuar</b>.</p>"},
+        {when:function(){ return tModalStep()==="measures"; },el:"#shapeSide",place:"left",x:"<p>Escribe:</p><ul><li>Nombre: <b>Dormitorio</b></li><li><b>A</b> y <b>C</b>: <b>3</b> m</li><li><b>B</b> y <b>D</b>: <b>4</b> m</li></ul><p>Fíjate que el botón ahora dice <b>Crear y colocar</b>, porque hay que decir dónde va. Púlsalo.</p>"},
+        {when:function(){ return S.placing && S.placing.step==="target"; },el:function(T){ return roomSel(T.salon); },x:"<p><b>Colocar, paso 1 de 3.</b> Pulsa en el plano la estancia a la que se va a pegar: el <b>Salón</b>.</p>"},
+        {when:function(){ return tModalStep()==="tEdge"; },el:"#shapeCanvas",place:"right",x:"<p><b>Paso 2 de 3.</b> Este es el Salón. Pulsa el lado donde irá pegada la nueva estancia, por ejemplo el <b>B</b> (el de la derecha).</p>"},
+        {when:function(){ return tModalStep()==="oEdge"; },el:"#shapeCanvas",place:"right",x:"<p><b>Paso 3 de 3.</b> Ahora pulsa el lado del Dormitorio que va pegado: el <b>D</b> (el de la izquierda).</p>"},
+        {when:function(){ return true; },el:"#addRoom",x:"<p>Vamos con la segunda. Pulsa <b>+ Estancia</b> otra vez.</p>"}
+      ]});
+    P.push({info:true,el:".plan-stage",t:"Muévete por el plano",x:"<ul><li><b>Arrastra</b> el fondo para desplazarte y usa la <b>rueda</b> o <b>+ / −</b> para el zoom.</li><li><b>Doble clic</b> en una estancia la coge para moverla; se pega sola al muro más cercano.</li><li><b>Un clic</b> abre su ficha (lo probaremos al final).</li></ul>"});
     if(suelo){
-      st.push({el:"#markBar",t:"3. Marca lo que afecta a los tubos",x:"<p>Pulsa un botón y luego la pared (o la zona) en el plano:</p><ul><li><b>Ventana</b> y <b>muro exterior</b>: ahí el tubo va más junto.</li><li><b>Escalera</b>: por esa pared no pasa tubo.</li><li><b>Puerta</b>: los tubos solo cruzan los tabiques por las puertas.</li><li><b>Obstáculo</b>: ducha, bañera, muebles fijos… ahí no va tubo.</li></ul>"});
-      st.push({el:"#ufRulesCard",t:"Reglas del suelo",x:"<p>Separación del tubo, longitud máxima por circuito (120 m por defecto), franjas junto a ventanas y muros, margen de tubo… Cambia cualquier valor y el plano se recalcula.</p>"});
-      st.push({el:"#collCard",t:"Salidas de cada colector",x:"<p>Indica cuántas salidas tiene cada colector. El programa reparte las estancias entre los colectores sin que ningún circuito se cruce con otro.</p>"});
-      st.push({el:"#detailCard",t:"Ficha de la estancia",x:"<p>Nombre, medida y tipo de cada pared, y separación propia del tubo si la quieres distinta.</p><p>Si una estancia se queda sin circuito, aquí te explica el motivo y qué cambiar para resolverlo.</p>"});
+      P.push({mission:true,t:"Marca una ventana",badge:"Ventana marcada",
+        done:function(){ return S.rooms.some(function(r){ return Object.keys(r.marks||{}).some(function(k){ return r.marks[k]==="ventana"; }); }); },
+        after:function(){ if(S.markTool) setMarkTool(S.markTool); },
+        skip:function(T){ if(S.markTool) setMarkTool(S.markTool); var r=roomById(T.salon)||S.rooms[0]; if(r){ r.marks=r.marks||{}; r.marks[0]="ventana"; update(true); } },
+        steps:[
+          {when:function(){ return S.markTool==="ventana"; },el:function(T){ return roomSel(T.salon); },x:"<p>Ahora pulsa en el plano la pared de arriba del <b>Salón</b>. Se pintará como ventana y verás que el tubo se aprieta junto a ella cuando haya colector.</p>"},
+          {when:function(){ return true; },el:'#markBar [data-mark="ventana"]',x:"<p>Las ventanas y muros exteriores hacen que el tubo vaya más junto. Pulsa <b>Marcar ventana</b>.</p>"}
+        ]});
+      P.push({mission:true,t:"Pon una puerta",badge:"Puerta colocada",
+        start:function(T){ T.base=tDoors(); },
+        done:function(T){ return tDoors()>T.base && !S.doorTool; },
+        skip:function(T){ if(S.doorTool||$("doorBtn").classList.contains("on")) doorCancel(true); var r=roomById(T.salon)||S.rooms[0]; if(r){ (r.doors=r.doors||[]).push({edge:1,t:2,w:0.8}); update(true); } },
+        steps:[
+          {when:function(){ return S.doorTool && S.doorTool.pending.length; },el:"#doorOk",x:"<p>Ya está marcada. Si la vivienda tuviera más puertas de este ancho, las pulsarías ahora. Pulsa <b>Confirmar</b> para guardarla.</p>"},
+          {when:function(){ return !!S.doorTool; },el:function(T){ return [roomSel(T.salon),roomSel(T.dorm)]; },x:"<p>Pulsa en la pared que separa el <b>Salón</b> y el <b>Dormitorio</b>: la puerta se centra donde pulses.</p>"},
+          {when:function(){ return $("doorBtn").classList.contains("on"); },el:"#modeHint",x:"<p>Primero el ancho de la puerta. Deja <b>80</b> cm y pulsa <b>Continuar</b>.</p>"},
+          {when:function(){ return true; },el:"#doorBtn",x:"<p>Los tubos solo cruzan los tabiques por las puertas. Pulsa <b>Marcar puerta</b>.</p>"}
+        ]});
     } else {
-      st.push({el:"#planTools",t:"Qué ver en el plano",x:"<p>Colorea los paneles por circuito, muestra la tubería de ida y retorno o dibuja la estructura de pladur encima del plano.</p>"});
-      st.push({el:"#catalogCard",t:"3. Tus paneles",x:"<p>Escribe las medidas de los paneles que uses, de cualquier fabricante. El programa coloca siempre el panel más grande que quepa, con un máximo de 2 paneles por circuito.</p>"});
-      st.push({el:"#coverCard",t:"Cobertura",x:"<p>Qué porcentaje del techo quieres cubrir con paneles. Cada estancia puede tener su propio rango desde su ficha.</p>"});
-      st.push({el:"#pladurCard",t:"Techo de pladur",x:"<p>Placa, separación de perfiles y cuelgues: con esto se calcula la estructura completa del techo.</p>"});
-      st.push({el:"#collCard",t:"Colectores y tubería",x:"<p>Salidas de cada colector, subida del colector al techo y margen de tubo para el cálculo del PEX.</p>"});
-      st.push({el:"#detailCard",t:"Ficha de la estancia",x:"<p>Medidas de cada lado, iluminación (puntos de luz o tira LED), cobertura propia y giro de la estructura.</p>"});
+      P.push({mission:true,t:"Muestra la tubería",badge:"Tubería a la vista",
+        done:function(){ return !!S.showPipes; },
+        skip:function(){ var c=$("showPipes"); if(c && !c.checked){ c.checked=true; c.dispatchEvent(new Event("change")); } },
+        steps:[{when:function(){ return true; },el:"#planTools",x:"<p>Puedes ver encima del plano la tubería, los circuitos por colores o la estructura de pladur. Marca <b>Mostrar tubería</b>.</p>"}]});
     }
-    st.push({el:"#tablesCard",t:"Resumen de circuitos",x:"<p>Circuitos y metros de tubo por estancia y por colector, con las salidas usadas y las libres.</p>"});
-    st.push({el:"#report",t:"4. Material e informe",x:"<p>Lista de material con cantidades. Escribe tus precios de coste para tener el importe aproximado, rellena cliente y obra, y descarga el <b>informe en PDF</b>.</p>",top:true});
-    st.push({el:"#openCompany",t:"Tus datos de empresa",x:"<p>Nombre, logotipo y datos de contacto: aparecen en la cabecera del informe.</p>"});
-    st.push({el:"#tourBtn",t:"¡Listo!",x:"<p>Puedes repetir este tutorial cuando quieras desde este botón.</p><p>Para empezar tu propia obra, pulsa <b>Nuevo proyecto</b> y añade la primera estancia.</p>"});
-    return st;
+    P.push({mission:true,t:"Coloca el colector",badge:"Colector instalado",
+      start:function(T){ T.base=S.collectors.length; },
+      done:function(T){ return suelo ? S.collectors.some(function(c){ return c.room!=null; }) : S.collectors.length>T.base; },
+      skip:function(T){ var r=roomById(T.salon)||S.rooms[0];
+        if(suelo) S.collectors.push({id:nid(),name:"Colector "+(S.collectors.length+1),cap:10,room:r?r.id:null,edge:2,off:1});
+        else S.collectors.push({id:nid(),name:"Colector "+(S.collectors.length+1),x:(r?r.tx:0)+1,y:(r?r.ty:0)+3.6,cap:16});
+        renderCollectors(); update(true); },
+      steps:[{when:function(){ return true; },
+        el:function(T){ return tPhone()?"#collChip":["#collChip",roomSel(T.salon)]; },
+        x:function(){ return tPhone()
+          ? "<p>Pulsa el <b>Colector</b>: aparecerá en el plano pegado a la pared más cercana.</p><p>Luego podrás arrastrarlo por el plano a otra pared.</p>"
+          : (suelo?"<p>Mantén pulsado el <b>Colector</b> y arrástralo hasta una pared del <b>Salón</b>. Suéltalo cerca de la pared y se pegará solo.</p><p>En cuanto lo sueltes, verás aparecer los circuitos.</p>"
+                  :"<p>Arrastra el <b>Colector</b> dentro del <b>Salón</b> (o simplemente púlsalo). Las estancias se asignan solas al colector más cercano con salidas libres.</p>"); }}]});
+    P.push({mission:true,t:"Abre la ficha de una estancia",badge:"Ficha consultada",
+      done:function(T){ return S.sel===T.salon && !S.moveId; },
+      skip:function(T){ if(T.salon) select(T.salon); },
+      steps:[{when:function(){ return true; },el:function(T){ return roomSel(T.salon); },x:"<p>Haz <b>un clic</b> sobre el <b>Salón</b> para abrir su ficha.</p>"}]});
+    P.push({info:true,el:"#detailCard",t:"La ficha de la estancia",x:suelo?"<p>Aquí cambias el nombre, la medida y el tipo de cada pared (normal, exterior, ventana) y la separación del tubo de esta estancia.</p><p>Si una estancia se queda sin circuito, aquí te explica el motivo y qué cambiar.</p>":"<p>Medidas de cada lado, iluminación (puntos de luz o tira LED), cobertura propia y giro de la estructura de esta estancia.</p>"});
+    if(suelo){
+      P.push({info:true,el:"#ufRulesCard",t:"Reglas del suelo",x:"<p>Separación del tubo, longitud máxima por circuito, franjas junto a ventanas y muros… Cambia cualquier valor y el plano se recalcula al momento.</p>"});
+      P.push({info:true,el:"#collCard",t:"Salidas de los colectores",x:"<p>Indica cuántas salidas tiene cada colector. El programa reparte las estancias sin que ningún circuito se cruce.</p>"});
+    } else {
+      P.push({info:true,el:"#catalogCard",t:"Tus paneles",x:"<p>Medidas de los paneles que uses, de cualquier fabricante. Se coloca siempre el más grande que quepa, con máximo 2 paneles por circuito.</p>"});
+      P.push({info:true,el:"#coverCard",t:"Cobertura",x:"<p>Qué porcentaje del techo quieres cubrir con paneles.</p>"});
+      P.push({info:true,el:"#pladurCard",t:"Techo de pladur",x:"<p>Placa, perfiles y cuelgues para calcular la estructura completa.</p>"});
+      P.push({info:true,el:"#collCard",t:"Colectores y tubería",x:"<p>Salidas de cada colector, subida al techo y margen de tubo.</p>"});
+    }
+    P.push({info:true,el:"#tablesCard",t:"Resumen de circuitos",x:"<p>Circuitos y metros de tubo por estancia y por colector, con las salidas usadas y libres.</p>"});
+    P.push({info:true,el:"#report",top:true,t:"Material e informe",x:"<p>Material con cantidades. Escribe tus precios para ver el coste aproximado, rellena cliente y obra, y descarga el <b>informe en PDF</b>.</p>"});
+    P.push({info:true,el:"#openCompany",t:"Tus datos de empresa",x:"<p>Nombre, logotipo y contacto: salen en la cabecera del informe.</p>"});
+    P.push({final:true});
+    return P;
   }
   function tourStart(){
-    if(TOUR) tourEnd(true);
+    if(TOUR) tourEnd(true,"keep");
     $("tourAsk").hidden=true;
-    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false);
-    var loaded=false; if(!allRooms().length){ loadExample(); loaded=true; }
-    var bl=document.createElement("div"), sp=document.createElement("div"), tp=document.createElement("div");
-    bl.className="tour-block"; sp.className="tour-spot"; tp.className="tour-tip"; tp.setAttribute("role","dialog"); tp.setAttribute("aria-live","polite");
-    document.body.appendChild(bl); document.body.appendChild(sp); document.body.appendChild(tp);
-    TOUR={i:0,steps:tourSteps(S.mode,loaded),bl:bl,sp:sp,tp:tp};
-    tp.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b||!TOUR) return; var a=b.getAttribute("data-t"); if(a==="next") tourGo(TOUR.i+1,1); else if(a==="prev") tourGo(TOUR.i-1,-1); else if(a==="end") tourEnd(); });
+    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool||$("doorBtn").classList.contains("on")) doorCancel(true); if(S.obstTool) obstTool(false); if(SH) closeShape();
+    var hadOwn=allRooms().length>0;
+    var snap={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title,project:JSON.parse(JSON.stringify(S.project||{}))};
+    S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.zoom=null; S.title="Práctica del tutorial";
+    syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true);
+    var bl=document.createElement("div"), sp=document.createElement("div"), tp=document.createElement("div"), toast=document.createElement("div");
+    bl.className="tour-block"; sp.className="tour-spot"; tp.className="tour-tip"; tp.setAttribute("role","dialog"); tp.setAttribute("aria-live","polite"); toast.className="tour-toast"; toast.hidden=true;
+    [bl,sp,tp,toast].forEach(function(n){ document.body.appendChild(n); });
+    TOUR={i:-1,snap:snap,hadOwn:hadOwn,bl:bl,sp:sp,tp:tp,toast:toast,got:{},skipped:{},sub:-1};
+    TOUR.plan=tourPlan(S.mode); TOUR.missions=TOUR.plan.filter(function(p){ return p.mission; });
+    tp.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b||!TOUR) return; tourAct(b.getAttribute("data-t")); });
     bl.addEventListener("wheel",function(e){ e.preventDefault(); },{passive:false});
     window.addEventListener("resize",tourPlace); window.addEventListener("scroll",tourPlace,true); document.addEventListener("keydown",tourKey,true);
-    tourGo(0,1);
+    TOUR.timer=setInterval(tourTick,200);
+    tourGo(0);
   }
-  function tourKey(e){ if(!TOUR) return; var k=e.key;
-    if(k==="Escape"){ e.preventDefault(); e.stopPropagation(); tourEnd(); }
-    else if(k==="ArrowRight"){ e.preventDefault(); e.stopPropagation(); tourGo(TOUR.i+1,1); }
-    else if(k==="ArrowLeft"){ e.preventDefault(); e.stopPropagation(); tourGo(TOUR.i-1,-1); } }
-  function tourEl(st){ if(!st.el) return null; var el=document.querySelector(st.el); if(!el || !el.getClientRects().length) return null; var r=el.getBoundingClientRect(); return (r.width>0&&r.height>0)?el:null; }
-  function tourGo(i,dir){
-    var T=TOUR; if(!T) return;
-    while(i>0 && i<T.steps.length && T.steps[i].el && !tourEl(T.steps[i])) i+=dir; // a step whose element is not shown is passed over
-    if(i>=T.steps.length){ tourEnd(); return; } if(i<0) i=0;
-    T.i=i; var st=T.steps[i], el=tourEl(st), n=T.steps.length, last=i===n-1;
-    T.tp.innerHTML='<div class="tt-arrow"></div><div class="tt-step">'+(i+1)+' de '+n+'</div><h3>'+st.t+'</h3>'+st.x+
-      '<div class="tt-bar"><i style="width:'+Math.round((i+1)/n*100)+'%"></i></div><div class="tt-nav">'+
-      (last?'':'<button class="tt-skip" type="button" data-t="end">Saltar tutorial</button>')+(i>0?'<button class="btn ghost small" type="button" data-t="prev">Anterior</button>':'')+
-      '<button class="btn small" type="button" data-t="'+(last?'end':'next')+'"'+(last?' style="margin-left:auto"':'')+'>'+(last?'Terminar':(i===0?'Empezar':'Siguiente'))+'</button></div>';
-    if(el){ // bring it into view, clear of the sticky top bar
-      var r=el.getBoundingClientRect(), tb=document.querySelector(".topbar"), top=(tb && !$("appView").hidden)?tb.getBoundingClientRect().bottom:0, vh=window.innerHeight, room=vh-top;
-      var want=(st.top || r.height>room-240) ? r.top-top-16 : r.top-top-Math.max(16,(room-r.height)/2-90);
-      if(st.top || r.top<top+8 || r.bottom>vh-200) window.scrollBy({top:want,behavior:"smooth"});
+  function tourAct(a){ var T=TOUR; if(!T) return;
+    if(a==="next") tourGo(T.i+1); else if(a==="prev") tourGo(T.i-1);
+    else if(a==="skip"){ var st=T.plan[T.i]; T.skipped[st.badge]=1; try{ st.skip(T); }catch(e){} tourWin(st,true); }
+    else if(a==="exit") tourGo(T.plan.length-1);
+    else if(a==="min"){ T.min=!T.min; T.tp.classList.toggle("min",T.min); tourRender(true); }
+    else if(a==="back"||a==="keep"||a==="fresh") tourEnd(false,a); }
+  function tourKey(e){ if(!TOUR) return; var st=TOUR.plan[TOUR.i]; if(!st || st.mission) return;
+    var tg=e.target, typing=tg && (tg.tagName==="INPUT"||tg.tagName==="SELECT"||tg.tagName==="TEXTAREA"); if(typing) return;
+    if(e.key==="ArrowRight" && !st.final){ e.preventDefault(); e.stopPropagation(); tourGo(TOUR.i+1); }
+    else if(e.key==="ArrowLeft" && TOUR.i>0 && !st.final){ e.preventDefault(); e.stopPropagation(); tourGo(TOUR.i-1); } }
+  function tourEl(sel){ if(!sel) return null; var el=document.querySelector(sel); if(!el || !el.getClientRects().length) return null; var r=el.getBoundingClientRect(); return (r.width>0&&r.height>0)?el:null; }
+  // what to point at: a selector, a function giving one, or a list of them (the box round all of them)
+  function tourEls(spec){ if(typeof spec==="function") spec=spec(TOUR); if(!spec) return []; if(!Array.isArray(spec)) spec=[spec]; return spec.map(tourEl).filter(function(e){ return e; }); }
+  function tourBox(els){ if(!els.length) return null; var b={left:Infinity,top:Infinity,right:-Infinity,bottom:-Infinity}; els.forEach(function(e){ var r=e.getBoundingClientRect(); b.left=Math.min(b.left,r.left); b.top=Math.min(b.top,r.top); b.right=Math.max(b.right,r.right); b.bottom=Math.max(b.bottom,r.bottom); }); b.width=b.right-b.left; b.height=b.bottom-b.top; return b; }
+  function roomSel(id){ return id!=null ? '#planWrap [data-room="'+id+'"]' : '.plan-stage'; }
+  function tourGo(i){
+    var T=TOUR; if(!T) return; i=Math.max(0,Math.min(T.plan.length-1,i));
+    T.i=i; T.sub=-1; var st=T.plan[i];
+    if(st.mission && st.start) st.start(T);
+    if(st.mission && S.rooms.length){ var fb=document.querySelector('[data-zoom="fit"]'); if(fb) fb.click(); } // the whole practice house in view
+    T.bl.style.display=st.mission?"none":""; T.tp.classList.toggle("min",!!(st.mission&&T.min));
+    T.sp.classList.toggle("live",!!st.mission);
+    tourRender(true);
+  }
+  function tourBadges(){ var T=TOUR; return '<span class="tt-badges">'+T.missions.map(function(m){ var g=T.got[m.badge]; return '<i class="'+(g?(T.skipped[m.badge]?'sk':'on'):'')+'" title="'+esc(m.badge)+'"></i>'; }).join("")+'</span>'; }
+  function tourRender(scroll){
+    var T=TOUR; if(!T) return; var st=T.plan[T.i], h, el=null;
+    if(st.final){
+      T.cur=st; var n=T.missions.filter(function(m){ return T.got[m.badge] && !T.skipped[m.badge]; }).length, all=T.missions.length;
+      h='<div class="tt-step">Tutorial '+(n===all?'completado':'terminado')+'</div><h3>'+(n===all?'¡Enhorabuena! Ya sabes usar el planificador':'Fin del tutorial')+'</h3>'+
+        '<ul class="tt-list">'+T.missions.map(function(m){ var g=T.got[m.badge], sk=T.skipped[m.badge]; return '<li class="'+(g&&!sk?'on':'')+'"><span>'+(g&&!sk?'✓':sk?'–':'·')+'</span>'+esc(m.badge)+(sk?' <em>(saltado)</em>':'')+'</li>'; }).join("")+'</ul>'+
+        '<p>Puedes repetir el tutorial cuando quieras con el botón <b>? Tutorial</b>.</p>'+
+        '<div class="tt-nav" style="margin-top:12px">'+(T.hadOwn?'<button class="tt-skip" type="button" data-t="keep">Quedarme con la práctica</button><button class="btn small" type="button" data-t="back">Volver a mi proyecto</button>':'<button class="tt-skip" type="button" data-t="keep">Seguir con la práctica</button><button class="btn small" type="button" data-t="fresh">Empezar mi proyecto</button>')+'</div>';
+    } else if(st.mission){
+      var k=T.missions.indexOf(st), sub=-1;
+      for(var j=0;j<st.steps.length;j++){ if(st.steps[j].when(T)){ sub=j; break; } }
+      if(!scroll && sub===T.sub) return; // nothing new to say
+      T.sub=sub; var ss=st.steps[sub]||{x:""}; T.cur=ss;
+      h='<div class="tt-head"><span class="tt-step">Misión '+(k+1)+' de '+T.missions.length+'</span>'+tourBadges()+'<button class="tt-min" type="button" data-t="min" aria-label="Plegar o desplegar la ayuda" title="Plegar / desplegar">'+(T.min?'+':'–')+'</button></div><h3>'+st.t+'</h3><div class="tt-body">'+(typeof ss.x==="function"?ss.x(T):ss.x)+'</div>'+
+        '<div class="tt-nav" style="margin-top:12px"><button class="tt-skip" type="button" data-t="exit">Salir del tutorial</button><button class="btn ghost small" type="button" data-t="skip">Saltar esta misión</button></div>';
+    } else {
+      T.cur=st; var nInfo=T.plan.filter(function(p){ return !p.final; }).length;
+      h='<div class="tt-head"><span class="tt-step">'+(T.i+1)+' de '+nInfo+'</span>'+(T.i>0?tourBadges():'')+'</div><h3>'+st.t+'</h3>'+st.x+
+        '<div class="tt-nav" style="margin-top:12px"><button class="tt-skip" type="button" data-t="exit">Salir del tutorial</button>'+(T.i>0&&!T.plan[T.i-1].mission?'<button class="btn ghost small" type="button" data-t="prev">Anterior</button>':'')+'<button class="btn small" type="button" data-t="next">'+(st.btn||'Siguiente')+'</button></div>';
+    }
+    T.tp.innerHTML='<div class="tt-arrow"></div>'+h;
+    var els=tourEls(T.cur && T.cur.el); el=els[0];
+    // on a narrow screen the plan scrolls sideways: bring the rooms in question to the middle of it
+    var pw=el && el.closest && el.closest("#planWrap"); if(pw && pw.scrollWidth>pw.clientWidth+2){ var bb=tourBox(els), pr=pw.getBoundingClientRect(); pw.scrollLeft+=(bb.left+bb.right)/2-(pr.left+pr.right)/2; }
+    if(el && (scroll || st.mission)){
+      var r=tourBox(els), tb=document.querySelector(".topbar"), inModal=!!el.closest(".modal"), top=(tb && !inModal)?tb.getBoundingClientRect().bottom:0, vh=window.innerHeight, room=vh-top;
+      var narrowS=document.documentElement.clientWidth<640, thS=T.tp.offsetHeight;
+      if(narrowS && !inModal){ if(r.top<top+8 || r.bottom>vh-thS-24) window.scrollBy({top:r.top-top-12,behavior:"smooth"}); } // phone: target up top, help card at the bottom
+      else if(!inModal && (T.cur.top || r.top<top+8 || r.bottom>vh-170)){ var want=(T.cur.top || r.height>room-240) ? r.top-top-16 : r.top-top-Math.max(16,(room-r.height)/2-90); window.scrollBy({top:want,behavior:"smooth"}); }
     }
     tourPlace(); setTimeout(tourPlace,350); setTimeout(tourPlace,700);
-    var nb=T.tp.querySelector('.btn[data-t="next"],.btn[data-t="end"]'); if(nb) nb.focus({preventScroll:true});
+    if(!st.mission){ var nb=T.tp.querySelector('.btn[data-t]'); if(nb) nb.focus({preventScroll:true}); }
+  }
+  function tourTick(){
+    var T=TOUR; if(!T) return; var st=T.plan[T.i];
+    if(st.mission && !T.got[st.badge] && st.done(T)){ tourWin(st,false); return; }
+    if(st.mission) tourRender(false);
+    tourPlace();
+  }
+  function tourWin(st,skipped){
+    var T=TOUR; if(!T || T.got[st.badge]) return;
+    T.got[st.badge]=1; if(st.after){ try{ st.after(T); }catch(e){} }
+    if(!skipped){ var n=T.missions.filter(function(m){ return T.got[m.badge] && !T.skipped[m.badge]; }).length;
+      T.toast.innerHTML='<span class="ic">'+TROPHY+'</span><span><b>¡Logro conseguido!</b><br>'+esc(st.badge)+' · '+n+' de '+T.missions.length+'</span>';
+      T.toast.hidden=false; T.toast.classList.remove("show"); void T.toast.offsetWidth; T.toast.classList.add("show");
+      clearTimeout(T.tt); T.tt=setTimeout(function(){ if(TOUR) TOUR.toast.hidden=true; },2600); }
+    setTimeout(function(){ if(TOUR===T) tourGo(T.i+1); }, skipped?150:700);
   }
   function tourPlace(){
-    var T=TOUR; if(!T) return; var st=T.steps[T.i], el=tourEl(st), sp=T.sp, tp=T.tp, vw=document.documentElement.clientWidth, vh=window.innerHeight, ar=tp.querySelector(".tt-arrow");
+    var T=TOUR; if(!T) return; var st=T.plan[T.i], els=tourEls(T.cur && T.cur.el), el=els[0], sp=T.sp, tp=T.tp, vw=document.documentElement.clientWidth, vh=window.innerHeight, ar=tp.querySelector(".tt-arrow");
     if(!el){ sp.classList.add("center"); sp.style.left=(vw/2)+"px"; sp.style.top=(vh/2)+"px"; sp.style.width="0px"; sp.style.height="0px";
       tp.classList.remove("sheet"); tp.style.left=Math.max(16,(vw-tp.offsetWidth)/2)+"px"; tp.style.top=Math.max(16,(vh-tp.offsetHeight)/2)+"px"; if(ar) ar.style.display="none"; return; }
     sp.classList.remove("center");
-    var r=el.getBoundingClientRect(), pad=6, x0=Math.max(4,r.left-pad), y0=Math.max(4,r.top-pad), x1=Math.min(vw-4,r.right+pad), y1=Math.min(vh-4,r.bottom+pad);
+    var r=tourBox(els), pad=6, x0=Math.max(4,r.left-pad), y0=Math.max(4,r.top-pad), x1=Math.min(vw-4,r.right+pad), y1=Math.min(vh-4,r.bottom+pad);
     sp.style.left=x0+"px"; sp.style.top=y0+"px"; sp.style.width=Math.max(0,x1-x0)+"px"; sp.style.height=Math.max(0,y1-y0)+"px";
     var gap=14, narrow=vw<640; tp.classList.toggle("sheet",narrow);
-    var th=tp.offsetHeight, tw=tp.offsetWidth, below=vh-y1, above=y0;
-    var placeBelow=below>=th+gap+8 ? (below>=above || above<th+gap+8) : false;
-    var fits=placeBelow || above>=th+gap+8;
-    if(narrow || !fits){ // small screen or no room beside it: the card sits at the bottom of the screen (or at the top if the target is down there)
-      if(ar) ar.style.display="none"; tp.style.left="16px";
-      var lowTarget=(y0+y1)/2>vh*0.55; tp.style.top=(lowTarget?16:Math.max(16,vh-th-16))+"px"; return; }
-    var cx=(x0+x1)/2, left=Math.min(vw-16-tw,Math.max(16,cx-tw/2)), top=placeBelow?y1+gap:y0-gap-th;
+    var th=tp.offsetHeight, tw=tp.offsetWidth, cx=(x0+x1)/2, cy=(y0+y1)/2;
+    var opts={below:vh-y1>=th+gap+8, above:y0>=th+gap+8, right:vw-x1>=tw+gap+8, left:x0>=tw+gap+8};
+    var order=(st.mission||T.cur.place)?[T.cur.place||"below","below","above","right","left"]:["below","above","right","left"];
+    if(!st.mission && opts.below && opts.above) order=[(vh-y1>=y0)?"below":"above"];
+    var pick=null; if(!narrow) for(var q=0;q<order.length;q++){ if(opts[order[q]]){ pick=order[q]; break; } }
+    if(!pick){ // phone, or no room beside it: the card sits at the bottom of the screen (at the top if the target is down there and there is room)
+      if(ar) ar.style.display="none"; tp.style.left="16px"; tp.style.top=((!narrow && cy>vh*0.55) || y0>th+40 && y1>vh-th-24 ? 16 : Math.max(16,vh-th-12))+"px"; return; }
+    var left, top;
+    if(pick==="below"||pick==="above"){ left=Math.min(vw-16-tw,Math.max(16,cx-tw/2)); top=pick==="below"?y1+gap:y0-gap-th; }
+    else { top=Math.min(vh-16-th,Math.max(16,cy-th/2)); left=pick==="right"?x1+gap:x0-gap-tw; }
     tp.style.left=left+"px"; tp.style.top=top+"px";
-    if(ar){ ar.style.display=""; ar.style.left=Math.min(tw-24,Math.max(10,cx-left-7))+"px"; if(placeBelow){ ar.style.top="-7px"; ar.style.bottom=""; } else { ar.style.top=""; ar.style.bottom="-7px"; } }
+    if(ar){ ar.style.display=""; ar.style.top=ar.style.bottom=ar.style.left=ar.style.right="";
+      if(pick==="below"){ ar.style.top="-7px"; ar.style.left=Math.min(tw-24,Math.max(10,cx-left-7))+"px"; }
+      else if(pick==="above"){ ar.style.bottom="-7px"; ar.style.left=Math.min(tw-24,Math.max(10,cx-left-7))+"px"; }
+      else if(pick==="right"){ ar.style.left="-7px"; ar.style.top=Math.min(th-24,Math.max(10,cy-top-7))+"px"; }
+      else { ar.style.right="-7px"; ar.style.top=Math.min(th-24,Math.max(10,cy-top-7))+"px"; } }
   }
-  function tourEnd(quiet){
-    var T=TOUR; if(!T) return; TOUR=null;
-    [T.bl,T.sp,T.tp].forEach(function(n){ if(n.parentNode) n.parentNode.removeChild(n); });
+  function tourEnd(quiet,how){
+    var T=TOUR; if(!T) return; TOUR=null; clearInterval(T.timer); clearTimeout(T.tt);
+    [T.bl,T.sp,T.tp,T.toast].forEach(function(n){ if(n.parentNode) n.parentNode.removeChild(n); });
     window.removeEventListener("resize",tourPlace); window.removeEventListener("scroll",tourPlace,true); document.removeEventListener("keydown",tourKey,true);
+    if(S.placing) cancelPlacing(); if(SH) closeShape(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool||$("doorBtn").classList.contains("on")) doorCancel(true); if(S.obstTool) obstTool(false);
+    if(how==="back"){ var s=T.snap; S.floors=s.floors; S.fi=s.fi; S.sel=s.sel; S.title=s.title; S.project=s.project; }
+    else if(how==="fresh"){ S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.title="Nuevo proyecto"; }
+    if(how==="back"||how==="fresh"){ S.moveId=null; S.zoom=null; syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(how==="fresh"?"Pulsa «+ Estancia» para dibujar la primera estancia de tu proyecto.":""); update(true); }
     tourMark(S.mode); if(!quiet) window.scrollTo({top:0,behavior:"smooth"});
   }
   try{ if(location.hash==="#planificador") showView("app-techo"); else if(location.hash==="#suelo") showView("app-suelo"); }catch(err){}
