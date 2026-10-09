@@ -6,6 +6,7 @@
 <title>Planificador Radiante</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -373,6 +374,43 @@
   .closure.ok{background:var(--ok-bg);color:var(--accent);}
   .closure.warn{background:var(--warn-bg);color:var(--warn);}
 
+
+  /* ---- accounts ---- */
+  #authView{min-height:100vh;display:flex;flex-direction:column;background:radial-gradient(1200px 500px at 15% -10%,#E3F1F8 0%,transparent 60%),radial-gradient(900px 500px at 100% 110%,#FDEBDD 0%,transparent 55%),var(--bg);}
+  .auth-main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:48px 16px 56px;}
+  .auth-card{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px 24px 22px;box-shadow:0 10px 30px rgba(15,42,61,.06);}
+  .auth-card h1{font-size:1.5rem;letter-spacing:-.02em;margin:12px 0 6px;}
+  .auth-card .lead{color:var(--muted);font-size:.92rem;line-height:1.5;margin:0 0 20px;}
+  .btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:11px 14px;font:600 .9rem/1.2 inherit;cursor:pointer;}
+  .btn-google:hover{background:var(--surface-2);}
+  .auth-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.78rem;margin:18px 0 14px;}
+  .auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:var(--line);}
+  .auth-card .field{margin-bottom:12px;}
+  .auth-card input[type=email],.auth-card input[type=password]{width:100%;padding:10px 11px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit;font-size:.92rem;}
+  .auth-card input:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .auth-card .btn.full{width:100%;padding:11px 14px;font-size:.9rem;margin-top:4px;}
+  .auth-card .btn:disabled{opacity:.6;cursor:default;}
+  .auth-msg{font-size:.85rem;line-height:1.45;color:var(--ink);margin:12px 0 0;min-height:1em;}
+  .auth-msg.bad{color:var(--warn);}
+  .auth-links{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:14px;font-size:.84rem;}
+  .auth-note{color:var(--muted);font-size:.75rem;line-height:1.45;margin:16px 0 0;}
+  .auth-only{display:none !important;}
+  body.auth-on .auth-only{display:inline-flex !important;}
+  body.auth-on .user-box[hidden]{display:none !important;}
+  .user-box{align-items:center;gap:10px;font-size:.8rem;color:var(--muted);}
+  .user-box .user-email{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .save-state{margin-left:10px;font-size:.72rem;font-weight:600;color:var(--muted);letter-spacing:0;text-transform:none;}
+  .save-state.ok{color:#2F7D5B;} .save-state.bad{color:var(--warn);}
+  #projModal .modal-card{max-width:620px;margin-top:8vh;}
+  .proj-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .proj-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 4px;border-top:1px solid var(--line);flex-wrap:wrap;}
+  .proj-row.cur{background:var(--ok-bg);border-radius:8px;padding:12px 10px;}
+  .proj-name{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .proj-name b{font-size:.92rem;overflow-wrap:anywhere;}
+  .proj-name span{font-size:.76rem;color:var(--muted);}
+  .proj-act{display:flex;gap:6px;flex-wrap:wrap;}
+  #projList{max-height:60vh;overflow-y:auto;}
+  #projList .note.bad{color:var(--warn);}
   /* ---- guided tour ---- */
   .tour-ask .modal-card{max-width:460px;margin-top:12vh;padding:22px 22px 18px;}
   .tour-ask .ta-ico{width:44px;height:44px;border-radius:12px;background:var(--ok-bg);display:grid;place-items:center;margin-bottom:12px;}
@@ -527,8 +565,31 @@
   <footer class="s-foot"><div class="s-wrap"><span>© 2026 Planificador Radiante</span><span>Herramienta de cálculo para techo radiante · Estimaciones orientativas, revisa siempre en obra</span></div></footer>
 </div>
 
-<div id="chooseView" hidden>
+<div id="authView" hidden>
   <div class="ch-top"><button class="linkbtn" data-go="site">← Volver a la web</button><span style="font-size:.8rem;color:var(--muted)">Planificador Radiante</span></div>
+  <main class="auth-main">
+    <div class="auth-card">
+      <span class="kicker">Tu cuenta</span>
+      <h1 id="authTitle">Entra en tu cuenta</h1>
+      <p class="lead" id="authLead"></p>
+      <div id="authGoogleBox">
+        <button class="btn-google" id="authGoogle" type="button"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continuar con Google</button>
+        <div class="auth-or">o con tu correo</div>
+      </div>
+      <form id="authForm" novalidate>
+        <div class="field" id="authEmailRow"><label class="lbl" for="authEmail">Correo electrónico</label><input type="email" id="authEmail" autocomplete="email" inputmode="email"></div>
+        <div class="field" id="authPassRow"><label class="lbl" for="authPass">Contraseña</label><input type="password" id="authPass" autocomplete="current-password"></div>
+        <div class="field" id="authPass2Row" hidden><label class="lbl" for="authPass2">Repite la contraseña</label><input type="password" id="authPass2" autocomplete="new-password"></div>
+        <button class="btn full" id="authSubmit" type="submit">Entrar</button>
+      </form>
+      <p class="auth-msg" id="authMsg" role="status" aria-live="polite"></p>
+      <div class="auth-links"><button class="linkbtn" id="authToggle" type="button">¿No tienes cuenta? Crear una</button><button class="linkbtn" id="authForgot" type="button">He olvidado mi contraseña</button><button class="linkbtn" id="authBack" type="button" hidden>← Volver a entrar</button></div>
+      <p class="auth-note">Fase de pruebas: la cuenta es gratuita. Tus proyectos se guardan en servidores de la Unión Europea y solo tú puedes verlos.</p>
+    </div>
+  </main>
+</div>
+<div id="chooseView" hidden>
+  <div class="ch-top"><button class="linkbtn" data-go="site">← Volver a la web</button><span class="user-box auth-only" hidden><span class="user-email"></span><button class="linkbtn logout-btn" type="button">Salir</button></span></div>
   <main class="ch-main">
     <span class="kicker">Nuevo plano</span>
     <h1>¿Qué sistema vas a calcular?</h1>
@@ -569,15 +630,16 @@
   </main>
 </div>
 <div id="appView" hidden>
-<div class="app-back"><button class="linkbtn" data-go="choose">← Elegir sistema</button><span id="appSys">Planificador Radiante · Techo radiante</span></div>
+<div class="app-back"><button class="linkbtn" data-go="choose">← Elegir sistema</button><span id="appSys">Planificador Radiante · Techo radiante</span><span class="user-box auth-only" hidden><span class="user-email"></span><button class="linkbtn logout-btn" type="button">Salir</button></span></div>
 <div class="wrap">
   <header class="topbar">
     <div>
-      <span class="eyebrow" id="appEyebrow">Techo radiante · Planificador</span>
+      <span class="eyebrow"><span id="appEyebrow">Techo radiante · Planificador</span><span class="save-state" aria-live="polite"></span></span>
       <h1 id="projTitle">Nuevo proyecto</h1>
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
       <div class="chips" id="chips"></div>
+      <button class="btn ghost small my-projects-btn auth-only" type="button">Mis proyectos</button>
       <button class="btn small" id="newProject">Nuevo proyecto</button>
       <button class="btn ghost small" id="openCompany">Datos de empresa</button>
       <button class="btn ghost small" id="tourBtn" title="Ver el tutorial paso a paso">? Tutorial</button>
@@ -771,6 +833,13 @@
 
 </div>
 
+<div class="modal" id="projModal" hidden role="dialog" aria-modal="true" aria-labelledby="projListTitle">
+  <div class="modal-card">
+    <div class="proj-head"><h2 id="projListTitle">Mis proyectos</h2><button class="btn small" id="projNew" type="button">+ Nuevo proyecto</button></div>
+    <div id="projList"></div>
+    <div class="modal-actions"><button class="btn ghost" id="projClose" type="button">Cerrar</button></div>
+  </div>
+</div>
 <div class="modal tour-ask" id="tourAsk" hidden role="dialog" aria-modal="true" aria-labelledby="tourAskTitle">
   <div class="modal-card">
     <div class="ta-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B7FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.9"/><path d="M12 17h.01"/></svg></div>
@@ -3259,13 +3328,14 @@
     if(allRooms().length && btn.getAttribute("data-confirm")!=="1"){ btn.setAttribute("data-confirm","1"); btn.textContent="¿Borrar el actual? Pulsa otra vez"; setTimeout(function(){ btn.removeAttribute("data-confirm"); btn.textContent="Nuevo proyecto"; },4000); return; }
     btn.removeAttribute("data-confirm"); btn.textContent="Nuevo proyecto";
     S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.placing=null; S.zoom=null; S.title="Nuevo proyecto"; S.project.client=""; S.project.addr="";
-    syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true); openShape();
+    syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true); cloudFresh(); openShape();
   }
   function loadExample(){
     var uf=S.mode==="suelo";
     S.floors=[uf?exampleFloorUF():exampleFloor()]; S.fi=0; S.sel=S.rooms[0].id; S.moveId=null; S.placing=null; S.zoom=null; S.title="Vivienda de ejemplo";
     syncProjectInputs(); renderFloorBar(); renderCollectors();
     hint(uf?"Ejemplo de suelo radiante: ventanas y muros exteriores ya marcados, colectores en la pared del pasillo. Prueba «Marcar escalera» en una pared o arrastra un colector a otra pared.":"Ejemplo cargado: el salón tiene una pared curva (lado D). Pulsa cualquier estancia para ver sus lados y medidas."); update(true);
+    cloudFresh();
   }
   function setMode(m){
     if(m===S.mode) return;
@@ -3311,11 +3381,13 @@
   // ---------------- product site ----------------
   function showView(v){
     if(v.indexOf("app-")===0){ setMode(v.slice(4)); v="app"; }
+    if(authGate(v)) return;
+    $("authView").hidden=true;
     $("siteView").hidden = v!=="site"; $("appView").hidden = v!=="app"; $("chooseView").hidden = v!=="choose"; $("chNote").textContent="";
     window.scrollTo(0,0);
-    if(v==="app") update(false);
+    if(v==="app"){ update(false); cloudOpenLast(); }
   }
-  document.addEventListener("click",function(e){ var b=e.target.closest && e.target.closest("[data-go]"); if(!b) return; e.preventDefault(); var g=b.getAttribute("data-go"); showView(g); if(g.indexOf("app-")===0) tourOffer(g.slice(4)); });
+  document.addEventListener("click",function(e){ var b=e.target.closest && e.target.closest("[data-go]"); if(!b) return; e.preventDefault(); var g=b.getAttribute("data-go"); showView(g); if(g.indexOf("app-")===0 && !$("appView").hidden) tourOffer(g.slice(4)); });
   (function heroPreview(){
     var keep={floors:S.floors,fi:S.fi,sel:S.sel,pipes:S.showPipes,str:S.showStruct};
     S.floors=[exampleFloor()]; S.fi=0; S.sel=null; S.showPipes=true; S.showStruct=false;
@@ -3330,6 +3402,192 @@
     update(true);
   })();
 
+  // ---------------- accounts (Supabase): sign-in, projects saved in the cloud, company data in the account ----------------
+  // The two public values of the Supabase project (Project Settings > API). The publishable/anon key is meant to be public:
+  // every table is protected by row level security, so each user only reaches his own rows.
+  var SUPA_URL = "";
+  var SUPA_KEY = "";
+  var AUTH_HOSTS = /(^|\.)github\.io$|^localhost$|^127\.0\.0\.1$/;   // where sign-in is required (add the product's own domain here)
+  var AUTH={on:false, sb:null, user:null, pending:null, mode:"login", ready:false};
+  var CLOUD={id:{}, last:{}, opened:{}, busy:false, fails:0, nextTry:0};
+  (function initAuth(){
+    var lib=window.__SUPA_MOCK || (window.supabase && SUPA_URL && SUPA_KEY && AUTH_HOSTS.test(location.hostname) ? window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:"pkce"}}) : null);
+    if(!lib) return;
+    AUTH.on=true; AUTH.sb=lib; document.body.classList.add("auth-on");
+    lib.auth.onAuthStateChange(function(ev,session){ setTimeout(function(){ authChanged(ev,session); },0); });
+  })();
+  function siteUrl(){ return location.origin+location.pathname; }
+  function authMsg(t,bad){ var m=$("authMsg"); m.textContent=t||""; m.className="auth-msg"+(bad?" bad":""); }
+  function showAuth(mode){
+    AUTH.mode=mode||"login";
+    $("siteView").hidden=true; $("appView").hidden=true; $("chooseView").hidden=true; $("authView").hidden=false; $("tourAsk").hidden=true;
+    var M=AUTH.mode, T={login:["Entra en tu cuenta","Para usar el planificador necesitas una cuenta. Tus proyectos se guardan en ella y los abres desde cualquier dispositivo.","Entrar"],
+      signup:["Crea tu cuenta","Gratis durante la fase de pruebas. Solo necesitas un correo y una contraseña, o tu cuenta de Google.","Crear cuenta"],
+      reset:["Recupera tu contraseña","Escribe tu correo y te enviaremos un enlace para crear una contraseña nueva.","Enviar enlace"],
+      newpass:["Elige una contraseña nueva","Escríbela dos veces. Después entrarás directamente.","Guardar contraseña"]}[M];
+    $("authTitle").textContent=T[0]; $("authLead").textContent=T[1]; $("authSubmit").textContent=T[2];
+    $("authEmailRow").hidden=M==="newpass"; $("authPassRow").hidden=M==="reset"; $("authPass2Row").hidden=!(M==="signup"||M==="newpass");
+    $("authGoogleBox").hidden=!(M==="login"||M==="signup");
+    $("authPass").setAttribute("autocomplete",M==="login"?"current-password":"new-password");
+    $("authToggle").textContent=M==="signup"?"¿Ya tienes cuenta? Entra":"¿No tienes cuenta? Crear una";
+    $("authToggle").hidden=M==="newpass"; $("authForgot").hidden=M!=="login"; $("authBack").hidden=!(M==="reset");
+    authMsg(AUTH.ready?"":"Comprobando tu sesión…"); window.scrollTo(0,0);
+    setTimeout(function(){ var f=M==="newpass"?$("authPass"):$("authEmail"); if(f) f.focus(); },30);
+  }
+  function afterLoginGo(){
+    var to=AUTH.pending; AUTH.pending=null;
+    try{ var st=sessionStorage.getItem("pr_after_login"); if(st){ to=to||st; sessionStorage.removeItem("pr_after_login"); } }catch(e){}
+    if(!$("authView").hidden || to){ var dest=to||"choose"; showView(dest); if(dest.indexOf("app-")===0) tourOffer(dest.slice(4)); }
+  }
+  function authChanged(ev,session){
+    var was=AUTH.user, u=session&&session.user||null, first=!AUTH.ready; AUTH.ready=true;
+    if(first && !u && !$("authView").hidden && $("authMsg").textContent==="Comprobando tu sesión…") authMsg("");
+    if(ev==="PASSWORD_RECOVERY"){ AUTH.user=u; userUi(); showAuth("newpass"); return; }
+    AUTH.user=u; userUi();
+    if(u && (!was || was.id!==u.id)){ loadCompanyFromCloud(); if(!was) afterLoginGo(); }
+    if(!u && was){ // signed out: nothing of the last user stays on screen
+      S.store={}; CLOUD.id={}; CLOUD.last={}; CLOUD.opened={};
+      S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.title="Nuevo proyecto"; S.project.client=""; S.project.addr="";
+      company={logo:null}; try{ localStorage.removeItem(CO_KEY); }catch(e){} renderCompanyMini();
+      syncProjectInputs(); renderFloorBar(); renderCollectors(); update(true);
+      if($("siteView").hidden) showAuth("login");
+    }
+    if(!u && !was && AUTH.pending && $("authView").hidden) showAuth("login");
+  }
+  function userUi(){ var u=AUTH.user, nm=u?((u.user_metadata&&(u.user_metadata.full_name||u.user_metadata.name))||u.email||""):"";
+    document.querySelectorAll(".user-email").forEach(function(el){ el.textContent=nm; el.title=u&&u.email||""; });
+    document.querySelectorAll(".user-box").forEach(function(el){ el.hidden=!u; }); }
+  // gate: the chooser and the planners need a signed-in user
+  function authGate(v){
+    if(!AUTH.on || AUTH.user) return false;
+    if(v==="choose" || v.indexOf("app")===0){ AUTH.pending=v; try{ sessionStorage.setItem("pr_after_login",v); }catch(e){} showAuth("login"); return true; }
+    return false;
+  }
+  $("authForm").addEventListener("submit",function(e){ e.preventDefault(); if(!AUTH.on) return;
+    var M=AUTH.mode, em=$("authEmail").value.trim(), pw=$("authPass").value, pw2=$("authPass2").value, sb=AUTH.sb, btn=$("authSubmit");
+    if(M!=="newpass" && !/^\S+@\S+\.\S+$/.test(em)){ authMsg("Escribe un correo válido.",true); $("authEmail").focus(); return; }
+    if((M==="login"||M==="signup"||M==="newpass") && pw.length<(M==="login"?1:8)){ authMsg(M==="login"?"Escribe tu contraseña.":"La contraseña debe tener al menos 8 caracteres.",true); $("authPass").focus(); return; }
+    if((M==="signup"||M==="newpass") && pw!==pw2){ authMsg("Las dos contraseñas no coinciden.",true); $("authPass2").focus(); return; }
+    btn.disabled=true; authMsg("Un momento…");
+    var p = M==="login" ? sb.auth.signInWithPassword({email:em,password:pw})
+      : M==="signup" ? sb.auth.signUp({email:em,password:pw,options:{emailRedirectTo:siteUrl()}})
+      : M==="reset" ? sb.auth.resetPasswordForEmail(em,{redirectTo:siteUrl()})
+      : sb.auth.updateUser({password:pw});
+    p.then(function(r){ btn.disabled=false; var er=r&&r.error;
+      if(er){ authMsg(authError(er),true); return; }
+      if(M==="signup" && !(r.data&&r.data.session)){ authMsg("Te hemos enviado un correo a "+em+". Ábrelo y pulsa el enlace para activar la cuenta."); return; }
+      if(M==="reset"){ authMsg("Si ese correo tiene cuenta, te llegará un enlace en unos minutos. Revisa también la carpeta de spam."); return; }
+      if(M==="newpass"){ authMsg("Contraseña cambiada."); AUTH.pending=AUTH.pending||"choose"; afterLoginGo(); return; }
+      authMsg("");
+    }, function(err){ btn.disabled=false; authMsg(authError(err),true); });
+  });
+  function authError(er){ var m=String(er&&er.message||er||"").toLowerCase();
+    if(/invalid login|invalid credentials/.test(m)) return "Correo o contraseña incorrectos.";
+    if(/not confirmed/.test(m)) return "Aún no has confirmado tu correo: pulsa el enlace que te enviamos al registrarte.";
+    if(/already registered|already exists/.test(m)) return "Ese correo ya tiene cuenta. Entra con tu contraseña o recupérala.";
+    if(/rate limit|too many/.test(m)) return "Demasiados intentos seguidos. Espera unos minutos y vuelve a probar.";
+    if(/weak|password should/.test(m)) return "Esa contraseña es demasiado débil. Usa al menos 8 caracteres mezclando letras y números.";
+    if(/fetch|network|failed to/.test(m)) return "No hay conexión con el servidor. Comprueba tu conexión a internet.";
+    return "No se ha podido completar: "+(er&&er.message||"error desconocido")+".";
+  }
+  $("authGoogle").addEventListener("click",function(){ if(!AUTH.on) return; authMsg("Abriendo Google…");
+    try{ if(AUTH.pending) sessionStorage.setItem("pr_after_login",AUTH.pending); }catch(e){}
+    AUTH.sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:siteUrl()}}).then(function(r){ if(r&&r.error) authMsg(authError(r.error),true); }); });
+  $("authToggle").addEventListener("click",function(){ showAuth(AUTH.mode==="signup"?"login":"signup"); });
+  $("authForgot").addEventListener("click",function(){ showAuth("reset"); });
+  $("authBack").addEventListener("click",function(){ showAuth("login"); });
+  document.querySelectorAll(".logout-btn").forEach(function(b){ b.addEventListener("click",function(){ if(!AUTH.on) return; flushSave().then(function(){ AUTH.sb.auth.signOut(); }); }); });
+
+  // ---- company data lives in the account
+  function loadCompanyFromCloud(){ if(!AUTH.user) return;
+    AUTH.sb.from("empresas").select("datos").eq("user_id",AUTH.user.id).maybeSingle().then(function(r){
+      if(r && !r.error && r.data && r.data.datos){ company=r.data.datos; if(!("logo" in company)) company.logo=null; try{ localStorage.setItem(CO_KEY,JSON.stringify(company)); }catch(e){} renderCompanyMini(); }
+      else if(r && !r.error && !r.data && (company.name||company.logo)) saveCompanyToCloud(); }); }
+  function saveCompanyToCloud(){ if(!AUTH.user) return Promise.resolve();
+    return AUTH.sb.from("empresas").upsert({user_id:AUTH.user.id,datos:company}).then(function(r){ if(r&&r.error){ $("companySaved").textContent="Guardado en este navegador, pero no en tu cuenta (sin conexión). Vuelve a pulsar Guardar más tarde."; } else if(!$("companyModal").hidden) $("companySaved").textContent="Guardado en tu cuenta."; }); }
+  $("companySave").addEventListener("click",function(){ saveCompanyToCloud(); });
+
+  // ---- projects: what is saved, and putting it back
+  var CFG_TECHO=["panels","gMin","gMax","clear","gap","strip","vert","margin","tail","secCm","primCm","bar","hang","board"];
+  function projSnapshot(){
+    var cfg={}; if(S.mode==="suelo") cfg.uf=S.uf; else CFG_TECHO.forEach(function(k){ cfg[k]=S[k]; });
+    return JSON.stringify({v:1,mode:S.mode,title:S.title,fi:S.fi,floors:S.floors,project:S.project,prices:S.prices,cfg:cfg},function(k,val){ return (k && k.charAt(0)==="_") ? undefined : val; });
+  }
+  function projApply(d){
+    S.floors=(d.floors&&d.floors.length)?d.floors:[emptyFloor("Planta baja")]; S.fi=Math.min(d.fi||0,S.floors.length-1);
+    S.title=d.title||"Proyecto"; S.project=Object.assign({client:"",addr:"",ref:S.project.ref},d.project||{}); S.prices=d.prices||S.prices;
+    var c=d.cfg||{};
+    if(S.mode==="suelo" && c.uf){ Object.assign(S.uf,c.uf);
+      [["uSep","sep"],["uMax","maxLen"],["uSepWin","sepWin"],["uWinW","winW"],["uSepExt","sepExt"],["uExtW","extW"],["uWall","wallCm"],["uVert","vert"],["uMargin","margin"],["uPlate","plate"]].forEach(function(p){ var el=$(p[0]); if(el) el.value=S.uf[p[1]]; }); }
+    if(S.mode==="techo"){ CFG_TECHO.forEach(function(k){ if(c[k]!=null) S[k]=c[k]; });
+      [["gMin","gMin"],["gMax","gMax"],["sClear","clear"],["sGap","gap"],["sStrip","strip"],["sVert","vert"],["sMargin","margin"],["sTail","tail"],["sSec","secCm"],["sPrim","primCm"],["sBar","bar"],["sHang","hang"],["sBoard","board"]].forEach(function(p){ var el=$(p[0]); if(el) el.value=S[p[1]]; });
+      renderCatalog(); }
+    var r0=S.rooms[0]; S.sel=r0?r0.id:null; S.moveId=null; S.placing=null; S.zoom=null;
+    syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true);
+  }
+  // the project on screen starts "clean": only a change by the user saves it
+  function cloudFresh(){ CLOUD.id[S.mode]=null; CLOUD.last[S.mode]=projSnapshot(); saveState(""); }
+  function saveState(t,cls){ document.querySelectorAll(".save-state").forEach(function(el){ el.textContent=t; el.className="save-state"+(cls?" "+cls:""); }); }
+  function cloudSave(){
+    if(!AUTH.user || CLOUD.busy) return Promise.resolve();
+    var m=S.mode, s=projSnapshot();
+    if(s===CLOUD.last[m]) return Promise.resolve();
+    if(!CLOUD.id[m] && !allRooms().length) return Promise.resolve();
+    CLOUD.busy=true; saveState("Guardando…");
+    var row={nombre:(S.title||"Proyecto").slice(0,200),datos:JSON.parse(s)}, id=CLOUD.id[m];
+    var q = id ? AUTH.sb.from("proyectos").update(row).eq("id",id).select("id").maybeSingle()
+               : AUTH.sb.from("proyectos").insert(Object.assign({modo:m},row)).select("id").single();
+    return q.then(function(r){ CLOUD.busy=false;
+      if(r && !r.error && r.data){ if(!id) CLOUD.id[m]=r.data.id; CLOUD.last[m]=s; CLOUD.fails=0; saveState("Guardado","ok"); return; }
+      if(r && !r.error && !r.data && id){ CLOUD.id[m]=null; return cloudSave(); } // it was deleted elsewhere: save it again as new
+      CLOUD.fails++; CLOUD.nextTry=Date.now()+Math.min(60000,3000*Math.pow(2,CLOUD.fails)); saveState("Sin guardar: reintentando…","bad");
+    }, function(){ CLOUD.busy=false; CLOUD.fails++; CLOUD.nextTry=Date.now()+Math.min(60000,3000*Math.pow(2,CLOUD.fails)); saveState("Sin conexión: no guardado","bad"); });
+  }
+  function flushSave(){ return (typeof TOUR!=="undefined" && TOUR) ? Promise.resolve() : cloudSave(); }
+  setInterval(function(){ if(!AUTH.user || $("appView").hidden || (typeof TOUR!=="undefined" && TOUR) || Date.now()<CLOUD.nextTry) return; cloudSave(); },2500);
+  window.addEventListener("beforeunload",function(e){ if(AUTH.user && !$("appView").hidden && projSnapshot()!==CLOUD.last[S.mode] && (CLOUD.id[S.mode]||allRooms().length)){ cloudSave(); e.preventDefault(); e.returnValue=""; } });
+  // first time in a planner after signing in: open the last project of that kind
+  function cloudOpenLast(){
+    var m=S.mode; if(!AUTH.user || CLOUD.opened[m]) return; CLOUD.opened[m]=true;
+    if(allRooms().length){ cloudFresh(); return; }
+    AUTH.sb.from("proyectos").select("id,nombre,datos").eq("modo",m).order("actualizado",{ascending:false}).limit(1).then(function(r){
+      if(S.mode!==m) return;
+      if(r && !r.error && r.data && r.data.length){ projApply(r.data[0].datos); CLOUD.id[m]=r.data[0].id; CLOUD.last[m]=projSnapshot(); saveState("Abierto: "+r.data[0].nombre,"ok"); }
+      else cloudFresh(); });
+  }
+
+  // ---- "Mis proyectos"
+  function fmtWhen(iso){ var d=new Date(iso), now=new Date(), s=(now-d)/1000;
+    if(s<60) return "hace un momento"; if(s<3600) return "hace "+Math.round(s/60)+" min"; if(s<86400 && d.getDate()===now.getDate()) return "hoy, "+d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"});
+    return d.toLocaleDateString("es-ES",{day:"numeric",month:"short",year:d.getFullYear()===now.getFullYear()?undefined:"numeric"}); }
+  function openProjects(){ if(!AUTH.user) return;
+    $("projModal").hidden=false; $("projListTitle").textContent="Mis proyectos de "+(S.mode==="suelo"?"suelo":"techo")+" radiante";
+    $("projList").innerHTML='<p class="note">Cargando…</p>';
+    flushSave().then(function(){ return AUTH.sb.from("proyectos").select("id,nombre,actualizado").eq("modo",S.mode).order("actualizado",{ascending:false}); }).then(function(r){
+      if(!r || r.error){ $("projList").innerHTML='<p class="note bad">No se han podido cargar tus proyectos. Comprueba la conexión y vuelve a abrir esta ventana.</p>'; return; }
+      var L=r.data||[], cur=CLOUD.id[S.mode];
+      $("projList").innerHTML = L.length ? L.map(function(p){ return '<div class="proj-row'+(p.id===cur?' cur':'')+'" data-id="'+esc(p.id)+'"><div class="proj-name"><b>'+esc(p.nombre)+'</b><span>'+(p.id===cur?'Abierto ahora · ':'')+'Modificado '+esc(fmtWhen(p.actualizado))+'</span></div>'+
+        '<div class="proj-act"><button class="btn small" data-pa="open"'+(p.id===cur?' disabled':'')+'>Abrir</button><button class="btn ghost small" data-pa="dup">Duplicar</button><button class="btn danger small" data-pa="del">Eliminar</button></div></div>'; }).join("")
+        : '<p class="note">Aún no tienes proyectos guardados. Todo lo que dibujes se guarda solo en tu cuenta.</p>';
+    }); }
+  function closeProjects(){ $("projModal").hidden=true; }
+  document.querySelectorAll(".my-projects-btn").forEach(function(b){ b.addEventListener("click",openProjects); });
+  $("projClose").addEventListener("click",closeProjects);
+  $("projModal").addEventListener("click",function(e){ if(e.target===this) closeProjects(); });
+  $("projNew").addEventListener("click",function(){ closeProjects(); flushSave().then(function(){
+    S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.placing=null; S.zoom=null; S.title="Nuevo proyecto"; S.project.client=""; S.project.addr="";
+    syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true); cloudFresh(); openShape(); }); });
+  $("projList").addEventListener("click",function(e){ var b=e.target.closest("[data-pa]"); if(!b) return; var row=b.closest("[data-id]"), id=row.getAttribute("data-id"), a=b.getAttribute("data-pa");
+    if(a==="open"){ b.disabled=true; flushSave().then(function(){ return AUTH.sb.from("proyectos").select("id,datos").eq("id",id).single(); }).then(function(r){
+        if(!r||r.error){ b.disabled=false; b.textContent="Reintentar"; return; }
+        projApply(r.data.datos); CLOUD.id[S.mode]=id; CLOUD.last[S.mode]=projSnapshot(); saveState("Guardado","ok"); closeProjects(); }); }
+    else if(a==="dup"){ b.disabled=true; AUTH.sb.from("proyectos").select("nombre,modo,datos").eq("id",id).single().then(function(r){
+        if(!r||r.error){ b.disabled=false; return null; } var d=r.data.datos; d.title=(r.data.nombre+" (copia)").slice(0,200);
+        return AUTH.sb.from("proyectos").insert({modo:r.data.modo,nombre:d.title,datos:d}).select("id").single(); }).then(function(){ openProjects(); }); }
+    else if(a==="del"){ if(b.getAttribute("data-confirm")!=="1"){ b.setAttribute("data-confirm","1"); b.textContent="¿Seguro? Pulsa otra vez"; setTimeout(function(){ if(b.isConnected){ b.removeAttribute("data-confirm"); b.textContent="Eliminar"; } },4000); return; }
+      b.disabled=true; AUTH.sb.from("proyectos").delete().eq("id",id).then(function(r){ if(r&&r.error){ b.disabled=false; b.textContent="No se pudo borrar"; return; }
+        if(CLOUD.id[S.mode]===id){ CLOUD.id[S.mode]=null; CLOUD.last[S.mode]=projSnapshot(); saveState(""); } openProjects(); }); }
+  });
   // ---------------- guided tutorial: the user does each thing on a practice project, mission by mission ----------------
   var TOUR=null, TOUR_SEEN={};
   function tourSeen(m){ if(TOUR_SEEN[m]) return true; try{ return localStorage.getItem("prTour_"+m)==="1"; }catch(e){ return false; } }
@@ -3444,7 +3702,7 @@
     if(TOUR) tourEnd(true,"keep");
     $("tourAsk").hidden=true;
     if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool||$("doorBtn").classList.contains("on")) doorCancel(true); if(S.obstTool) obstTool(false); if(SH) closeShape();
-    var hadOwn=allRooms().length>0;
+    var hadOwn=allRooms().length>0; cloudSave();
     var snap={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title,project:JSON.parse(JSON.stringify(S.project||{}))};
     S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.zoom=null; S.title="Práctica del tutorial";
     syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true);
@@ -3564,6 +3822,7 @@
     if(S.placing) cancelPlacing(); if(SH) closeShape(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool||$("doorBtn").classList.contains("on")) doorCancel(true); if(S.obstTool) obstTool(false);
     if(how==="back"){ var s=T.snap; S.floors=s.floors; S.fi=s.fi; S.sel=s.sel; S.title=s.title; S.project=s.project; }
     else if(how==="fresh"){ S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.title="Nuevo proyecto"; }
+    if(how!=="back") cloudFresh();
     if(how==="back"||how==="fresh"){ S.moveId=null; S.zoom=null; syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(how==="fresh"?"Pulsa «+ Estancia» para dibujar la primera estancia de tu proyecto.":""); update(true); }
     tourMark(S.mode); if(!quiet) window.scrollTo({top:0,behavior:"smooth"});
   }
