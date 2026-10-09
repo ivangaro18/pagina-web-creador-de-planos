@@ -375,6 +375,10 @@
   .closure.warn{background:var(--warn-bg);color:var(--warn);}
 
 
+  /* ---- thermal ---- */
+  .th-adv{margin:0 0 12px;}
+  .th-adv summary{cursor:pointer;font-size:.8rem;color:var(--accent);font-weight:600;margin-bottom:8px;}
+  .th-floor b{display:block;font-size:.8rem;margin:6px 0 4px;}
   /* ---- accounts ---- */
   #authView{min-height:100vh;display:flex;flex-direction:column;background:radial-gradient(1200px 500px at 15% -10%,#E3F1F8 0%,transparent 60%),radial-gradient(900px 500px at 100% 110%,#FDEBDD 0%,transparent 55%),var(--bg);}
   .auth-main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:48px 16px 56px;}
@@ -663,13 +667,13 @@
       <span class="only-techo">Arrastra la figura al plano (o púlsala) para añadir un colector. Los colectores se mueven arrastrándolos.</span>
       <span class="only-suelo">Arrastra el colector junto a una pared: al soltarlo se pega a la pared más cercana, en horizontal o vertical según la pared.</span>
     </div>
-    <div class="mark-bar only-suelo" id="markBar">
+    <div class="mark-bar" id="markBar">
       <button class="mk-btn" type="button" data-mark="ventana"><i></i>Marcar ventana</button>
       <button class="mk-btn" type="button" data-mark="exterior"><i></i>Marcar muro exterior</button>
-      <button class="mk-btn" type="button" data-mark="escalera"><i></i>Marcar escalera</button>
-      <button class="mk-btn" type="button" id="doorBtn"><i style="border-top:3px solid var(--wall);width:14px;border-radius:0 0 8px 0;height:8px;border-right:2px solid var(--wall)"></i>Marcar puerta</button>
-      <button class="mk-btn" type="button" id="obstBtn"><i style="border:none;width:14px;height:10px;background:repeating-linear-gradient(45deg,#8C9BA7 0 2px,#E6ECF0 2px 4px);border:1px solid #6B7B88"></i>Añadir obstáculo</button>
-      <span>Pulsa un botón y luego la pared en el plano. Otra pulsación en la pared la desmarca.</span>
+      <button class="mk-btn only-suelo" type="button" data-mark="escalera"><i></i>Marcar escalera</button>
+      <button class="mk-btn only-suelo" type="button" id="doorBtn"><i style="border-top:3px solid var(--wall);width:14px;border-radius:0 0 8px 0;height:8px;border-right:2px solid var(--wall)"></i>Marcar puerta</button>
+      <button class="mk-btn only-suelo" type="button" id="obstBtn"><i style="border:none;width:14px;height:10px;background:repeating-linear-gradient(45deg,#8C9BA7 0 2px,#E6ECF0 2px 4px);border:1px solid #6B7B88"></i>Añadir obstáculo</button>
+      <span>Pulsa un botón y luego la pared en el plano. Otra pulsación en la pared la desmarca.<span class="only-techo"> Se usan para el cálculo térmico.</span></span>
     </div>
     <div class="mode-hint" id="modeHint" hidden></div>
     <div class="plan-stage">
@@ -687,8 +691,8 @@
       <span class="only-suelo"><span class="lg-line" style="border-color:#2F6F5E"></span>Circuito (un color por circuito, las flechas marcan el sentido)</span>
       <span class="only-suelo"><span class="sw dot" style="background:var(--ida)"></span>Salida (ida) en el colector</span>
       <span class="only-suelo"><span class="sw dot" style="background:var(--ret)"></span>Retorno en el colector</span>
-      <span class="only-suelo"><span class="lg-mk" style="border-top:6px double #5FB8D8"></span>Ventana</span>
-      <span class="only-suelo"><span class="lg-mk"></span>Muro exterior</span>
+      <span><span class="lg-mk" style="border-top:6px double #5FB8D8"></span>Ventana</span>
+      <span><span class="lg-mk"></span>Muro exterior</span>
       <span class="only-suelo"><span class="lg-mk" style="border-top:5px dashed var(--ang)"></span>Escalera (no pasa tubo)</span>
       <span class="only-suelo"><span class="sw" style="background:repeating-linear-gradient(45deg,#8C9BA7 0 2px,#E6ECF0 2px 4px);border:1px solid #6B7B88"></span>Obstáculo (ducha, bañera, inodoro, mueble fijo…): sin tubo</span>
       <span class="only-suelo">◜ Puerta: los tubos solo cruzan los tabiques por las puertas (si hay alguna marcada)</span>
@@ -769,6 +773,40 @@
         <p class="note only-techo">Indica las salidas de cada colector. Las estancias se asignan enteras al colector más cercano con salidas suficientes.</p>
         <p class="note only-suelo">Indica las salidas de cada colector. Cada estancia va entera a un colector al que pueda llegar sin cruzar una escalera; si una escalera la separa, necesita su propio colector.</p>
       </div>
+      <div class="card" id="thermCard">
+        <span class="section-title">Cálculo térmico</span>
+        <div class="grid2">
+          <div class="field"><label class="lbl" for="thZone">Zona climática</label><select id="thZone"></select></div>
+          <div class="field"><label class="lbl" for="thTe">T. exterior (°C)</label><input type="number" id="thTe" step="0.5"></div>
+          <div class="field"><label class="lbl" for="thTi">T. interior (°C)</label><input type="number" id="thTi" step="0.5" min="10" max="30"></div>
+          <div class="field"><label class="lbl" for="thH">Altura de techo (m)</label><input type="number" id="thH" step="0.05" min="2" max="6"></div>
+        </div>
+        <div class="field"><label class="lbl" for="thBuild">Aislamiento de la vivienda</label><select id="thBuild"></select></div>
+        <details class="th-adv"><summary>Ajustar envolvente y ventilación</summary>
+          <div class="grid2">
+            <div class="field"><label class="lbl" for="thUw">U muro (W/m²K)</label><input type="number" id="thUw" step="0.05" min="0"></div>
+            <div class="field"><label class="lbl" for="thUv">U ventana (W/m²K)</label><input type="number" id="thUv" step="0.1" min="0"></div>
+            <div class="field"><label class="lbl" for="thUs">U suelo (W/m²K)</label><input type="number" id="thUs" step="0.05" min="0"></div>
+            <div class="field"><label class="lbl" for="thUc">U cubierta (W/m²K)</label><input type="number" id="thUc" step="0.05" min="0"></div>
+            <div class="field"><label class="lbl" for="thN">Renovaciones de aire por hora</label><input type="number" id="thN" step="0.1" min="0"></div>
+            <div class="field"><label class="lbl" for="thWin">Ventana en la pared marcada (%)</label><input type="number" id="thWin" step="5" min="0" max="100"></div>
+          </div>
+        </details>
+        <div class="grid2">
+          <div class="field"><label class="lbl" for="thSig">Salto ida–retorno (K)</label><input type="number" id="thSig" step="0.5" min="2" max="15"></div>
+          <div class="field"><label class="lbl" for="thMarg">Margen (%)</label><input type="number" id="thMarg" step="1" min="0" max="50"></div>
+          <div class="field only-suelo"><label class="lbl" for="thVmaxS">Impulsión máxima (°C)</label><input type="number" id="thVmaxS" step="1" min="25" max="55"></div>
+          <div class="field only-suelo"><label class="lbl" for="thPav">Pavimento general</label><select id="thPav"></select></div>
+          <div class="field only-suelo"><label class="lbl" for="thTube">Tubo</label><select id="thTube"></select></div>
+          <div class="field only-suelo"><label class="lbl" for="thSu">Mortero sobre el tubo (mm)</label><input type="number" id="thSu" step="5" min="15" max="100"></div>
+          <div class="field only-techo"><label class="lbl" for="thKp">Panel (W/m²K)</label><input type="number" id="thKp" step="0.5" min="1" max="30"></div>
+          <div class="field only-techo"><label class="lbl" for="thVmaxT">Impulsión máxima (°C)</label><input type="number" id="thVmaxT" step="1" min="25" max="55"></div>
+        </div>
+        <div id="thFloors"></div>
+        <p class="note">Marca en el plano las ventanas y los muros exteriores de cada estancia: con ellos se calculan las pérdidas. Los baños van a 24 °C; cualquier estancia puede tener su propia temperatura. Es un cálculo orientativo: el proyecto lo firma un técnico.</p>
+        <p class="note only-techo" style="margin-top:0;">Potencia del panel: la ficha de Sunthalpy da unos 12 W/m² de panel por cada °C entre el agua y el ambiente (180 W un panel S con el agua a 30 °C y la sala a 20 °C). Pon el dato de tu fabricante.</p>
+        <p class="note only-suelo" style="margin-top:0;">Emisión según UNE-EN 1264: depende de la separación del tubo, del pavimento y del mortero. El suelo no pasa de 29 °C (33 °C en baños).</p>
+      </div>
     </aside>
 
     <main class="stack">
@@ -789,6 +827,15 @@
             <tbody id="collBody"></tbody>
           </table>
         </div>
+      </section>
+      <section class="card" id="thermRes">
+        <div class="card-head"><h2>Cálculo térmico</h2></div>
+        <div id="thSummary"></div>
+        <div class="table-scroll"><table><thead id="thHead"></thead><tbody id="thBody"></tbody><tfoot id="thFoot"></tfoot></table></div>
+        <span class="section-title" style="margin-top:18px;">Caudal por circuito para el equilibrado</span>
+        <div class="table-scroll"><table><thead id="thcHead"></thead><tbody id="thcBody"></tbody></table></div>
+        <p class="note only-suelo">Ajusta el caudalímetro de cada salida del colector al valor en l/min. La pérdida de carga es la del tubo del circuito; la bomba tiene que vencer la del circuito más desfavorable más la del colector.</p>
+        <p class="note only-techo">Ajusta el caudalímetro de cada salida del colector al valor en l/min. El caudal de cada circuito se reparte según la superficie de sus paneles.</p>
       </section>
     </main>
   </div>
@@ -1338,6 +1385,7 @@
     results={}; collStats={}; allUnassigned=[];
     S.floors.forEach(function(fl){ placeFloor(fl); if(S.mode==="suelo") computeFloorUF(fl); else computeFloor(fl); });
     unassigned=allUnassigned.filter(function(u){ return u.floor===curFloor(); });
+    computeThermal();
   }
   function computeFloor(fl){
     var unas=[], C=fl.collectors;
@@ -2342,6 +2390,9 @@
       o+='<text class="p-sub" x="'+f3(c.x)+'" y="'+f3(c.y+0.14)+'" text-anchor="middle">'+sub+'</text>';
     });
     var pills="";
+    if(S.mode!=="suelo"){ rooms.forEach(function(r){ o+=ufMarksSvg(r,function(p){ return toW(r,p); }); });
+      if(S.markHover && !forExport){ var hr0=S.markHover.room, he0=S.markHover.edge, hn0=hr0.pts.length;
+        o+='<polyline class="p-mk hov" points="'+ptsStr(edgeSamples(hr0.pts[he0],hr0.pts[(he0+1)%hn0],hr0.bulge[he0]||0,16).map(function(p){ return toW(hr0,p); }))+'"/>'; } }
     if(S.mode==="suelo"){
       rooms.forEach(function(r){ o+=ufObstSvg(r,function(p){ return toW(r,p); },forExport?"obHx":"obHp"); });
       if(S.obstDraft && !forExport){ var od=S.obstDraft; o+='<rect class="p-obst draft" x="'+f3(Math.min(od.a.x,od.b.x))+'" y="'+f3(Math.min(od.a.y,od.b.y))+'" width="'+f3(Math.abs(od.b.x-od.a.x))+'" height="'+f3(Math.abs(od.b.y-od.a.y))+'"/>';
@@ -2435,7 +2486,7 @@
     var res=results[room.id];
     box.innerHTML=renderDetailSvg(room,res);
     var h="";
-    if(S.mode==="suelo"){ out.innerHTML=ufDetailHtml(room,res); var oc=$("obstClear"); if(oc) oc.addEventListener("click",function(){ room.obst=[]; update(false); }); return; }
+    if(S.mode==="suelo"){ out.innerHTML=ufDetailHtml(room,res)+thDetailHtml(room); var oc=$("obstClear"); if(oc) oc.addEventListener("click",function(){ room.obst=[]; update(false); }); return; }
     if(!room.active) h+='<div class="msg ok">Estancia marcada sin paneles. No suma circuitos.</div>';
     res.msgs.forEach(function(m){ h+='<div class="msg '+m.t+'">'+m.x+'</div>'; });
     h+='<div class="stats"><div class="stat"><div class="k">Superficie</div><div class="v">'+fmt(res.area,2)+'</div><div class="s">m²</div></div>'+
@@ -2451,7 +2502,7 @@
     if(res.st){ var sb=barsFor(res.st.secLens,S.bar), pb=barsFor(res.st.primLens,S.bar), ab=barsFor(res.st.ang,S.bar);
       h+='<p class="layout-line">Estructura'+(res.st.rot?' (rotada)':'')+': <b>'+fmt(sb.total,1)+' m de TC</b> ('+sb.bars+' barras) · <b>'+fmt(pb.total,1)+' m de primario</b> ('+pb.bars+') · <b>'+fmt(ab.total,1)+' m de angular</b> ('+ab.bars+') · <b>'+res.st.boards+' placas</b> para '+fmt(res.st.need,2)+' m² de techo sin paneles.'+(S.showStruct?'':' Activa «Estructura de pladur» para verla dibujada.')+'</p>'; }
     if(res.circ.length) h+='<p class="layout-line">Tubería: <b>'+fmt(res.pex,1)+' m de PEX</b> · '+res.mang+' manguito'+(res.mang===1?'':'s')+' · '+res.unions+' conexiones'+(res.col?' · va a <b>'+esc(res.col.name)+'</b>':' · <span style="color:var(--warn)">sin colector: '+esc(res.why||'')+'</span>')+'.</p>';
-    out.innerHTML=h;
+    out.innerHTML=h+thDetailHtml(room);
   }
   function ufDetailHtml(room,res){
     var U=S.uf, h="";
@@ -2477,7 +2528,7 @@
     var n=room.pts.length, rows="";
     for(var i=0;i<n;i++){
       var a=room.pts[i], b=room.pts[(i+1)%n], h=room.bulge[i]||0;
-      var mkc= S.mode==="suelo" ? '<td><select class="mk-sel" data-mk="'+i+'" aria-label="Tipo de muro del lado '+LETTER(i)+'"><option value="">Normal</option><option value="ventana">Ventana</option><option value="exterior">Exterior</option><option value="escalera">Escalera</option></select></td>' : '';
+      var mkc='<td><select class="mk-sel" data-mk="'+i+'" aria-label="Tipo de muro del lado '+LETTER(i)+'"><option value="">Normal</option><option value="ventana">Ventana</option><option value="exterior">Exterior</option>'+(S.mode==="suelo"?'<option value="escalera">Escalera</option>':'')+'</select></td>';
       rows+= h ? '<tr><td><span class="letter">'+LETTER(i)+'</span></td><td class="muted">Curvo · cuerda '+fmt(len(sub(b,a)),2)+' m</td><td><input type="number" step="1" data-flecha="'+i+'" value="'+Math.round(curveDepth(a,b,h)*100)+'" aria-label="Flecha del lado '+LETTER(i)+' en cm"></td><td class="muted">cm flecha</td>'+mkc+'</tr>'
                : '<tr><td><span class="letter">'+LETTER(i)+'</span></td><td class="muted">Recto</td><td><input type="number" step="0.01" min="0.1" data-side="'+i+'" value="'+(Math.round(len(sub(b,a))*100)/100)+'" aria-label="Longitud del lado '+LETTER(i)+' en metros"></td><td class="muted">m</td>'+mkc+'</tr>';
     }
@@ -2496,6 +2547,8 @@
         '<label class="check"><input type="checkbox" id="rOver"> Rango de cobertura propio</label>'+
         '<div class="grid2" id="overFields"><div class="field"><label class="lbl" for="rMin">% mínimo</label><input type="number" id="rMin" min="0" max="100"></div><div class="field"><label class="lbl" for="rMax">% máximo</label><input type="number" id="rMax" min="0" max="100"></div></div>'+
         '<span class="section-title" style="margin:6px 0 6px;">Estructura de techo</span><div class="btn-row" style="margin-bottom:10px;"><button class="btn ghost small" id="rRotate">Rotar estructura</button><span class="note" style="margin:0;" id="rRotInfo"></span></div>')+
+        '<span class="section-title" style="margin:6px 0 6px;">Cálculo térmico</span><div class="grid2"><div class="field"><label class="lbl" for="rTi">Temperatura interior (°C)</label><input type="number" id="rTi" step="0.5" min="10" max="30"></div><div class="field"><label class="lbl" for="rWin">Ventanas (m²)</label><input type="number" id="rWin" step="0.1" min="0"></div></div>'+
+        (S.mode==="suelo"?'<div class="field"><label class="lbl" for="rPav">Pavimento</label><select id="rPav"></select></div>':'')+
         '<span class="section-title" style="margin:6px 0 6px;">Lados</span><table class="sides"><tbody>'+rows+'</tbody></table>'+
         '<div id="sideMsg"></div><p class="note">Al cambiar un lado, la forma se recalcula para seguir cerrada y los lados contiguos se ajustan.</p>'+place+
       '</div><div><div class="detail-plan" id="detailSvg"></div><div id="detailOut"></div></div></div>';
@@ -2504,10 +2557,15 @@
     $("rName").addEventListener("input",function(e){ room.name=e.target.value; $("detailTitle").textContent=room.name; update(false); });
     $("rActive").addEventListener("change",function(e){ room.active=e.target.checked; update(false); });
     bindSideCommon(card,room);
+    card.querySelectorAll("[data-mk]").forEach(function(sl){ var i=+sl.getAttribute("data-mk"); sl.value=(room.marks||{})[i]||"";
+      sl.addEventListener("change",function(){ room.marks=room.marks||{}; if(sl.value) room.marks[i]=sl.value; else delete room.marks[i]; update(false); }); });
+    $("rTi").value=thSet(room.ti)?room.ti:""; $("rWin").value=thSet(room.winA)?room.winA:"";
+    [["rTi","ti"],["rWin","winA"]].forEach(function(f){ $(f[0]).addEventListener("input",function(){ var v=String(this.value).replace(",",".");
+      if(v===""){ room[f[1]]=null; thUpdate(); } else if(isFinite(+v)){ room[f[1]]=+v; thUpdate(); } }); });
+    if($("rPav")){ $("rPav").innerHTML='<option value="">General ('+(TH_PAV[S.th.pav]||TH_PAV.cer).n.toLowerCase()+')</option>'+Object.keys(TH_PAV).map(function(k){ return '<option value="'+k+'">'+TH_PAV[k].n+'</option>'; }).join("");
+      $("rPav").value=room.pav||""; $("rPav").addEventListener("change",function(){ room.pav=this.value||null; thUpdate(); }); }
     if(S.mode==="suelo"){
       $("rSep").value=String(room.sep||0); $("rSep").addEventListener("change",function(e){ room.sep=+e.target.value||null; update(false); });
-      card.querySelectorAll("[data-mk]").forEach(function(sl){ var i=+sl.getAttribute("data-mk"); sl.value=(room.marks||{})[i]||"";
-        sl.addEventListener("change",function(){ room.marks=room.marks||{}; if(sl.value) room.marks[i]=sl.value; else delete room.marks[i]; update(false); }); });
       return;
     }
     $("rOver").checked=room.override; $("rMin").value=room.minPct; $("rMax").value=room.maxPct; $("overFields").hidden=!room.override;
@@ -2776,6 +2834,21 @@
       allColls().forEach(function(c){ var st=collStats[c.id]||{n:0,pex:0,rooms:[]}, fl=floorOfColl(c); cb.push([c.name+(multi&&fl?"\n"+fl.name:""),String(c.cap||0),st.rooms.map(function(x){return x.room.name+": "+x.n+" circ.";}).join("\n")||"—",String(st.n),String((c.cap||0)-st.n),fmt(st.pex,1)]); });
       allUnassigned.forEach(function(u){ cb.push(["Sin asignar","",u.room.name+": "+u.n+" circ.",String(u.n),"",""]); });
       T({head:[["Colector","Salidas","Estancias y circuitos","Usadas","Libres","PEX (m)"]],body:cb.length?cb:[["—","","","","",""]],columnStyles:{1:{halign:"right"},3:{halign:"right"},4:{halign:"right"},5:{halign:"right"}}});
+      if(TH && TH.rows.length){ var TT=TH, R7={halign:"right"};
+        section("Cálculo térmico");
+        doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor.apply(doc,INK);
+        var tl=doc.splitTextToSize("Exterior "+fmt(S.th.te)+" °C · Impulsión "+(TT.tv!=null?fmt(TT.tv,1):"–")+" °C · Retorno "+(TT.tr!=null?fmt(TT.tr,1):"–")+" °C · Potencia necesaria "+fmt(TT.totQ/1000,2)+" kW · Caudal total "+fmt(TT.totFlow)+" l/h"+(UFM&&TT.dpMax?" · Circuito más desfavorable "+fmt(TT.dpMax,1)+" kPa (sin colector)":""),PW-2*M);
+        y+=3; doc.text(tl,M,y); y+=tl.length*3.8;
+        var tbd=[];
+        S.floors.forEach(function(fl){ var rs=TT.rows.filter(function(o){ return o.fl===fl; }); if(!rs.length) return;
+          if(multi) tbd.push([{content:fl.name,colSpan:8,styles:{fontStyle:"bold",fillColor:[229,241,235]}}]);
+          rs.forEach(function(o){ tbd.push([o.room.name+(o.warn.length?"\n"+o.warn[0]:""),fmt(o.ti),fmt(o.Q),o.A>0?fmt(o.q):"—",o.out?fmt(o.out):"—",UFM?(o.surf?fmt(o.surf,1):"—"):(o.tm?fmt(o.tm,1):"—"),o.sig?fmt(o.sig,1):"—",o.flow?fmt(o.flow):"—"]); }); });
+        T({head:[["Estancia","°C","Necesita W","W/m²","Da W",UFM?"Suelo °C":"Agua °C","Salto K","Caudal l/h"]],body:tbd,columnStyles:{1:R7,2:R7,3:R7,4:R7,5:R7,6:R7,7:R7}});
+        var ccb=[];
+        allColls().forEach(function(c){ TT.rows.forEach(function(o){ o.circ.forEach(function(x){ if(x.col!==c) return; ccb.push([c.name,o.room.name,x.name,fmt(x.len,1),fmt(x.flow),fmt(x.flow/60,2)].concat(UFM?[fmt(x.dp,1)]:[])); }); }); });
+        if(ccb.length){ section("Caudales para el equilibrado del colector");
+          T({head:[["Colector","Estancia","Circuito",UFM?"Tubo m":"PEX m","Caudal l/h","l/min"].concat(UFM?["Pérdida kPa"]:[])],body:ccb,columnStyles:{3:R7,4:R7,5:R7,6:R7}}); }
+      }
       section("Material");
       var anyPrice=false,total=0;
       var mb=reportRows.map(function(row){ var pr=parseFloat(S.prices[row.key]), has=isFinite(pr)&&pr>0; if(has){ anyPrice=true; total+=pr*row.qty; } return [row.label+"\n"+row.note, fmt(row.qty,row.qty%1?1:0)+" "+row.unit, has?eurPdf(pr):"", has?eurPdf(pr*row.qty):""]; });
@@ -2784,6 +2857,7 @@
       if(y>255){ doc.addPage(); y=18; }
       doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor.apply(doc,MUT);
       var note=UFM ? "Notas: separación del tubo en plancha de tetones universal (múltiplos de 5 cm). Junto a ventanas y muros exteriores el tubo va más junto (zona periférica, UNE-EN 1264). Cada circuito tiene como máximo "+fmt(S.uf.maxLen)+" m contando la ida y vuelta al colector con recorrido ortogonal y "+fmt(S.uf.vert,1)+" m de bajada por tramo. Las estancias separadas por una escalera llevan su propio colector. Los metros de tubo incluyen un "+fmt(S.uf.margin)+"% de margen." : "Notas: cada colector incluye ida y retorno. Cada circuito lleva 2 conexiones (ida y retorno): en el colector, 1 bicono completo; en el panel, 1 racor de tubo de panel a rosca 1/2\", 1 racor PEX con rosca 1/2\" y 1 casquillo. Manguito de unión: 1 por circuito de 2 paneles. Los metros de PEX son una estimación con recorrido ortogonal, subida al techo de "+fmt(S.vert,1)+" m por tramo, descontando "+fmt(S.tail,1)+" m de tubo del propio panel por tramo, y "+fmt(S.margin)+"% de margen.";
+      note+=" Cálculo térmico orientativo: pérdidas por transmisión (U · superficie · diferencia de temperatura) por los muros exteriores y ventanas marcados, suelo y techo, más ventilación y un "+fmt(S.th.marg)+"% de margen. "+(UFM?"Emisión del suelo según UNE-EN 1264 con tubo "+(TH_TUBE[S.th.tube]||TH_TUBE["16x2"]).n+" y "+fmt(S.th.su)+" mm de mortero.":"Emisión de los paneles: "+fmt(S.th.kp,1)+" W/m² por cada °C entre el agua y el ambiente.")+" No sustituye al proyecto firmado por un técnico.";
       var nl=doc.splitTextToSize(note,PW-2*M); doc.text(nl,M,y); y+=nl.length*3.4+3;
       if(company.foot){ var fl2=doc.splitTextToSize(company.foot,PW-2*M); if(y+fl2.length*3.6>283){ doc.addPage(); y=18; } doc.setTextColor.apply(doc,INK); doc.setFontSize(8); doc.text(fl2,M,y); }
       var pages=doc.getNumberOfPages();
@@ -3076,7 +3150,7 @@
       if(dq && doorClick(V(dq.x,dq.y))){ e.preventDefault(); e.stopImmediatePropagation(); suppressClick=true; }
       return;
     }
-    if(S.mode==="suelo" && S.markTool){
+    if(S.markTool){
       var mq=svgPointRaw(e.clientX,e.clientY), hit=mq?ufHitEdge(V(mq.x,mq.y)):null;
       if(hit){ e.preventDefault(); e.stopImmediatePropagation(); var mk=hit.room.marks=hit.room.marks||{};
         if(mk[hit.edge]===S.markTool) delete mk[hit.edge]; else mk[hit.edge]=S.markTool;
@@ -3157,7 +3231,7 @@
   function setMarkTool(t){
     S.markTool = S.markTool===t ? null : t; S.markHover=null;
     document.querySelectorAll("#markBar [data-mark]").forEach(function(b){ b.classList.toggle("on",b.getAttribute("data-mark")===S.markTool); });
-    if(S.markTool) hint('Marcando <b>'+MARKS[S.markTool].toLowerCase()+'</b>: pulsa una pared del plano. '+(S.markTool==="escalera"?'Por esa pared no pasará ningún tubo; lo que quede al otro lado necesita su propio colector. ':S.markTool==="ventana"?'Junto a ella el tubo irá a '+clampSep(S.uf.sepWin)+' cm en una franja de '+fmt(S.uf.winW,1)+' m. ':'Junto a él el tubo irá a '+clampSep(S.uf.sepExt)+' cm en una franja de '+fmt(S.uf.extW,1)+' m. ')+'<button class="btn ghost small" id="markDone">Terminar</button>');
+    if(S.markTool) hint('Marcando <b>'+MARKS[S.markTool].toLowerCase()+'</b>: pulsa una pared del plano. '+(S.mode!=="suelo"?'Se usa en el cálculo térmico de la estancia. ':S.markTool==="escalera"?'Por esa pared no pasará ningún tubo; lo que quede al otro lado necesita su propio colector. ':S.markTool==="ventana"?'Junto a ella el tubo irá a '+clampSep(S.uf.sepWin)+' cm en una franja de '+fmt(S.uf.winW,1)+' m. ':'Junto a él el tubo irá a '+clampSep(S.uf.sepExt)+' cm en una franja de '+fmt(S.uf.extW,1)+' m. ')+'<button class="btn ghost small" id="markDone">Terminar</button>');
     else hint("");
     var md=$("markDone"); if(md) md.addEventListener("click",function(){ setMarkTool(S.markTool); });
     renderPlan();
@@ -3374,7 +3448,180 @@
   $("showPipes").addEventListener("change",function(e){ S.showPipes=e.target.checked; document.querySelectorAll(".pipe-lg").forEach(function(x){ x.hidden=!S.showPipes; }); renderPlan(); });
   $("addPanel").addEventListener("click",function(){ S.panels.push({id:nid(),name:"Modelo nuevo",w:60,h:120}); renderCatalog(); update(false); });
 
-  function update(rebuild){ computeAll(); renderPlan(); if(rebuild) buildEditor(); renderDetailOutput(); renderTables(); }
+  // ---------------- thermal calculation ----------------
+  // Heat loss per room (transmission through marked exterior walls and windows, floor, roof, ventilation) and,
+  // with it, design supply temperature, emission, flow and pressure drop per circuit.
+  // Floor: UNE-EN 1264-2 characteristic curve and 1264-3 design method. Ceiling: panel output per °C (data sheet).
+  var TH_ZONES={alfa:{n:"α · Canarias",te:10},A:{n:"A · Cádiz, Almería…",te:3},B:{n:"B · Sevilla, Valencia…",te:0},C:{n:"C · Barcelona, Bilbao…",te:-1},D:{n:"D · Madrid, Zaragoza…",te:-4},E:{n:"E · Burgos, León…",te:-7}};
+  var TH_BUILD={cte19:{n:"Nueva (CTE 2019)",uw:0.35,uv:1.8,us:0.45,uc:0.30,ach:0.5},
+    cte06:{n:"CTE 2006 a 2018",uw:0.6,uv:2.8,us:0.6,uc:0.45,ach:0.6},
+    nbe:{n:"1980 a 2006 (NBE-CT-79)",uw:1.0,uv:3.3,us:0.9,uc:0.8,ach:0.8},
+    old:{n:"Antes de 1980, sin aislar",uw:1.6,uv:5.0,us:1.2,uc:1.5,ach:1.0}};
+  var TH_PAV={cer:{n:"Cerámico o piedra",r:0.01},vin:{n:"Vinílico",r:0.03},lam:{n:"Laminado",r:0.06},par:{n:"Parquet de madera",r:0.10},moq:{n:"Moqueta",r:0.15}};
+  var TH_TUBE={"16x1.8":{n:"16 × 1,8 mm",d:0.016,e:0.0018},"16x2":{n:"16 × 2 mm",d:0.016,e:0.002},"17x2":{n:"17 × 2 mm",d:0.017,e:0.002},"20x2":{n:"20 × 2 mm",d:0.020,e:0.002}};
+  var TH_BELOW={terreno:"Terreno",nocal:"Local sin calefacción",cal:"Vivienda con calefacción",ext:"Aire exterior (voladizo)"};
+  var TH_ABOVE={cub:"Cubierta",nocal:"Bajo cubierta sin calefacción",cal:"Vivienda con calefacción"};
+  var TH_UK=["uw","uv","us","uc","ach"];
+  S.th={zone:"D",te:-4,ti:20,h:2.6,build:"cte06",uw:0.6,uv:2.8,us:0.6,uc:0.45,ach:0.6,win:25,sig:5,marg:10,pav:"cer",tube:"16x2",su:45,vmaxS:45,kp:12,vmaxT:40};
+  var TH=null;
+  function thBath(r){ return /ba[ñn]o|aseo/i.test(r.name||""); }
+  function thSet(v){ return v!=null && v!=="" && isFinite(+v); }
+  function thTi(r){ return thSet(r.ti) ? +r.ti : (thBath(r)?24:S.th.ti); }
+  function flTh(fl){ var i=S.floors.indexOf(fl), n=S.floors.length, t=fl.th||{};
+    return {below:TH_BELOW[t.below]?t.below:(i<=0?"terreno":"cal"), above:TH_ABOVE[t.above]?t.above:(i===n-1?"cub":"cal")}; }
+  function thLoad(r,fl){
+    var T=S.th, ti=thTi(r), dT=Math.max(0,ti-T.te), n=r.pts.length, h=T.h, wv=0, we=0, mk=r.marks||{};
+    for(var e=0;e<n;e++){ var t=mk[e]; if(t!=="ventana" && t!=="exterior") continue;
+      var L=edgeLength(r.pts[e],r.pts[(e+1)%n],r.bulge[e]||0); if(t==="ventana") wv+=L*h; else we+=L*h; }
+    var auto=wv*T.win/100, Aw=thSet(r.winA) ? Math.max(0,Math.min(+r.winA,wv+we)) : auto, Awall=Math.max(0,wv+we-Aw);
+    var area=Math.abs(signedArea(localOutline(r))), ft=flTh(fl);
+    var bB={terreno:0.45,nocal:0.5,cal:0,ext:1}[ft.below], bA={cub:1,nocal:0.7,cal:0}[ft.above];
+    var p={muros:T.uw*Awall*dT, ventanas:T.uv*Aw*dT, suelo:T.us*area*dT*bB, techo:T.uc*area*dT*bA, vent:0.34*T.ach*area*h*dT};
+    var Q0=p.muros+p.ventanas+p.suelo+p.techo+p.vent;
+    return {ti:ti, Q:Q0*(1+T.marg/100), Q0:Q0, parts:p, Aw:Aw, AwAuto:auto, Awall:Awall, area:area, ext:wv+we>0, ft:ft};
+  }
+  // UNE-EN 1264-2: K_H = B · a_B · a_T^mT · a_U^mU · a_D^mD (tube in the screed, type A)
+  function thKH(sep,R){ var T=S.th, su=Math.max(0.015,(T.su||45)/1000), a=10.8;
+    var aB=(1/a+su/1)/(1/a+su/1.2+R);
+    var aT=R<=0.05 ? 1.23+(1.188-1.23)*R/0.05 : R<=0.10 ? 1.188+(1.156-1.188)*(R-0.05)/0.05 : 1.156+(1.134-1.156)*Math.min(1,(R-0.10)/0.05);
+    var Tm=Math.max(0.05,Math.min(0.375,sep)), D=(TH_TUBE[T.tube]||TH_TUBE["16x2"]).d;
+    return 6.7*aB*Math.pow(aT,1-Tm/0.075)*Math.pow(1.06,100*(0.045-su))*Math.pow(1.03,250*(D-0.020)); }
+  function thQmaxFloor(ti,bath){ var d=(bath?33:29)-ti; return d>0 ? 8.92*Math.pow(d,1.1) : 0; }
+  function thSurf(ti,q){ return ti+Math.pow(Math.max(0,q)/8.92,1/1.1); }
+  function thLM(sig,dV){ return sig<=1e-9 ? dV : sig/Math.log(dV/(dV-sig)); }            // log-mean water–room difference
+  function thVfor(dH,sig){ return sig/(1-Math.exp(-sig/dH)); }                             // supply–room difference that gives dH with spread sig
+  function thSigma(dH,dV){ if(dH>=dV) return 0; var lo=0, hi=dV*(1-1e-9);                 // spread that gives dH with supply dV
+    for(var i=0;i<60;i++){ var m=(lo+hi)/2; if(thLM(m,dV)>dH) lo=m; else hi=m; } return (lo+hi)/2; }
+  function thDp(lh,L){ var tb=TH_TUBE[S.th.tube]||TH_TUBE["16x2"], di=tb.d-2*tb.e, v=lh/3.6e6/(Math.PI*di*di/4); if(!(v>0)) return 0;
+    var Re=v*di/0.66e-6, f=Re<2300?64/Re:0.316*Math.pow(Re,-0.25); return f*(L/di)*992*v*v/2/1000*1.15; }   // kPa, +15 % for bends
+  function computeThermal(){
+    var T=S.th, UF=S.mode==="suelo", rows=[], vmax=UF?T.vmaxS:T.vmaxT, sig=Math.max(1,+T.sig||5), anyExt=false;
+    S.floors.forEach(function(fl){ fl.rooms.forEach(function(r){ var res=results[r.id]; if(!res) return;
+      var L=thLoad(r,fl), o={room:r,fl:fl,res:res,L:L,Q:L.Q,ti:L.ti,bath:thBath(r),circ:[],flow:0,out:0,short:0,warn:[]};
+      if(L.ext) anyExt=true;
+      if(UF){ var pav=TH_PAV[r.pav]||TH_PAV[T.pav]||TH_PAV.cer;
+        o.A=r.active?Math.max(0,res.area-(res.obArea||0)):0; o.pav=pav; o.K=thKH((r.active?res.sep:clampSep(S.uf.sep))/100,pav.r);
+        o.qmax=thQmaxFloor(o.ti,o.bath); o.dHmax=o.qmax/o.K; }
+      else { o.A=r.active?res.covered:0; o.K=+T.kp||12; o.dHmax=Infinity; }
+      o.q=o.A>0?o.Q/o.A:0; o.dHreq=o.A>0?o.Q/(o.A*o.K):0;
+      res.th=o; rows.push(o); }); });
+    // the room that needs the warmest water (within its surface limit) sets the supply temperature
+    var need=0, des=null;
+    // bathrooms do not set it (UNE-EN 1264-3) unless there is nothing else: if they fall short they get a towel rail
+    var cand=rows.filter(function(o){ return o.A>0.05 && o.Q>0; }), dry=cand.filter(function(o){ return !o.bath; });
+    (dry.length?dry:cand).forEach(function(o){ var v=o.ti+thVfor(Math.min(o.dHreq,o.dHmax),sig); if(v>need){ need=v; des=o; } });
+    var tv=des ? Math.min(vmax,Math.ceil(need*2)/2) : null, colls={}, dpMax=0, dpO=null, totQ=0, totOut=0, totFlow=0;
+    rows.forEach(function(o){ var res=o.res, r=o.room; totQ+=o.Q;
+      if(!(o.A>0.05) || tv==null || tv<=o.ti){ o.short=o.Q;
+        if(o.Q>1 && !r.active) o.warn.push("Sin "+(UF?"suelo radiante":"paneles")+": necesita "+fmt(o.Q)+" W de otro emisor.");
+        else if(o.Q>1 && r.active) o.warn.push("No tiene superficie radiante para dar los "+fmt(o.Q)+" W que necesita.");
+        return; }
+      var dV=tv-o.ti, dHs=dV>sig ? thLM(sig,dV) : dV/2, dH=Math.min(o.dHreq,o.dHmax,dHs), s=dH>0 ? Math.min(thSigma(dH,dV),2*sig,dV*0.9) : 0;   // rooms that need less get at most twice the design spread; the thermostat does the rest
+      if(s<sig && dH>=dHs-1e-9) s=sig;
+      o.dH=dH=s>0?thLM(s,dV):0; o.sig=s; o.out=o.K*o.A*dH; o.short=Math.max(0,o.Q-o.out); o.qo=o.out/o.A; o.tr=tv-s; o.tm=o.ti+dH;
+      var fd=1;
+      if(UF){ o.surf=thSurf(o.ti,o.qo);
+        var Ro=1/10.8+o.pav.r+Math.max(0.015,(T.su||45)/1000)/1.2, b=o.L.ft.below, Ru=b==="cal"?0.75:b==="ext"?2:1.25, tu=b==="cal"?o.ti:b==="terreno"?10:b==="ext"?T.te:(o.ti+T.te)/2;
+        fd=1+Ro/Ru+(o.ti-tu)/(Math.max(1,o.qo)*Ru); o.down=o.out*(fd-1); }
+      o.flow=s>0 ? o.out*fd/(s*1.163) : 0; totOut+=o.out; totFlow+=o.flow;
+      if(o.short>Math.max(15,o.Q*0.03)){
+        if(UF && o.dHreq>o.dHmax+1e-9) o.warn.push("Necesita "+fmt(o.q)+" W/m² y el suelo da como máximo "+fmt(o.qmax)+" W/m² sin pasar de "+(o.bath?33:29)+" °C en la superficie. Faltan "+fmt(o.short)+" W: mejora el aislamiento, junta más el tubo, usa un pavimento que transmita mejor o añade un apoyo (toallero o radiador).");
+        else if(UF) o.warn.push(tv>=vmax ? "Con la impulsión limitada a "+fmt(vmax)+" °C faltan "+fmt(o.short)+" W. Sube la impulsión máxima, mejora el aislamiento o junta más el tubo."
+          : "Con la impulsión de diseño ("+fmt(tv,1)+" °C) faltan "+fmt(o.short)+" W"+(o.bath?": lo normal es completar el baño con un toallero.":". Junta más el tubo o mejora el aislamiento."));
+        else if(tv>=vmax) o.warn.push("Los paneles ("+fmt(o.A,2)+" m²) necesitan el agua a unos "+fmt(o.ti+o.dHreq,1)+" °C de media y la impulsión máxima es "+fmt(vmax)+" °C: faltan "+fmt(o.short)+" W. Sube la cobertura de la estancia o mejora el aislamiento.");
+        else o.warn.push("Con la impulsión de diseño ("+fmt(tv,1)+" °C) los paneles ("+fmt(o.A,2)+" m²) dan "+fmt(o.out)+" W: faltan "+fmt(o.short)+" W"+(o.bath?". Lo normal es completar el baño con un toallero o subir su cobertura.":". Sube la cobertura de la estancia."));
+      }
+      // circuits: the room flow is shared by tube in the room (floor) or panel area (ceiling)
+      if(UF){ var tl=res.circ.reduce(function(t,c){ return t+(c.inLen||0); },0);
+        res.circ.forEach(function(c,i){ var f=o.flow*(tl?(c.inLen||0)/tl:1/res.circ.length), dp=thDp(f,c.inst||0);
+          o.circ.push({name:"C"+(i+1),col:res.col,len:c.inst||0,flow:f,dp:dp,color:c.color});
+          if(dp>dpMax){ dpMax=dp; dpO={o:o,name:"C"+(i+1)}; } }); }
+      else { var ga=[], ta=0; res.panels.forEach(function(p){ ga[p.circuit]=(ga[p.circuit]||0)+p.w*p.h; ta+=p.w*p.h; });
+        ga.forEach(function(a,i){ o.circ.push({name:"C"+(i+1),col:res.col,len:res.circ[i]?res.circ[i].len:0,flow:ta?o.flow*a/ta:0,n:res.circ[i]?res.circ[i].n:0}); }); }
+      o.circ.forEach(function(c){ var lm=c.flow/60;
+        if(c.flow>0 && UF && lm>4) o.warn.push("El circuito "+c.name+" pide "+fmt(lm,1)+" l/min: es mucho para un caudalímetro normal; divide la estancia en más circuitos.");
+        if(UF && c.dp>25) o.warn.push("El circuito "+c.name+" pierde "+fmt(c.dp,1)+" kPa: es largo para su caudal; acorta el circuito o divídelo.");
+        if(c.col){ var k=colls[c.col.id]=colls[c.col.id]||{c:c.col,flow:0,n:0,dp:0}; k.flow+=c.flow; k.n++; k.dp=Math.max(k.dp,c.dp||0); } });
+    });
+    TH={tv:tv,tr:tv!=null?tv-sig:null,sig:sig,rows:rows,des:des,need:need,capped:des&&need>vmax+1e-9,vmax:vmax,totQ:totQ,totOut:totOut,totFlow:totFlow,dpMax:dpMax,dpO:dpO,colls:colls,anyExt:anyExt,UF:UF};
+    return TH;
+  }
+  // ---- rendering ----
+  function thDetailHtml(room){
+    var res=results[room.id], o=res&&res.th, rw=$("rWin"), rt=$("rTi"); if(!o || res.pending) return "";
+    if(rw) rw.placeholder=fmt(o.L.AwAuto,1)+" (auto)"; if(rt) rt.placeholder=fmt(thBath(room)?24:S.th.ti)+" (auto)";
+    var UF=S.mode==="suelo", p=o.L.parts, h='<span class="section-title" style="margin:14px 0 6px;">Cálculo térmico</span>';
+    o.warn.forEach(function(w){ h+='<div class="msg warn">'+esc(w)+'</div>'; });
+    h+='<div class="stats"><div class="stat"><div class="k">Necesita</div><div class="v">'+fmt(o.Q)+'</div><div class="s">W'+(o.A>0?' · '+fmt(o.q)+' W/m²':'')+'</div></div>'+
+      '<div class="stat"><div class="k">Da</div><div class="v">'+fmt(o.out)+'</div><div class="s">W a '+fmt(o.ti)+' °C</div></div>'+
+      (UF?'<div class="stat"><div class="k">Suelo</div><div class="v">'+(o.surf?fmt(o.surf,1):'–')+'</div><div class="s">°C de superficie (máx. '+(o.bath?33:29)+')</div></div>'
+         :'<div class="stat"><div class="k">Agua</div><div class="v">'+(o.tm?fmt(o.tm,1):'–')+'</div><div class="s">°C de media en los paneles</div></div>')+
+      '<div class="stat"><div class="k">Caudal</div><div class="v">'+fmt(o.flow)+'</div><div class="s">l/h'+(o.sig?' · salto '+fmt(o.sig,1)+' K':'')+'</div></div></div>';
+    h+='<p class="layout-line">Pérdidas: muros '+fmt(p.muros)+' W · ventanas '+fmt(p.ventanas)+' W ('+fmt(o.L.Aw,1)+' m²) · suelo '+fmt(p.suelo)+' W · techo '+fmt(p.techo)+' W · ventilación '+fmt(p.vent)+' W · margen '+fmt(S.th.marg)+'%.'+
+      (o.L.ext?'':' <span style="color:var(--warn)">No tiene ventanas ni muros exteriores marcados.</span>')+(UF&&o.down?' Además, '+fmt(o.down)+' W se van hacia abajo.':'')+'</p>';
+    if(o.circ.length) h+='<p class="layout-line">Caudal por circuito: '+o.circ.map(function(c){ return '<b'+(c.color?' style="color:'+c.color+'"':'')+'>'+c.name+'</b> '+fmt(c.flow)+' l/h ('+fmt(c.flow/60,2)+' l/min)'+(UF?' · '+fmt(c.dp,1)+' kPa':''); }).join(' · ')+'.</p>';
+    return h;
+  }
+  var thFloorsKey="";
+  function renderThermal(){
+    var T=TH||computeThermal(), UF=T.UF, box=$("thFloors");
+    var fk=S.floors.map(function(fl){ var t=flTh(fl); return fl.id+fl.name+t.below+t.above; }).join("|");
+    if(fk!==thFloorsKey){ thFloorsKey=fk;
+      box.innerHTML=S.floors.map(function(fl,i){ var t=flTh(fl), opt=function(o,v){ return Object.keys(o).map(function(k){ return '<option value="'+k+'"'+(k===v?' selected':'')+'>'+o[k]+'</option>'; }).join(""); };
+        return '<div class="th-floor">'+(S.floors.length>1?'<b>'+esc(fl.name)+'</b>':'')+'<div class="grid2"><div class="field"><label class="lbl" for="thB'+i+'">Debajo del suelo</label><select id="thB'+i+'" data-fl="'+i+'" data-k="below">'+opt(TH_BELOW,t.below)+'</select></div>'+
+          '<div class="field"><label class="lbl" for="thA'+i+'">Encima del techo</label><select id="thA'+i+'" data-fl="'+i+'" data-k="above">'+opt(TH_ABOVE,t.above)+'</select></div></div></div>'; }).join(""); }
+    var sum=$("thSummary"), multi=S.floors.length>1;
+    if(!T.rows.length){ sum.innerHTML='<p class="muted" style="margin:0;">Añade estancias para ver el cálculo.</p>'; $("thBody").innerHTML=""; $("thFoot").innerHTML=""; $("thcBody").innerHTML=""; return; }
+    var h="";
+    if(!T.anyExt) h+='<div class="msg warn">No hay ventanas ni muros exteriores marcados: la carga solo cuenta la ventilación, el suelo y el techo. Usa «Marcar ventana» y «Marcar muro exterior» en el plano.</div>';
+    if(T.capped) h+='<div class="msg warn">Para cubrir '+esc(T.des.room.name)+' haría falta impulsar a '+fmt(T.need,1)+' °C, por encima del máximo indicado ('+fmt(T.vmax)+' °C). Se calcula con '+fmt(T.vmax)+' °C y esa estancia se queda corta.</div>';
+    var short=T.rows.filter(function(o){ return o.room.active && o.short>Math.max(15,o.Q*0.03); }).length;
+    if(short) h+='<div class="msg warn">'+short+(short>1?' estancias no llegan':' estancia no llega')+' a la potencia que necesita'+(short>1?'n':'')+'. Mira el detalle en la tabla.</div>';
+    h+='<div class="stats"><div class="stat"><div class="k">Impulsión</div><div class="v">'+(T.tv!=null?fmt(T.tv,1):'–')+'</div><div class="s">°C de diseño</div></div>'+
+      '<div class="stat"><div class="k">Retorno</div><div class="v">'+(T.tr!=null?fmt(T.tr,1):'–')+'</div><div class="s">°C (salto '+fmt(T.sig,1)+' K)</div></div>'+
+      '<div class="stat"><div class="k">Potencia</div><div class="v">'+fmt(T.totQ/1000,2)+'</div><div class="s">kW necesarios</div></div>'+
+      '<div class="stat"><div class="k">Caudal</div><div class="v">'+fmt(T.totFlow)+'</div><div class="s">l/h en total</div></div></div>';
+    if(T.des) h+='<p class="layout-line">La impulsión la marca <b>'+esc(T.des.room.name)+'</b>, que es la que más potencia pide por m² ('+fmt(T.des.q)+' W/m²). Exterior '+fmt(S.th.te)+' °C.'+(UF&&T.dpO?' Circuito más desfavorable: <b>'+esc(T.dpO.o.room.name)+' '+T.dpO.name+'</b>, '+fmt(T.dpMax,1)+' kPa sin contar el colector.':'')+'</p>';
+    sum.innerHTML=h;
+    $("thHead").innerHTML='<tr><th>Estancia</th><th class="num">°C</th><th class="num">Necesita W</th><th class="num">W/m²</th><th class="num">Da W</th><th class="num">'+(UF?'Suelo °C':'Agua °C')+'</th><th class="num">Salto K</th><th class="num">Caudal l/h</th></tr>';
+    var tb="";
+    S.floors.forEach(function(fl){ var rs=T.rows.filter(function(o){ return o.fl===fl; }); if(!rs.length) return;
+      if(multi) tb+='<tr class="floor-row"><td colspan="8">'+esc(fl.name)+'</td></tr>';
+      rs.forEach(function(o){ var bad=o.warn.length;
+        tb+='<tr class="clickable'+(o.room.id===S.sel?' sel':'')+'" data-room="'+o.room.id+'"><td>'+esc(o.room.name)+(bad?' <span style="color:var(--warn)" title="Revisar">●</span>':'')+'</td><td class="num">'+fmt(o.ti)+'</td><td class="num">'+fmt(o.Q)+'</td><td class="num">'+(o.A>0?fmt(o.q):'—')+'</td><td class="num">'+(o.out?(o.short>Math.max(15,o.Q*0.03)?'<span style="color:var(--warn)">'+fmt(o.out)+'</span>':fmt(o.out)):'—')+'</td><td class="num">'+(UF?(o.surf?fmt(o.surf,1):'—'):(o.tm?fmt(o.tm,1):'—'))+'</td><td class="num">'+(o.sig?fmt(o.sig,1):'—')+'</td><td class="num">'+(o.flow?fmt(o.flow):'—')+'</td></tr>'; }); });
+    $("thBody").innerHTML=tb;
+    $("thFoot").innerHTML='<tr><td>Total</td><td></td><td class="num">'+fmt(T.totQ)+'</td><td></td><td class="num">'+fmt(T.totOut)+'</td><td></td><td></td><td class="num">'+fmt(T.totFlow)+'</td></tr>';
+    $("thcHead").innerHTML='<tr><th>Colector</th><th>Estancia</th><th>Circuito</th><th class="num">'+(UF?'Tubo m':'PEX m')+'</th><th class="num">Caudal l/h</th><th class="num">l/min</th>'+(UF?'<th class="num">Pérdida kPa</th>':'')+'</tr>';
+    var cb="";
+    allColls().forEach(function(c){ var k=T.colls[c.id]; if(!k) return; var first=true;
+      T.rows.forEach(function(o){ o.circ.forEach(function(x){ if(x.col!==c) return;
+        cb+='<tr><td>'+(first?'<b>'+esc(c.name)+'</b>':'')+'</td><td>'+esc(o.room.name)+'</td><td>'+(x.color?'<b style="color:'+x.color+'">■</b> ':'')+x.name+(x.n?' · '+x.n+' panel'+(x.n>1?'es':''):'')+'</td><td class="num">'+fmt(x.len,1)+'</td><td class="num">'+fmt(x.flow)+'</td><td class="num"><b>'+fmt(x.flow/60,2)+'</b></td>'+(UF?'<td class="num">'+fmt(x.dp,1)+'</td>':'')+'</tr>'; first=false; }); });
+      cb+='<tr class="floor-row"><td colspan="4">Total '+esc(c.name)+' · '+k.n+' circuitos</td><td class="num">'+fmt(k.flow)+'</td><td class="num">'+fmt(k.flow/60,2)+'</td>'+(UF?'<td class="num">'+fmt(k.dp,1)+'</td>':'')+'</tr>'; });
+    $("thcBody").innerHTML=cb||'<tr><td colspan="7" class="muted">Asigna las estancias a un colector para ver el caudal de cada circuito.</td></tr>';
+  }
+  function syncTh(){ var T=S.th;
+    $("thZone").value=T.zone; $("thBuild").value=TH_BUILD[T.build]?T.build:"custom"; $("thPav").value=T.pav; $("thTube").value=T.tube;
+    Object.keys(TH_NUM).forEach(function(id){ $(id).value=T[TH_NUM[id]]; }); }
+  function thUpdate(){ computeThermal(); renderDetailOutput(); renderThermal(); }
+  var TH_NUM={thTe:"te",thTi:"ti",thH:"h",thUw:"uw",thUv:"uv",thUs:"us",thUc:"uc",thN:"ach",thWin:"win",thSig:"sig",thMarg:"marg",thSu:"su",thVmaxS:"vmaxS",thKp:"kp",thVmaxT:"vmaxT"};
+  (function(){
+    var opt=function(o,f){ return Object.keys(o).map(function(k){ return '<option value="'+k+'">'+(f?f(o[k]):o[k])+'</option>'; }).join(""); };
+    $("thZone").innerHTML=opt(TH_ZONES,function(z){ return z.n; });
+    $("thBuild").innerHTML=opt(TH_BUILD,function(b){ return b.n; })+'<option value="custom">Personalizado</option>';
+    $("thPav").innerHTML=opt(TH_PAV,function(p){ return p.n; }); $("thTube").innerHTML=opt(TH_TUBE,function(p){ return p.n; });
+    Object.keys(TH_NUM).forEach(function(id){ $(id).addEventListener("input",function(){ var v=parseFloat(String(this.value).replace(",",".")); if(!isFinite(v)) return; var k=TH_NUM[id];
+      S.th[k]=v; if(TH_UK.indexOf(k)>=0){ S.th.build="custom"; $("thBuild").value="custom"; } thUpdate(); }); });
+    $("thZone").addEventListener("change",function(){ S.th.zone=this.value; S.th.te=TH_ZONES[this.value].te; $("thTe").value=S.th.te; thUpdate(); });
+    $("thBuild").addEventListener("change",function(){ var b=TH_BUILD[this.value]; S.th.build=this.value; if(b) TH_UK.forEach(function(k){ S.th[k]=b[k]; }); syncTh(); thUpdate(); });
+    $("thPav").addEventListener("change",function(){ S.th.pav=this.value; thUpdate(); });
+    $("thTube").addEventListener("change",function(){ S.th.tube=this.value; thUpdate(); });
+    $("thFloors").addEventListener("change",function(e){ var sl=e.target.closest("[data-fl]"); if(!sl) return; var fl=S.floors[+sl.getAttribute("data-fl")]; if(!fl) return;
+      fl.th=fl.th||{}; fl.th[sl.getAttribute("data-k")]=sl.value; thUpdate(); });
+    $("thBody").addEventListener("click",function(e){ var tr=e.target.closest("[data-room]"); if(tr) select(+tr.getAttribute("data-room")); });
+    syncTh();
+  })();
+
+  function update(rebuild){ computeAll(); renderPlan(); if(rebuild) buildEditor(); renderDetailOutput(); renderTables(); renderThermal(); }
 
   renderCatalog(); renderCollectors(); renderFloorBar(); syncProjectInputs(); update(true);
 
@@ -3510,13 +3757,14 @@
   // ---- projects: what is saved, and putting it back
   var CFG_TECHO=["panels","gMin","gMax","clear","gap","strip","vert","margin","tail","secCm","primCm","bar","hang","board"];
   function projSnapshot(){
-    var cfg={}; if(S.mode==="suelo") cfg.uf=S.uf; else CFG_TECHO.forEach(function(k){ cfg[k]=S[k]; });
+    var cfg={th:S.th}; if(S.mode==="suelo") cfg.uf=S.uf; else CFG_TECHO.forEach(function(k){ cfg[k]=S[k]; });
     return JSON.stringify({v:1,mode:S.mode,title:S.title,fi:S.fi,floors:S.floors,project:S.project,prices:S.prices,cfg:cfg},function(k,val){ return (k && k.charAt(0)==="_") ? undefined : val; });
   }
   function projApply(d){
     S.floors=(d.floors&&d.floors.length)?d.floors:[emptyFloor("Planta baja")]; S.fi=Math.min(d.fi||0,S.floors.length-1);
     S.title=d.title||"Proyecto"; S.project=Object.assign({client:"",addr:"",ref:S.project.ref},d.project||{}); S.prices=d.prices||S.prices;
     var c=d.cfg||{};
+    if(c.th){ Object.assign(S.th,c.th); syncTh(); }
     if(S.mode==="suelo" && c.uf){ Object.assign(S.uf,c.uf);
       [["uSep","sep"],["uMax","maxLen"],["uSepWin","sepWin"],["uWinW","winW"],["uSepExt","sepExt"],["uExtW","extW"],["uWall","wallCm"],["uVert","vert"],["uMargin","margin"],["uPlate","plate"]].forEach(function(p){ var el=$(p[0]); if(el) el.value=S.uf[p[1]]; }); }
     if(S.mode==="techo"){ CFG_TECHO.forEach(function(k){ if(c[k]!=null) S[k]=c[k]; });
