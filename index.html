@@ -3405,8 +3405,8 @@
   // ---------------- accounts (Supabase): sign-in, projects saved in the cloud, company data in the account ----------------
   // The two public values of the Supabase project (Project Settings > API). The publishable/anon key is meant to be public:
   // every table is protected by row level security, so each user only reaches his own rows.
-  var SUPA_URL = "";
-  var SUPA_KEY = "";
+  var SUPA_URL = "https://lzeuacxmfjqpytwsvvkw.supabase.co";
+  var SUPA_KEY = "sb_publishable_se83tyCzz2ZzQYNczx9wSw_4ZVErjnE";
   var AUTH_HOSTS = /(^|\.)github\.io$|^localhost$|^127\.0\.0\.1$/;   // where sign-in is required (add the product's own domain here)
   var AUTH={on:false, sb:null, user:null, pending:null, mode:"login", ready:false};
   var CLOUD={id:{}, last:{}, opened:{}, busy:false, fails:0, nextTry:0};
