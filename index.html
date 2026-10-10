@@ -1807,6 +1807,12 @@
           if(dot(u1,unit(sub(D0,C0)))>-0.99 || Math.abs(dot(sub(C0,A),no))>0.2) continue;
           var t1=dot(sub(C0,A),u1), t2=dot(sub(D0,A),u1), lo=Math.max(0,Math.min(t1,t2))+0.12, hi=Math.min(L1,Math.max(t1,t2))-0.12;
           if(hi-lo<0.4) continue;
+          // a collector standing on this wall: the tubes cross beside it, not through it (else the way from the collector to
+          // this opening would have zero length and the bundles would go all round the room to reach it)
+          live.forEach(function(col){ var ps=col._pose; if(!ps || hi-lo<0.4 || Math.abs(dot(ps.u,u1))<0.99 || Math.abs(dot(sub(ps.base,A),no))>0.2) return;
+            var tc=dot(sub(ps.base,A),u1), b0=tc-ps.CL/2-0.15, b1=tc+ps.CL/2+0.15; if(b1<=lo || b0>=hi) return;
+            var la=b0-lo, lb=hi-b1; if(la>=lb) hi=Math.min(hi,b0); else lo=Math.max(lo,b1); });
+          if(hi-lo<0.4) continue;
           conns.push({ra:i,rb:j,P:add(A,mul(u1,lo)),Q:add(A,mul(u1,hi)),C:add(A,mul(u1,(lo+hi)/2)),w:hi-lo,n:mul(no,-1),virt:true}); } } }
     // ---- what sits on each room's outline: openings and collectors, by position along the outline
     var items=RG.map(function(){ return []; }), allIt=[];
@@ -2245,10 +2251,12 @@
         var again=false; PL.routed.forEach(function(o){ if(o.circs.some(function(c){ return c.inst>U.maxLen+1e-6; })){ extra[o.P.zi]=(extra[o.P.zi]||0)+1; again=true; } });
         if(!again) break; }
       if(bst) bst.forbid=fb; return bst; }
-    function nOut(P){ return P ? P.need.filter(function(v,x){ return v && !P.routed.some(function(o){ return o.P.room===fl.rooms[x] && (o.circs.length||o.small); }); }).length : 0; }
+    // a room only counts as served without a circuit of its own when it is really small (a landing crossed by tubes)
+    function bare(o){ return o.small && results[o.P.room.id] && (results[o.P.room.id].area-(results[o.P.room.id].obArea||0))>=4; }
+    function nOut(P){ return P ? P.need.filter(function(v,x){ return v && !P.routed.some(function(o){ return o.P.room===fl.rooms[x] && (o.circs.length||(o.small&&!bare(o))); }); }).length : 0; }
     best=planLoop({});
     // rooms still left out: plan again a different way (each room's own floor kept where it first went; bundles laid the plain way), keep the best
-    [{nogap:1},{classic:1}].forEach(function(v){ if(best && nOut(best)){ var alt=planLoop(v); if(alt && alt.served>best.served) best=alt; } });
+    [{nogap:1},{classic:1}].forEach(function(v){ if(best && nOut(best)){ var alt=planLoop(v); if(alt && (alt.served>best.served || (alt.served===best.served && nOut(alt)<nOut(best)))) best=alt; } });
     if(best) forbid=best.forbid;
     var colour=0, served={};
     if(best) best.routed.forEach(function(o){ var res=results[o.P.room.id];
@@ -3671,6 +3679,7 @@
     var un=0, unc=0, pex=0, over=0;
     fl.rooms.forEach(function(r){ var res=results[r.id]; if(!res) return;
       if(res.circuits && !res.col){ un++; unc+=res.circuits; }
+      else if(r.active && !(res.circ||[]).length && res.area-(res.obArea||0)>=4) un++;   // a real room left with no circuit of its own
       if(res.routeFail) un++;
       (res.circ||[]).forEach(function(q){ if(q.inst>S.uf.maxLen+1e-6) over++; }); });
     fl.collectors.forEach(function(k){ var st=collStats[k.id]; if(st) pex+=st.pex; });
