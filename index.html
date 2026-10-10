@@ -3884,6 +3884,7 @@
     if(/invalid login|invalid credentials/.test(m)) return "Correo o contraseña incorrectos.";
     if(/not confirmed/.test(m)) return "Aún no has confirmado tu correo: pulsa el enlace que te enviamos al registrarte.";
     if(/already registered|already exists/.test(m)) return "Ese correo ya tiene cuenta. Entra con tu contraseña o recupérala.";
+    if(/email rate limit|over_email_send_rate/.test(m)) return "Ahora mismo no podemos enviar el correo de confirmación (se ha alcanzado el límite de envíos por hora). Prueba dentro de un rato o entra con Google.";
     if(/rate limit|too many/.test(m)) return "Demasiados intentos seguidos. Espera unos minutos y vuelve a probar.";
     if(/weak|password should/.test(m)) return "Esa contraseña es demasiado débil. Usa al menos 8 caracteres mezclando letras y números.";
     if(/fetch|network|failed to/.test(m)) return "No hay conexión con el servidor. Comprueba tu conexión a internet.";
