@@ -375,6 +375,17 @@
   .closure.warn{background:var(--warn-bg);color:var(--warn);}
 
 
+  /* ---- recommended collector ---- */
+  .rec-chip{display:inline-flex;align-items:center;gap:7px;background:#FFF4DC;color:#7A4F00;border:1px solid #F2B53A;border-radius:7px;padding:5px 11px;font:600 .8rem/1.2 inherit;cursor:pointer;}
+  .rec-chip[hidden]{display:none !important;}
+  .rec-chip i{width:8px;height:8px;border-radius:50%;background:#F2B53A;animation:recPulse 1.4s ease-in-out infinite;flex:none;}
+  .rec-chip.on{background:#F2B53A;color:#3B2600;}
+  @keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(242,181,58,.75);}50%{box-shadow:0 0 0 5px rgba(242,181,58,0);}}
+  @media (prefers-reduced-motion:reduce){ .rec-chip i{animation:none;} }
+  .p-rec{fill:#F2B53A;stroke:#7A4F00;stroke-width:.03;}
+  .p-rec-ring{fill:rgba(242,181,58,.28);stroke:#D99A1E;stroke-width:.06;stroke-dasharray:.12 .08;}
+  .p-rec-l{stroke:#D99A1E;stroke-width:.04;stroke-dasharray:.15 .1;fill:none;}
+  .p-rectext{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.17px;font-weight:700;fill:#7A4F00;paint-order:stroke;stroke:var(--room-fill);stroke-width:.07px;stroke-linejoin:round;pointer-events:none;}
   /* ---- thermal ---- */
   .th-adv{margin:0 0 12px;}
   .th-adv summary{cursor:pointer;font-size:.8rem;color:var(--accent);font-weight:600;margin-bottom:8px;}
@@ -665,7 +676,8 @@
     <div class="coll-bar">
       <span class="coll-chip" id="collChip" role="button" tabindex="0" aria-label="Arrastra al plano para añadir un colector"><span class="ico"></span>Colector</span>
       <span class="only-techo">Arrastra la figura al plano (o púlsala) para añadir un colector. Los colectores se mueven arrastrándolos.</span>
-      <span class="only-suelo">Arrastra el colector junto a una pared: al soltarlo se pega a la pared más cercana, en horizontal o vertical según la pared.</span>
+      <button type="button" class="rec-chip only-suelo" id="collRec" hidden><i></i>Ubicación recomendada para <b></b></button>
+      <span class="only-suelo">Púlsalo y se coloca solo en la pared recomendada, o arrástralo a la pared que quieras: al soltarlo se pega a la pared más cercana.</span>
     </div>
     <div class="mark-bar" id="markBar">
       <button class="mk-btn" type="button" data-mark="ventana"><i></i>Marcar ventana</button>
@@ -2419,6 +2431,7 @@
       o+='<g class="coll-g" data-coll="'+c.id+'"><rect x="'+f3(c.x-0.45)+'" y="'+f3(c.y-0.25)+'" width="0.9" height="0.5" style="fill:transparent"/><rect class="p-coll" x="'+f3(c.x-0.28)+'" y="'+f3(c.y-0.1)+'" width="0.56" height="0.2" rx="0.03"><title>'+esc(c.name)+' · arrastra para mover</title></rect></g>';
       o+='<text class="p-colltext" x="'+f3(c.x)+'" y="'+f3(c.y+0.33)+'" text-anchor="middle">'+esc(c.name)+' · '+st.n+'/'+(c.cap||0)+'</text>';
     });
+    if(S.mode==="suelo" && !forExport) o+=recGhostSvg();
     var sel=rooms.filter(function(r){return r.id===S.sel;})[0];
     if(sel && !forExport) o+='<path class="p-sel" d="'+pathD(results[sel.id].wout)+'"/>';
     var mv=rooms.filter(function(r){ return r.id===S.moveId; })[0];
@@ -3187,6 +3200,7 @@
     }
   });
   function addCollector(x,y){
+    var auto=x==null;
     if(x==null){ var mnx=Infinity,mny=Infinity,mxx=-Infinity,mxy=-Infinity;
       S.rooms.forEach(function(r){ (results[r.id]?results[r.id].wout:worldOutline(r)).forEach(function(p){ mnx=Math.min(mnx,p.x); mny=Math.min(mny,p.y); mxx=Math.max(mxx,p.x); mxy=Math.max(mxy,p.y); }); });
       if(!isFinite(mnx)){ mnx=0;mny=0;mxx=4;mxy=4; } x=Math.round((mnx+mxx)/2*20)/20; y=Math.round((mny+mxy)/2*20)/20; }
@@ -3194,6 +3208,7 @@
     var nc={id:nid(),name:"Colector "+(allColls().length+1),x:x,y:y,cap:pending||(S.mode==="suelo"?8:12)};
     if(S.mode==="suelo"){ var sn=ufSnapColl(V(x,y),nc); if(sn){ nc.room=sn.room; nc.edge=sn.edge; nc.off=sn.off; } }
     S.collectors.push(nc);
+    if(S.mode==="suelo" && auto) recPlaceNew(nc);
     renderCollectors(); update(false);
   }
   $("addColl").addEventListener("click",function(){ addCollector(); $("planWrap").scrollIntoView({behavior:"smooth",block:"center"}); });
@@ -3621,7 +3636,144 @@
     syncTh();
   })();
 
-  function update(rebuild){ computeAll(); renderPlan(); if(rebuild) buildEditor(); renderDetailOutput(); renderTables(); renderThermal(); }
+  // ---------------- recommended collector position (floor heating) ----------------
+  // Candidates: every straight wall that is not a window or a staircase, every 40 cm. A quick distance score
+  // (circuits × distance to each room, taking the nearest collector) keeps the best few; those are planned for real
+  // (same router as the plan) and the one with fewest rooms left out, no circuit over the maximum and least tube wins.
+  var REC={gen:0,key:null,best:null,dismissed:null,preview:false,timer:0,busy:false};
+  function recKey(fl){ return JSON.stringify([fl.id,fl.rooms.map(function(r){ return [r.id,r.pts,r.bulge,r.tx,r.ty,r.rot,r.active,r.marks||{},r.sep||0,r.doors||[],r.obst||[]]; }),fl.collectors.map(function(c){ return [c.id,c.room,c.edge,c.off,c.cap]; }),S.uf]); }
+  function recCands(fl,c){
+    var out=[], CL=collLen(c);
+    fl.rooms.forEach(function(R){ var n=R.pts.length, mk=R.marks||{};
+      for(var e=0;e<n;e++){ var t=mk[e]; if(R.bulge[e] || t==="ventana" || t==="escalera") continue;
+        var A=toW(R,R.pts[e]), B=toW(R,R.pts[(e+1)%n]), L=len(sub(B,A)); if(L<CL+0.2) continue;
+        var u=unit(sub(B,A)), nin=mul(outN(A,B),-1), offs=[L/2];
+        for(var o=CL/2+0.1;o<=L-CL/2-0.1+1e-9;o+=0.4) offs.push(o);
+        offs.forEach(function(off){ out.push({room:R.id,edge:e,off:Math.round(off*100)/100,p:add(add(A,mul(u,off)),mul(nin,0.1)),ext:t==="exterior",liv:recLiving(R)}); }); } });
+    return out;
+  }
+  // collectors are better out of sight: bedrooms and the living room only when it saves a lot of tube
+  function recLiving(R){ return /dormitorio|habitaci[oó]n|sal[oó]n|comedor|estar|despacho/i.test(R.name||""); }
+  function recPen(pos){ var r=roomById(pos.room); return (pos.ext?5:0)+(r&&recLiving(r)?20:0); }
+  function recNeed(fl){ return fl.rooms.map(function(r){ var res=results[r.id]||{}; if(!r.active || !res.ctr) return {n:0};
+    var est=Math.max(1,Math.ceil(Math.max(0,res.area-(res.obArea||0))*100/ufSep(r)/S.uf.maxLen*1.15));
+    return {n:res.circuits||est, ctr:res.ctr}; }); }
+  function recPick(fl,c,cands,k){
+    var others=fl.collectors.filter(function(q){ return q!==c && q._pose; }), need=recNeed(fl);
+    cands.forEach(function(x){ var cost=0; need.forEach(function(o){ if(!o.n) return; var d=manh(x.p,o.ctr); others.forEach(function(q){ d=Math.min(d,manh(q._pose.c,o.ctr)); }); cost+=o.n*d; }); x.pre=cost+(x.ext?2:0)+(x.liv?12:0); });
+    cands.sort(function(a,b){ return a.pre-b.pre; });
+    var top=[];
+    for(var i=0;i<cands.length && top.length<k;i++){ var x=cands[i];
+      if(top.every(function(y){ return manh(x.p,y.p)>1.2; })) top.push(x); }
+    return top;
+  }
+  function recScore(fl,c){
+    var un=0, unc=0, pex=0, over=0;
+    fl.rooms.forEach(function(r){ var res=results[r.id]; if(!res) return;
+      if(res.circuits && !res.col){ un++; unc+=res.circuits; }
+      if(res.routeFail) un++;
+      (res.circ||[]).forEach(function(q){ if(q.inst>S.uf.maxLen+1e-6) over++; }); });
+    fl.collectors.forEach(function(k){ var st=collStats[k.id]; if(st) pex+=st.pex; });
+    var st=collStats[c.id];
+    return {un:un,unc:unc,pex:pex,over:over,used:st?st.n:0,v:un*1000+unc*200+over*300+pex};
+  }
+  // plan the floor with collector c at pos (and optionally another capacity), then put everything back as it was
+  function recEval(fl,c,pos,cap){
+    var save=fl.collectors.map(function(k){ return {k:k,room:k.room,edge:k.edge,off:k.off,x:k.x,y:k.y,cap:k.cap,pose:k._pose}; });
+    var sR=results, sC=collStats, sA=allUnassigned, uk=fl._uk, ur=fl._ur, dr=S.drag, sc=null;
+    results={}; collStats={}; allUnassigned=[]; fl._uk=null; S.drag=null;
+    S.floors.forEach(function(f){ if(f!==fl) f.rooms.forEach(function(r){ results[r.id]=sR[r.id]; }); });
+    try{ if(pos){ c.room=pos.room; c.edge=pos.edge; c.off=pos.off; } if(cap) c.cap=cap;
+      computeFloorUF(fl); sc=recScore(fl,c); if(pos) sc.v+=recPen(pos); }
+    finally{ results=sR; collStats=sC; allUnassigned=sA; fl._uk=uk; fl._ur=ur; S.drag=dr;
+      save.forEach(function(s){ var k=s.k; k.room=s.room; k.edge=s.edge; k.off=s.off; k.x=s.x; k.y=s.y; k.cap=s.cap; k._pose=s.pose; }); }
+    return sc;
+  }
+  // evaluate the current place and the best candidates one by one (the page stays responsive between them)
+  function recSearch(fl,c,o,done){
+    var gen=REC.gen, list=recPick(fl,c,recCands(fl,c),o.k||5), cr=c._pose?roomById(c.room):null, cur=c._pose?{room:c.room,edge:c.edge,off:c.off,cur:true,ext:!!(cr&&(cr.marks||{})[c.edge]==="exterior")}:null;
+    if(cur) list.unshift(cur);
+    var out=[], i=0;
+    (function step(){
+      if(gen!==REC.gen) return done(null);
+      if(i>=list.length){ out.sort(function(a,b){ return a.sc.v-b.sc.v; }); return done({best:out[0]||null,cur:cur?out.filter(function(x){ return x.pos.cur; })[0]:null}); }
+      var p=list[i++]; out.push({pos:p,sc:recEval(fl,c,p,o.cap)}); setTimeout(step,40);
+    })();
+  }
+  function recWhy(sc,cur){
+    var w=[];
+    if(!cur) return "es donde menos tubo hace falta para llegar a todas las estancias";
+    if(sc.un<cur.un) w.push("llega a "+(cur.un-sc.un)+" estancia"+(cur.un-sc.un>1?"s":"")+" que ahora se quedan sin circuito");
+    if(sc.over<cur.over) w.push("ningún circuito pasa de "+fmt(S.uf.maxLen)+" m");
+    if(cur.pex-sc.pex>=1) w.push("ahorra unos "+fmt(cur.pex-sc.pex)+" m de tubo");
+    return w.join(", ").replace(/, ([^,]*)$/," y $1") || "reparte mejor los circuitos";
+  }
+  function recWall(pos){ var r=roomById(pos.room); return "pared "+LETTER(pos.edge)+(r?" de "+r.name:""); }
+  // a new collector: placed at once where the quick score says, then moved to the best place after the real check
+  function recPlaceNew(nc){
+    var fl=curFloor(), top=recPick(fl,nc,recCands(fl,nc),1)[0];
+    if(top){ nc.room=top.room; nc.edge=top.edge; nc.off=top.off; }
+    if(!top || !S.rooms.some(function(r){ return r.active; })) return;
+    var q={room:nc.room,edge:nc.edge,off:nc.off};
+    REC.gen++; REC.busy=true; REC.best=null; REC.preview=false; recChip();
+    hint("<span>Buscando la mejor pared para <b>"+esc(nc.name)+"</b>…</span>");
+    var cap0=nc.cap;
+    setTimeout(function(){ recSearch(fl,nc,{k:5,cap:Math.max(12,cap0)},function(r){ REC.busy=false;
+      if(!r || !r.best || fl.collectors.indexOf(nc)<0 || nc.room!==q.room || nc.edge!==q.edge || nc.off!==q.off){ hint(""); return; }
+      var b=r.best; nc.room=b.pos.room; nc.edge=b.pos.edge; nc.off=b.pos.off; if(b.sc.used>0) nc.cap=Math.max(2,b.sc.used);
+      renderCollectors(); update(false); REC.key=recKey(fl);
+      hint("<span><b>"+esc(nc.name)+"</b> colocado en la "+esc(recWall(b.pos))+": "+recWhy(b.sc,null)+(b.sc.used?" ("+b.sc.used+" salidas)":"")+". Arrástralo si prefieres otro sitio.</span>"); }); },30);
+  }
+  // after a change on the floor: look again in the background and offer a better place if there is one
+  function recSchedule(){
+    if(S.mode!=="suelo"){ recCancel(); return; }
+    var fl=curFloor(); if(!fl.collectors.length || !fl.rooms.length){ recCancel(); return; }
+    if(S.drag || S.placing || S.markTool || S.doorTool || S.obstTool || REC.busy) return;
+    var key=recKey(fl); if(key===REC.key) return;
+    recCancel(); REC.key=key;
+    REC.timer=setTimeout(recRun,1500);
+  }
+  function recCancel(){ REC.gen++; clearTimeout(REC.timer); var was=REC.preview; REC.best=null; REC.preview=false; REC.key=null; recChip(); if(was){ hint(""); renderPlan(); } }
+  function recRun(){
+    var fl=curFloor(), key=REC.key, cs=fl.collectors.slice(), found=[], i=0, gen=REC.gen;
+    (function next(){
+      if(gen!==REC.gen || key!==REC.key) return;
+      if(i>=cs.length){ found.sort(function(a,b){ return b.gain-a.gain; }); REC.best=found[0]||null; recChip(); return; }
+      var c=cs[i++];
+      recSearch(fl,c,{k:4},function(r){ if(!r || gen!==REC.gen) return;
+        var b=r.best, cu=r.cur;
+        if(b && !b.pos.cur){
+          var gain=cu ? cu.sc.v-b.sc.v : 1e6, worth=!cu || b.sc.un<cu.sc.un || b.sc.over<cu.sc.over || gain>=Math.max(6,cu.sc.pex*0.05);
+          if(worth && manh(b.pos.p||V(0,0),c._pose?c._pose.c:V(1e3,1e3))>0.5) found.push({c:c,pos:b.pos,sc:b.sc,cur:cu?cu.sc:null,gain:gain}); }
+        setTimeout(next,40); });
+    })();
+  }
+  function recChip(){ var el=$("collRec"); if(!el) return; var on=!!(REC.best && REC.dismissed!==REC.key && S.mode==="suelo");
+    el.hidden=!on; if(on) el.querySelector("b").textContent=REC.best.c.name; el.classList.toggle("on",REC.preview); }
+  function recShow(){ var b=REC.best; if(!b) return;
+    REC.preview=true; recChip(); renderPlan();
+    hint('<span><b>Ubicación recomendada para '+esc(b.c.name)+':</b> '+esc(recWall(b.pos))+'. '+recWhy(b.sc,b.cur).replace(/^./,function(m){ return m.toUpperCase(); })+'.</span><button class="btn small" id="recOk">Colocar aquí</button><button class="btn ghost small" id="recNo">Descartar</button>');
+    $("recOk").addEventListener("click",recAccept); $("recNo").addEventListener("click",recReject);
+    $("planWrap").scrollIntoView({behavior:"smooth",block:"center"});
+  }
+  function recAccept(){ var b=REC.best; if(!b) return; var c=b.c, nm=c.name;
+    c.room=b.pos.room; c.edge=b.pos.edge; c.off=b.pos.off;
+    REC.best=null; REC.preview=false; recChip(); update(false); REC.key=recKey(curFloor());
+    hint("<span><b>"+esc(nm)+"</b> movido a la "+esc(recWall(b.pos))+".</span>"); }
+  function recReject(){ REC.dismissed=REC.key; REC.preview=false; recChip(); hint(""); renderPlan(); }
+  function recGhostSvg(){
+    var b=REC.best; if(!REC.preview || !b) return "";
+    var ps=ufCollPose({room:b.pos.room,edge:b.pos.edge,off:b.pos.off,cap:b.c.cap}); if(!ps) return "";
+    var u=ps.u, nn=ps.n, bs=ps.base, h=ps.CL/2, poly=[add(bs,mul(u,-h)),add(bs,mul(u,h)),add(add(bs,mul(u,h)),mul(nn,COLL_D)),add(add(bs,mul(u,-h)),mul(nn,COLL_D))], o="";
+    if(b.c._pose){ var a=b.c._pose.c; o+='<line class="p-rec-l" x1="'+f3(a.x)+'" y1="'+f3(a.y)+'" x2="'+f3(ps.c.x)+'" y2="'+f3(ps.c.y)+'"/>'; }
+    o+='<circle class="p-rec-ring" cx="'+f3(ps.c.x)+'" cy="'+f3(ps.c.y)+'" r="'+f3(Math.max(0.5,h+0.25))+'"/><polygon class="p-rec" points="'+ptsStr(poly)+'"/>';
+    var tp=add(ps.c,mul(nn,0.34)); o+='<text class="p-rectext" x="'+f3(tp.x)+'" y="'+f3(tp.y+0.05)+'" text-anchor="middle">Recomendado</text>';
+    return o;
+  }
+  $("collRec").addEventListener("click",function(){ if(REC.preview){ REC.preview=false; recChip(); hint(""); renderPlan(); } else recShow(); });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape" && REC.preview){ REC.preview=false; recChip(); hint(""); renderPlan(); } });
+
+  function update(rebuild){ computeAll(); renderPlan(); if(rebuild) buildEditor(); renderDetailOutput(); renderTables(); renderThermal(); recSchedule(); }
 
   renderCatalog(); renderCollectors(); renderFloorBar(); syncProjectInputs(); update(true);
 
@@ -3923,8 +4075,8 @@
       steps:[{when:function(){ return true; },
         el:function(T){ return tPhone()?"#collChip":["#collChip",roomSel(T.salon)]; },
         x:function(){ return tPhone()
-          ? "<p>Pulsa el <b>Colector</b>: aparecerá en el plano pegado a la pared más cercana.</p><p>Luego podrás arrastrarlo por el plano a otra pared.</p>"
-          : (suelo?"<p>Mantén pulsado el <b>Colector</b> y arrástralo hasta una pared del <b>Salón</b>. Suéltalo cerca de la pared y se pegará solo.</p><p>En cuanto lo sueltes, verás aparecer los circuitos.</p>"
+          ? (suelo?"<p>Pulsa el <b>Colector</b>: se colocará solo en la pared recomendada, donde menos tubo hace falta.</p><p>Luego podrás arrastrarlo por el plano a otra pared.</p>":"<p>Pulsa el <b>Colector</b>: aparecerá en el plano pegado a la pared más cercana.</p><p>Luego podrás arrastrarlo por el plano a otra pared.</p>")
+          : (suelo?"<p>Mantén pulsado el <b>Colector</b> y arrástralo hasta una pared del <b>Salón</b>. Suéltalo cerca de la pared y se pegará solo.</p><p>En cuanto lo sueltes, verás aparecer los circuitos. Si solo lo pulsas, se coloca solo en la pared recomendada.</p>"
                   :"<p>Arrastra el <b>Colector</b> dentro del <b>Salón</b> (o simplemente púlsalo). Las estancias se asignan solas al colector más cercano con salidas libres.</p>"); }}]});
     P.push({mission:true,t:"Abre la ficha de una estancia",badge:"Ficha consultada",
       done:function(T){ return S.sel===T.salon && !S.moveId; },
