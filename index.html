@@ -375,6 +375,54 @@
   .closure.warn{background:var(--warn-bg);color:var(--warn);}
 
 
+  /* ---- plans & pricing ---- */
+  .plan-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#FFF4DC;border:1px solid #F2C46A;color:#5A3D00;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:.86rem;line-height:1.5;}
+  .plan-banner[hidden]{display:none;}
+  .plan-banner > div:first-child{flex:1 1 320px;}
+  body.proj-ro .plan-banner{background:var(--ok-bg);border-color:#9CCFB6;color:#1F5B42;}
+  .lk{color:var(--muted) !important;letter-spacing:.08em;}
+  body.proj-ro #collChip, body.proj-ro .mk-btn{pointer-events:none;opacity:.5;}
+  .fin-list{margin:6px 0 14px;gap:8px;} .fin-list li{font-size:.88rem;}
+  .fin-price{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;background:var(--surface-2);border-radius:10px;padding:12px 14px;margin:12px 0 4px;}
+  .fin-price span{color:var(--muted);font-size:.85rem;} .fin-price b{font-size:1.5rem;} .fin-price small{color:var(--muted);font-size:.78rem;}
+  #pricingView{min-height:100vh;background:radial-gradient(1100px 480px at 10% -10%,#E3F1F8 0%,transparent 60%),radial-gradient(900px 460px at 100% 0%,#FDEBDD 0%,transparent 55%),var(--bg);}
+  .pr-main{padding:40px 20px 72px;}
+  .pr-hero{max-width:700px;margin:0 auto 32px;text-align:center;}
+  .pr-hero h1{font-size:clamp(1.8rem,4vw,2.6rem);letter-spacing:-.02em;margin:12px 0 10px;line-height:1.1;}
+  .pr-hero .lead{color:var(--muted);font-size:1.02rem;line-height:1.6;margin:0;}
+  .pr-test{display:inline-block;margin:16px 0 0;background:#FFF4DC;color:#7A4F00;border:1px solid #F2C46A;border-radius:999px;padding:6px 14px;font-size:.82rem;font-weight:600;}
+  .pr-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:900px;margin:0 auto;}
+  @media (max-width:760px){ .pr-grid{grid-template-columns:1fr;} }
+  .pr-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px 24px;display:flex;flex-direction:column;gap:12px;}
+  .pr-card.hl{border:2px solid var(--accent);box-shadow:0 22px 48px -30px rgba(11,127,171,.65);}
+  .pr-for{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--accent);}
+  .pr-card h2{margin:0;font-size:1.35rem;letter-spacing:-.01em;}
+  .pr-amt{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;} .pr-amt b{font-size:2.6rem;letter-spacing:-.03em;line-height:1;} .pr-amt span{color:var(--muted);}
+  .pr-vat{color:var(--muted);font-size:.85rem;margin:-4px 0 4px;min-height:1.3em;}
+  .pr-period{display:inline-flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:2px;align-self:flex-start;flex-wrap:wrap;}
+  .pr-period button{border:none;background:none;border-radius:8px;padding:7px 12px;font:600 .82rem "IBM Plex Sans",system-ui,sans-serif;color:var(--muted);cursor:pointer;}
+  .pr-period button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(15,42,61,.15);}
+  .pr-limits{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;}
+  .pr-limits li{font-size:.86rem;color:var(--muted);padding-left:26px;position:relative;line-height:1.45;}
+  .pr-limits li::before{content:"i";position:absolute;left:2px;top:1px;width:16px;height:16px;border-radius:50%;background:#FFF4DC;color:#7A4F00;font:700 .7rem/16px Georgia,serif;text-align:center;}
+  .pr-card .s-btn{justify-content:center;margin-top:auto;}
+  .pr-msg{font-size:.84rem;color:var(--accent);margin:0;min-height:1em;line-height:1.45;}
+  .pr-sec{max-width:900px;margin:56px auto 0;}
+  .pr-sec h2{font-size:1.35rem;letter-spacing:-.01em;margin:0 0 16px;}
+  .pr-tw{overflow-x:auto;}
+  .pr-table{width:100%;min-width:480px;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:.9rem;}
+  .pr-table th,.pr-table td{padding:12px 14px;border-top:1px solid var(--line);text-align:left;vertical-align:top;line-height:1.4;}
+  .pr-table thead th{border-top:none;background:var(--surface-2);font-size:.8rem;}
+  .pr-table td:not(:first-child),.pr-table th:not(:first-child){text-align:center;width:27%;}
+  .pr-yes{color:#2F7D5B;font-weight:700;} .pr-mid{color:#7A4F00;font-weight:600;}
+  .pr-steps{list-style:none;counter-reset:s;padding:0;margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+  @media (max-width:760px){ .pr-steps{grid-template-columns:1fr;} }
+  .pr-steps li{counter-increment:s;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;font-size:.9rem;line-height:1.5;color:var(--muted);}
+  .pr-steps li::before{content:counter(s);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;margin-bottom:10px;}
+  .pr-steps b{display:block;color:var(--ink);margin-bottom:4px;}
+  .pr-sim{max-width:900px;margin:48px auto 0;border:1px dashed #F2C46A;background:#FFFBF2;border-radius:14px;padding:16px 18px;font-size:.88rem;}
+  .pr-sim p{margin:4px 0 10px;color:var(--muted);line-height:1.5;}
+  .pr-sim .btn-row button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
   /* ---- recommended collector ---- */
   .rec-chip{display:inline-flex;align-items:center;gap:7px;background:#FFF4DC;color:#7A4F00;border:1px solid #F2B53A;border-radius:7px;padding:5px 11px;font:600 .8rem/1.2 inherit;cursor:pointer;}
   .rec-chip[hidden]{display:none !important;}
@@ -482,7 +530,7 @@
     <div class="s-wrap">
       <a class="brand" href="#inicio"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg1" x1="0" x2="1"><stop offset="0" stop-color="#0B7FAB"/><stop offset="1" stop-color="#EE7B3A"/></linearGradient></defs><rect x="1" y="1" width="30" height="30" rx="8" fill="#0F2A3D"/><rect x="7" y="9" width="8" height="5" rx="1" fill="url(#lg1)"/><rect x="17" y="9" width="8" height="5" rx="1" fill="url(#lg1)"/><rect x="7" y="18" width="8" height="5" rx="1" fill="url(#lg1)"/><rect x="17" y="18" width="8" height="5" rx="1" fill="url(#lg1)"/></svg>Planificador Radiante</a>
       <div class="s-links">
-        <a href="#funciones">Funciones</a><a href="#como">Cómo funciona</a><a href="#precios">Precios</a><a href="#preguntas">Preguntas</a>
+        <a href="#funciones">Funciones</a><a href="#como">Cómo funciona</a><a href="#precios" data-go="pricing">Precios</a><a href="#preguntas">Preguntas</a>
         <button class="s-btn small" data-go="choose">Abrir el planificador</button>
       </div>
     </div>
@@ -555,12 +603,12 @@
 
   <section class="s-sec" id="precios">
     <div class="s-wrap">
-      <div class="s-head"><span class="kicker">Precios</span><h2>Proyectos ilimitados, sin permanencia</h2><p>Prueba gratis durante 14 días con todas las funciones.</p></div>
+      <div class="s-head"><span class="kicker">Precios</span><h2>Un proyecto suelto o una suscripción para empresas</h2><p>Fase de pruebas: ahora mismo el planificador es gratis.</p></div>
       <div class="prices">
-        <div class="price-card"><h3>Mensual</h3><div class="amt">59 € <small>/ mes</small></div><ul class="checks"><li>Proyectos y plantas ilimitados</li><li>Informes PDF con tu logo</li><li>Estructura de pladur y materiales</li></ul><button class="s-btn ghost" data-go="choose">Empezar prueba</button></div>
-        <div class="price-card hl"><h3>Anual <span class="badge">2 meses gratis</span></h3><div class="amt">590 € <small>/ año</small></div><ul class="checks"><li>Todo lo del plan mensual</li><li>Equivale a 49 € al mes</li><li>Soporte prioritario</li></ul><button class="s-btn" data-go="choose">Empezar prueba</button></div>
+        <div class="price-card"><h3>Por proyecto</h3><div class="amt">37 € <small>/ proyecto</small></div><ul class="checks"><li>Todas las herramientas y avisos</li><li>Resultados e informe PDF al finalizar</li><li>IVA incluido, sin suscripción</li></ul><button class="s-btn ghost" data-go="pricing">Ver detalles</button></div>
+        <div class="price-card hl"><h3>Empresas <span class="badge">sin límites</span></h3><div class="amt">67 € <small>/ mes</small></div><ul class="checks"><li>Resultados en tiempo real</li><li>Proyectos ilimitados y modificables</li><li>187 € al trimestre o 737 € al año</li></ul><button class="s-btn" data-go="pricing">Ver planes</button></div>
       </div>
-      <p class="price-note">Precios sin IVA. Precios de ejemplo para esta maqueta de la web.</p>
+      <p class="price-note">Suscripciones + IVA. Los pagos se activarán al terminar la fase de pruebas.</p>
     </div>
   </section>
 
@@ -580,6 +628,76 @@
   <footer class="s-foot"><div class="s-wrap"><span>© 2026 Planificador Radiante</span><span>Herramienta de cálculo para techo radiante · Estimaciones orientativas, revisa siempre en obra</span></div></footer>
 </div>
 
+<div id="pricingView" class="site" hidden>
+  <div class="ch-top"><button class="linkbtn" data-go="site">← Volver a la web</button><button class="linkbtn" data-go="choose">Abrir el planificador →</button></div>
+  <main class="pr-main">
+    <div class="pr-hero">
+      <span class="kicker">Precios</span>
+      <h1>Paga solo por lo que uses</h1>
+      <p class="lead">Un proyecto suelto cuando lo necesites, o una suscripción si diseñas instalaciones cada mes. Techo y suelo radiante, cálculo térmico e informe con tu logo en todos los planes.</p>
+      <p class="pr-test">Fase de pruebas: ahora mismo el planificador es gratis y los pagos aún no están activos</p>
+    </div>
+    <div class="pr-grid">
+      <article class="pr-card">
+        <span class="pr-for">Particulares y autónomos</span>
+        <h2>Por proyecto</h2>
+        <div class="pr-amt"><b>37 €</b><span>por proyecto</span></div>
+        <p class="pr-vat">IVA incluido · pago único, sin suscripción</p>
+        <ul class="checks"><li>Todas las herramientas: estancias, colectores, circuitos, materiales y cálculo térmico</li><li>Avisos mientras diseñas: qué falla y por qué, para que lo corrijas</li><li>Al finalizar, todos los datos y el informe en PDF con tu logo</li></ul>
+        <ul class="pr-limits"><li>Los resultados numéricos (tubo, materiales, potencias y caudales) se ven al finalizar</li><li>Un proyecto en curso a la vez</li><li>El proyecto finalizado queda cerrado: no se puede modificar</li></ul>
+        <button class="s-btn ghost pr-buy" type="button" data-plan="proyecto">Comprar un proyecto</button>
+        <p class="pr-msg" aria-live="polite"></p>
+      </article>
+      <article class="pr-card hl">
+        <span class="pr-for">Empresas instaladoras</span>
+        <h2>Suscripción</h2>
+        <div class="pr-period" role="tablist" aria-label="Periodo de pago"><button type="button" role="tab" class="on" aria-selected="true" data-per="mensual">Mensual</button><button type="button" role="tab" aria-selected="false" data-per="trimestral">Trimestral</button><button type="button" role="tab" aria-selected="false" data-per="anual">Anual</button></div>
+        <div class="pr-amt"><b id="prAmt">67 €</b><span id="prPer">al mes</span></div>
+        <p class="pr-vat" id="prSave">+ IVA · sin permanencia</p>
+        <ul class="checks"><li>Todo lo del plan por proyecto</li><li>Resultados en tiempo real mientras diseñas</li><li>Proyectos ilimitados: nuevos, duplicados y modificables siempre</li><li>Informes PDF ilimitados</li><li>Acceso total mientras dure la suscripción</li></ul>
+        <button class="s-btn pr-buy" type="button" id="prBuyE" data-plan="mensual">Suscribirme</button>
+        <p class="pr-msg" aria-live="polite"></p>
+      </article>
+    </div>
+    <section class="pr-sec">
+      <h2>Qué incluye cada plan</h2>
+      <div class="pr-tw"><table class="pr-table">
+        <thead><tr><th></th><th>Por proyecto</th><th>Suscripción</th></tr></thead>
+        <tbody>
+          <tr><td>Estancias, colectores y circuitos automáticos</td><td><span class="pr-yes">Sí</span></td><td><span class="pr-yes">Sí</span></td></tr>
+          <tr><td>Techo y suelo radiante</td><td><span class="pr-yes">Sí</span></td><td><span class="pr-yes">Sí</span></td></tr>
+          <tr><td>Cálculo térmico y caudales de equilibrado</td><td><span class="pr-yes">Sí</span></td><td><span class="pr-yes">Sí</span></td></tr>
+          <tr><td>Avisos de fallos y su motivo</td><td><span class="pr-yes">Sí</span></td><td><span class="pr-yes">Sí</span></td></tr>
+          <tr><td>Resultados numéricos</td><td><span class="pr-mid">Al finalizar</span></td><td><span class="pr-yes">En tiempo real</span></td></tr>
+          <tr><td>Informe PDF con tu logo</td><td><span class="pr-mid">Al finalizar</span></td><td><span class="pr-yes">Siempre</span></td></tr>
+          <tr><td>Proyectos</td><td>Uno en curso a la vez</td><td><span class="pr-yes">Ilimitados</span></td></tr>
+          <tr><td>Modificar un proyecto terminado</td><td>No</td><td><span class="pr-yes">Sí</span></td></tr>
+          <tr><td>Precio</td><td>37 € por proyecto<br><small>IVA incluido</small></td><td>67 €/mes, 187 €/trimestre o 737 €/año<br><small>+ IVA</small></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+    <section class="pr-sec">
+      <h2>Cómo funciona el pago por proyecto</h2>
+      <ol class="pr-steps"><li><b>Diseña</b>Dibuja la vivienda y usa todas las herramientas, sin límite de cambios.</li><li><b>Corrige</b>Los avisos te dicen qué estancia falla y por qué: sin colector, sin potencia suficiente, circuitos demasiado largos…</li><li><b>Finaliza</b>Pagas 37 €, ves todos los resultados y descargas el informe. El proyecto queda guardado y cerrado.</li></ol>
+    </section>
+    <section class="pr-sec">
+      <h2>Preguntas</h2>
+      <div class="faq">
+        <details><summary>¿Por qué no veo los resultados hasta finalizar en el plan por proyecto?</summary><p>Porque el precio es por proyecto terminado. Mientras diseñas tienes todas las herramientas y los avisos de lo que falla; los metros de tubo, materiales, potencias y caudales aparecen al finalizar, junto con el informe.</p></details>
+        <details><summary>¿Puedo cambiar un proyecto ya finalizado?</summary><p>En el plan por proyecto no: queda cerrado para consulta y descarga. Con la suscripción puedes modificar cualquier proyecto cuando quieras.</p></details>
+        <details><summary>¿Puedo empezar otro proyecto antes de terminar el actual?</summary><p>En el plan por proyecto solo hay un proyecto en curso a la vez: finalízalo (o elimínalo) para empezar otro. Con la suscripción no hay límite.</p></details>
+        <details><summary>¿La suscripción tiene permanencia?</summary><p>No. Mientras pagas tienes acceso completo; si la cancelas, sigue activa hasta el final del periodo pagado.</p></details>
+        <details><summary>¿Cuánto ahorro con el pago trimestral o anual?</summary><p>El trimestral sale a 62,33 € al mes (ahorras 14 €) y el anual a 61,42 € al mes: es como tener un mes gratis.</p></details>
+      </div>
+    </section>
+    <section class="pr-sim" id="prSim">
+      <b>Fase de pruebas · Simular un plan</b>
+      <p>Para ver cómo se comporta el planificador con cada plan. Solo cambia este navegador; no se cobra nada.</p>
+      <div class="btn-row"><button class="btn ghost small" type="button" data-sim="prueba">Prueba (todo abierto)</button><button class="btn ghost small" type="button" data-sim="proyecto">Por proyecto</button><button class="btn ghost small" type="button" data-sim="mensual">Empresa</button></div>
+      <p id="prSimNow" style="margin:10px 0 0;"></p>
+    </section>
+  </main>
+</div>
 <div id="authView" hidden>
   <div class="ch-top"><button class="linkbtn" data-go="site">← Volver a la web</button><span style="font-size:.8rem;color:var(--muted)">Planificador Radiante</span></div>
   <main class="auth-main">
@@ -657,9 +775,11 @@
       <button class="btn ghost small my-projects-btn auth-only" type="button">Mis proyectos</button>
       <button class="btn small" id="newProject">Nuevo proyecto</button>
       <button class="btn ghost small" id="openCompany">Datos de empresa</button>
+      <button class="btn ghost small" id="planBtn" data-go="pricing" type="button">Plan</button>
       <button class="btn ghost small" id="tourBtn" title="Ver el tutorial paso a paso">? Tutorial</button>
     </div>
   </header>
+  <div class="plan-banner" id="planBanner" hidden></div>
 
   <section class="card">
     <div class="card-head">
@@ -892,6 +1012,13 @@
 
 </div>
 
+<div class="modal" id="finModal" hidden role="dialog" aria-modal="true" aria-labelledby="finTitle">
+  <div class="modal-card" style="max-width:520px;">
+    <h2 id="finTitle">Finalizar el proyecto</h2>
+    <div id="finBody"></div>
+    <div class="modal-actions"><button class="btn ghost" id="finNo" type="button">Seguir editando</button><button class="btn" id="finYes" type="button">Finalizar proyecto</button></div>
+  </div>
+</div>
 <div class="modal" id="projModal" hidden role="dialog" aria-modal="true" aria-labelledby="projListTitle">
   <div class="modal-card">
     <div class="proj-head"><h2 id="projListTitle">Mis proyectos</h2><button class="btn small" id="projNew" type="button">+ Nuevo proyecto</button></div>
@@ -3158,7 +3285,7 @@
   $("planWrap").addEventListener("pointerdown",function(e){
     if(e.button!==undefined && e.button!==0) return;
     suppressClick=false;
-    if(S.placing) return;
+    if(S.placing || RO()) return;
     if(S.mode==="suelo" && S.obstTool){
       var oq=svgPointRaw(e.clientX,e.clientY); if(!oq) return; oq=snapPt(V(oq.x,oq.y));
       e.preventDefault(); e.stopImmediatePropagation(); suppressClick=true;
@@ -3187,6 +3314,7 @@
   });
   var ghost=null;
   $("collChip").addEventListener("pointerdown",function(e){
+    if(RO()) return;
     e.preventDefault(); S.drag={isNew:true,sx:e.clientX,sy:e.clientY};
     ghost=document.createElement("div"); ghost.className="coll-chip drag-ghost"; ghost.innerHTML='<span class="ico"></span>Colector';
     ghost.style.left=e.clientX+"px"; ghost.style.top=e.clientY+"px"; document.body.appendChild(ghost); document.body.classList.add("dragging");
@@ -3336,7 +3464,7 @@
     }
     // one click (without dragging) shows the room's details; a double click picks it up to move it (details stay as they were)
     var now=Date.now();
-    if(lastTap && lastTap.id===id && now-lastTap.t<350){ clearTimeout(lastTap.timer); lastTap=null; S.moveId=id; renderPlan();
+    if(lastTap && lastTap.id===id && now-lastTap.t<350 && !RO()){ clearTimeout(lastTap.timer); lastTap=null; S.moveId=id; renderPlan();
       var rr=S.rooms.filter(function(r){ return r.id===id; })[0];
       hint('<b>'+esc(rr?rr.name:"")+'</b> lista para mover: arrástrala a su sitio. Un clic en cualquier estancia muestra su información.'); }
     else { if(lastTap) clearTimeout(lastTap.timer);
@@ -3421,14 +3549,16 @@
 
   // ---------------- top-level actions ----------------
   function newProject(){
+    if(!canNew()){ hint("Con el plan por proyecto solo puedes tener un proyecto en curso: finaliza este (o elimínalo desde «Mis proyectos») para empezar otro.",true); return; }
     var btn=$("newProject");
     if(allRooms().length && btn.getAttribute("data-confirm")!=="1"){ btn.setAttribute("data-confirm","1"); btn.textContent="¿Borrar el actual? Pulsa otra vez"; setTimeout(function(){ btn.removeAttribute("data-confirm"); btn.textContent="Nuevo proyecto"; },4000); return; }
     btn.removeAttribute("data-confirm"); btn.textContent="Nuevo proyecto";
-    S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.placing=null; S.zoom=null; S.title="Nuevo proyecto"; S.project.client=""; S.project.addr="";
+    S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.placing=null; S.zoom=null; S.title="Nuevo proyecto"; S.project.client=""; S.project.addr=""; S.final=null;
     syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true); cloudFresh(); openShape();
   }
   function loadExample(){
-    var uf=S.mode==="suelo";
+    if(planKind()==="proyecto" && !S.final && allRooms().length){ hint("Con el plan por proyecto el ejemplo solo se puede abrir en un proyecto vacío.",true); return; }
+    var uf=S.mode==="suelo"; S.final=null;
     S.floors=[uf?exampleFloorUF():exampleFloor()]; S.fi=0; S.sel=S.rooms[0].id; S.moveId=null; S.placing=null; S.zoom=null; S.title="Vivienda de ejemplo";
     syncProjectInputs(); renderFloorBar(); renderCollectors();
     hint(uf?"Ejemplo de suelo radiante: ventanas y muros exteriores ya marcados, colectores en la pared del pasillo. Prueba «Marcar escalera» en una pared o arrastra un colector a otra pared.":"Ejemplo cargado: el salón tiene una pared curva (lado D). Pulsa cualquier estancia para ver sus lados y medidas."); update(true);
@@ -3437,9 +3567,9 @@
   function setMode(m){
     if(m===S.mode) return;
     if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); S.moveId=null;
-    S.store[S.mode]={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title};
+    S.store[S.mode]={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title,final:S.final||null};
     var d=S.store[m]||{floors:[emptyFloor("Planta baja")],fi:0,sel:null,title:"Nuevo proyecto"};
-    S.floors=d.floors; S.fi=d.fi; S.sel=d.sel; S.title=d.title; S.zoom=null; S.mode=m;
+    S.floors=d.floors; S.fi=d.fi; S.sel=d.sel; S.title=d.title; S.final=d.final||null; S.zoom=null; S.mode=m;
     document.body.classList.toggle("mode-suelo",m==="suelo");
     var nm=m==="suelo"?"Suelo radiante":"Techo radiante";
     $("appSys").textContent="Planificador Radiante · "+nm; $("appEyebrow").textContent=nm+" · Planificador";
@@ -3714,7 +3844,7 @@
     if(!cur) return "es donde menos tubo hace falta para llegar a todas las estancias";
     if(sc.un<cur.un) w.push("llega a "+(cur.un-sc.un)+" estancia"+(cur.un-sc.un>1?"s":"")+" que ahora se quedan sin circuito");
     if(sc.over<cur.over) w.push("ningún circuito pasa de "+fmt(S.uf.maxLen)+" m");
-    if(cur.pex-sc.pex>=1) w.push("ahorra unos "+fmt(cur.pex-sc.pex)+" m de tubo");
+    if(cur.pex-sc.pex>=1) w.push(LOCKED()?"ahorra tubo":"ahorra unos "+fmt(cur.pex-sc.pex)+" m de tubo");
     return w.join(", ").replace(/, ([^,]*)$/," y $1") || "reparte mejor los circuitos";
   }
   function recWall(pos){ var r=roomById(pos.room); return "pared "+LETTER(pos.edge)+(r?" de "+r.name:""); }
@@ -3782,7 +3912,116 @@
   $("collRec").addEventListener("click",function(){ if(REC.preview){ REC.preview=false; recChip(); hint(""); renderPlan(); } else recShow(); });
   document.addEventListener("keydown",function(e){ if(e.key==="Escape" && REC.preview){ REC.preview=false; recChip(); hint(""); renderPlan(); } });
 
-  function update(rebuild){ computeAll(); renderPlan(); if(rebuild) buildEditor(); renderDetailOutput(); renderTables(); renderThermal(); recSchedule(); }
+  // ---------------- plans: pay per project, or a subscription for companies ----------------
+  // "proyecto": all the tools and warnings, but the numbers (tube, materials, power, flows) stay hidden until the project
+  // is finished; finishing shows them, allows the PDF and closes the project (read only). Only one project in progress.
+  // "mensual" / "trimestral" / "anual": everything, always. "prueba": testing phase, everything.
+  // Note: hiding is done in the page; the real protection comes when payments and server checks are switched on.
+  var TEST_PHASE=true;
+  var PLANS={proyecto:{n:"Por proyecto",price:37},mensual:{n:"Empresa · mensual",price:67,m:1},trimestral:{n:"Empresa · trimestral",price:187,m:3},anual:{n:"Empresa · anual",price:737,m:12}};
+  var PLAN={id:TEST_PHASE?"prueba":"proyecto",src:"defecto"};
+  function planKind(){ return PLAN.id==="proyecto" ? "proyecto" : PLANS[PLAN.id] ? "empresa" : "prueba"; }
+  function planName(){ return PLAN.id==="prueba" ? "Prueba" : PLAN.id==="proyecto" ? "Por proyecto" : "Empresa"; }
+  function LOCKED(){ return planKind()==="proyecto" && !S.final; }
+  function RO(){ return planKind()==="proyecto" && !!S.final; }
+  function canNew(){ return planKind()!=="proyecto" || !!S.final || !allRooms().length; }
+  function planRead(){
+    var sim=null; try{ sim=localStorage.getItem("pr_plan_sim"); }catch(e){}
+    PLAN = (sim==="prueba"||sim==="proyecto"||PLANS[sim]) ? {id:sim,src:"sim"} : {id:TEST_PHASE?"prueba":"proyecto",src:"defecto"};
+    planApply();
+    if(typeof AUTH!=="undefined" && AUTH && AUTH.on && AUTH.user && AUTH.sb){ var uid=AUTH.user.id;
+      try{ AUTH.sb.from("suscripciones").select("plan,estado,fin").maybeSingle().then(function(r){
+        if(!r||r.error||!r.data||!AUTH.user||AUTH.user.id!==uid) return; var d=r.data;
+        if(d.estado==="activa" && (!d.fin || new Date(d.fin)>new Date()) && PLANS[d.plan] && d.plan!=="proyecto"){ PLAN={id:d.plan,src:"cuenta"}; planApply(); } },function(){}); }catch(e){} }
+  }
+  var bannerHtml="";
+  function planApply(){
+    var lk=LOCKED(), ro=RO(), b=$("planBanner"), h="";
+    document.body.classList.toggle("plan-locked",lk); document.body.classList.toggle("proj-ro",ro);
+    if(lk) h='<div><b>Plan por proyecto.</b> Los resultados (metros de tubo, materiales, potencias y caudales) se ven al finalizar el proyecto. Mientras tanto, los avisos te dicen qué falla y por qué para que lo corrijas.</div><button class="btn small" type="button" data-fin="open">Finalizar proyecto · '+PLANS.proyecto.price+' €</button>';
+    else if(ro){ var d=new Date(S.final.at||Date.now());
+      h='<div><b>Proyecto finalizado</b> el '+String(d.getDate()).padStart(2,"0")+'/'+String(d.getMonth()+1).padStart(2,"0")+'/'+d.getFullYear()+'. Ya ves todos los datos y puedes descargar el informe. El proyecto está cerrado: no se puede modificar.</div><div class="btn-row"><button class="btn small" type="button" data-fin="pdf">Descargar informe</button><button class="btn ghost small" type="button" data-fin="new">Empezar otro proyecto</button></div>'; }
+    if(h!==bannerHtml){ bannerHtml=h; b.innerHTML=h; } b.hidden=!h;
+    $("newProject").hidden=!canNew();
+    $("loadExample").hidden=planKind()==="proyecto" && !S.final && allRooms().length>0;
+    $("planBtn").textContent="Plan: "+planName();
+    var dl=$("downloadReport"); dl.textContent=lk?"Finalizar y descargar el informe":"Descargar informe (PDF)";
+    document.querySelectorAll("[data-sim]").forEach(function(x){ x.classList.toggle("on",x.getAttribute("data-sim")===PLAN.id || (x.getAttribute("data-sim")==="mensual" && planKind()==="empresa")); x.disabled=PLAN.src==="cuenta"; });
+    var sn=$("prSimNow"); if(sn) sn.textContent=PLAN.src==="cuenta" ? "Tu cuenta tiene una suscripción activa: "+PLANS[PLAN.id].n+"." : "Plan con el que se abre ahora el planificador en este navegador: "+planName()+".";
+    lockMask(); roApply();
+  }
+  // ---- hiding the numbers while the project is not finished
+  var MASK_RE=/(?<![\d.,])(?<!(?:máx\.|Exterior)\s-?)(\d+(?:[.,]\d+)*)(\s?(?:m²|W\/m²|kW|W|kPa|l\/h|l\/min|°C|m|en la estancia|de ida y vuelta|barras?|placas?|manguitos?|conexiones)(?![A-Za-zÀ-ÿ²\/]))/g;
+  var MASK_COL=/tubo|pex|necesita|^da\b|w\/m|suelo °c|agua|salto|caudal|l\/min|pérdida|cantidad|importe|manguitos|uniones/i;
+  var MASK_STAT=/^(tubo|necesita|da|suelo|agua|caudal|impulsión|retorno|potencia)$/i;
+  var DOTS="•••";
+  function maskText(root){ if(!root) return; var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null), n, list=[];
+    while((n=w.nextNode())) list.push(n);
+    list.forEach(function(t){ var v=t.nodeValue, m=v.replace(MASK_RE,DOTS+"$2"); if(m!==v) t.nodeValue=m; }); }
+  function maskTable(tb){
+    var hr=tb.tHead && tb.tHead.rows[tb.tHead.rows.length-1]; if(!hr) return;
+    var cols=[]; Array.prototype.forEach.call(hr.cells,function(c){ for(var k=0;k<(c.colSpan||1);k++) cols.push(MASK_COL.test(c.textContent.trim())); });
+    Array.prototype.forEach.call(tb.querySelectorAll("tbody tr, tfoot tr"),function(tr){ var x=0;
+      Array.prototype.forEach.call(tr.cells,function(td){ var hit=false; for(var k=0;k<(td.colSpan||1);k++) if(cols[x+k]) hit=true; x+=td.colSpan||1;
+        if(hit && td.colSpan===1 && !td.querySelector("input,select") && td.textContent!==DOTS && /\d/.test(td.textContent)){ td.textContent=DOTS; td.classList.add("lk"); } }); });
+  }
+  function lockMask(){
+    if(!LOCKED()) return;
+    MO_ON=false;
+    document.querySelectorAll("#appView table").forEach(maskTable);
+    document.querySelectorAll("#detailOut .stat, #thSummary .stat").forEach(function(st){ var k=st.querySelector(".k"), v=st.querySelector(".v");
+      if(k && v && MASK_STAT.test(k.textContent.trim()) && v.textContent!==DOTS){ v.textContent=DOTS; v.classList.add("lk"); } });
+    document.querySelectorAll("#detailOut .stat .s, #thSummary .stat .s, #detailOut .layout-line, #detailOut .msg, #thSummary .layout-line, #thSummary .msg, #reportBody, #reportColl").forEach(maskText);
+    document.querySelectorAll("#chips .chip").forEach(function(c){ var t=(c.firstChild&&c.firstChild.nodeValue||"").trim(), b=c.querySelector("b"); if(b && /^(tubo|pex)$/i.test(t) && b.textContent!==DOTS) b.textContent=DOTS; });
+    MO_ON=true;
+  }
+  // ---- a finished project is read only: everything that edits is switched off
+  var RO_KEEP='[data-go],#tourBtn,.my-projects-btn,.logout-btn,#openCompany,#downloadReport,.zoom-ctl button,#colorByCircuit,#showPipes,#showStruct,#floorBar [data-floor],#planBanner button,#report .proj-grid input,#reportBody input,#planBtn,#newProject';
+  function roApply(){
+    var ro=RO();
+    document.querySelectorAll("#appView input, #appView select, #appView textarea, #appView button").forEach(function(el){
+      if(ro){ if(!el.disabled && !el.matches(RO_KEEP)){ el.disabled=true; el.setAttribute("data-ro","1"); } }
+      else if(el.getAttribute("data-ro")==="1"){ el.disabled=false; el.removeAttribute("data-ro"); } });
+  }
+  var MO_ON=true;
+  new MutationObserver(function(){ if(!MO_ON) return; if(LOCKED()) lockMask(); if(RO()) roApply(); }).observe($("appView"),{childList:true,subtree:true,characterData:true});
+  // ---- finishing the project
+  function finOpen(){
+    if(!LOCKED()) return;
+    if(!allRooms().length){ hint("Dibuja al menos una estancia antes de finalizar el proyecto.",true); return; }
+    var w=[], uf=S.mode==="suelo";
+    if(allUnassigned.length) w.push(allUnassigned.length+(allUnassigned.length>1?" estancias se quedan":" estancia se queda")+" sin colector");
+    var sh=TH?TH.rows.filter(function(o){ return o.room.active && o.short>Math.max(15,o.Q*0.03); }).length:0; if(sh) w.push(sh+(sh>1?" estancias no llegan":" estancia no llega")+" a la potencia que necesita");
+    if(uf){ var ov=0; allRooms().forEach(function(r){ var z=results[r.id]; if(z && (z.circ||[]).some(function(c){ return c.inst>S.uf.maxLen+1e-6; })) ov++; }); if(ov) w.push(ov+(ov>1?" estancias tienen":" estancia tiene")+" algún circuito demasiado largo"); }
+    $("finBody").innerHTML='<p>Al finalizar:</p><ul class="checks fin-list"><li>Verás todos los resultados: metros de tubo, materiales, potencias y caudales.</li><li>Podrás descargar el informe en PDF con tu logo.</li><li>El proyecto queda cerrado y ya no se podrá modificar.</li></ul>'+
+      (w.length?'<div class="msg warn">Antes de finalizar, revisa: '+w.join("; ")+'.</div>':'<div class="msg ok">Sin avisos pendientes.</div>')+
+      '<div class="fin-price"><span>Precio</span><b>'+PLANS.proyecto.price+' €</b><small>IVA incluido · pago único</small></div>'+
+      (TEST_PHASE?'<p class="note">Fase de pruebas: el pago aún no está activo, así que el proyecto se finaliza sin pagar.</p>':'');
+    $("finYes").textContent=TEST_PHASE?"Finalizar proyecto":"Pagar "+PLANS.proyecto.price+" € y finalizar";
+    $("finModal").hidden=false; $("finYes").focus();
+  }
+  function finClose(){ $("finModal").hidden=true; }
+  function finDo(){ finClose(); S.final={at:new Date().toISOString(),pago:TEST_PHASE?"prueba":"pendiente"};
+    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); S.moveId=null;
+    update(true); cloudSave(); hint("<span><b>Proyecto finalizado.</b> Ya ves todos los datos. Descarga el informe desde el aviso de arriba o desde «Informe final».</span>"); }
+  $("finYes").addEventListener("click",finDo); $("finNo").addEventListener("click",finClose);
+  $("finModal").addEventListener("click",function(e){ if(e.target===this) finClose(); });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape" && !$("finModal").hidden) finClose(); });
+  $("planBanner").addEventListener("click",function(e){ var b=e.target.closest("[data-fin]"); if(!b) return; var a=b.getAttribute("data-fin");
+    if(a==="open") finOpen(); else if(a==="pdf") $("downloadReport").click(); else if(a==="new") newProject(); });
+  document.addEventListener("click",function(e){ if(e.target.closest && e.target.closest("#downloadReport") && LOCKED()){ e.preventDefault(); e.stopImmediatePropagation(); finOpen(); } },true);
+  // ---- pricing page
+  var PR_PER={mensual:{a:"67 €",p:"al mes",s:"+ IVA · sin permanencia"},trimestral:{a:"187 €",p:"cada 3 meses",s:"62,33 € al mes · ahorras 14 € · + IVA"},anual:{a:"737 €",p:"al año",s:"61,42 € al mes · un mes gratis (ahorras 67 €) · + IVA"}};
+  document.querySelectorAll("[data-per]").forEach(function(b){ b.addEventListener("click",function(){ var k=b.getAttribute("data-per"), p=PR_PER[k];
+    document.querySelectorAll("[data-per]").forEach(function(x){ var on=x===b; x.classList.toggle("on",on); x.setAttribute("aria-selected",on?"true":"false"); });
+    $("prAmt").textContent=p.a; $("prPer").textContent=p.p; $("prSave").textContent=p.s; $("prBuyE").setAttribute("data-plan",k); }); });
+  document.querySelectorAll(".pr-buy").forEach(function(b){ b.addEventListener("click",function(){ var m=b.parentNode.querySelector(".pr-msg");
+    m.textContent=TEST_PHASE?"Los pagos se activarán al terminar la fase de pruebas. Mientras tanto, el planificador es gratis.":"Abriendo el pago…"; }); });
+  document.querySelectorAll("[data-sim]").forEach(function(b){ b.addEventListener("click",function(){ try{ localStorage.setItem("pr_plan_sim",b.getAttribute("data-sim")); }catch(e){} planRead(); }); });
+  var _userUi=userUi; userUi=function(){ _userUi.apply(this,arguments); planRead(); };
+  planRead();
+
+  function update(rebuild){ computeAll(); renderPlan(); if(rebuild) buildEditor(); renderDetailOutput(); renderTables(); renderThermal(); recSchedule(); planApply(); }
 
   renderCatalog(); renderCollectors(); renderFloorBar(); syncProjectInputs(); update(true);
 
@@ -3791,7 +4030,7 @@
     if(v.indexOf("app-")===0){ setMode(v.slice(4)); v="app"; }
     if(authGate(v)) return;
     $("authView").hidden=true;
-    $("siteView").hidden = v!=="site"; $("appView").hidden = v!=="app"; $("chooseView").hidden = v!=="choose"; $("chNote").textContent="";
+    $("siteView").hidden = v!=="site"; $("pricingView").hidden = v!=="pricing"; $("appView").hidden = v!=="app"; $("chooseView").hidden = v!=="choose"; $("chNote").textContent="";
     window.scrollTo(0,0);
     if(v==="app"){ update(false); cloudOpenLast(); }
   }
@@ -3828,7 +4067,7 @@
   function authMsg(t,bad){ var m=$("authMsg"); m.textContent=t||""; m.className="auth-msg"+(bad?" bad":""); }
   function showAuth(mode){
     AUTH.mode=mode||"login";
-    $("siteView").hidden=true; $("appView").hidden=true; $("chooseView").hidden=true; $("authView").hidden=false; $("tourAsk").hidden=true;
+    $("siteView").hidden=true; $("pricingView").hidden=true; $("appView").hidden=true; $("chooseView").hidden=true; $("authView").hidden=false; $("tourAsk").hidden=true;
     var M=AUTH.mode, T={login:["Entra en tu cuenta","Para usar el planificador necesitas una cuenta. Tus proyectos se guardan en ella y los abres desde cualquier dispositivo.","Entrar"],
       signup:["Crea tu cuenta","Gratis durante la fase de pruebas. Solo necesitas un correo y una contraseña, o tu cuenta de Google.","Crear cuenta"],
       reset:["Recupera tu contraseña","Escribe tu correo y te enviaremos un enlace para crear una contraseña nueva.","Enviar enlace"],
@@ -3920,11 +4159,11 @@
   var CFG_TECHO=["panels","gMin","gMax","clear","gap","strip","vert","margin","tail","secCm","primCm","bar","hang","board"];
   function projSnapshot(){
     var cfg={th:S.th}; if(S.mode==="suelo") cfg.uf=S.uf; else CFG_TECHO.forEach(function(k){ cfg[k]=S[k]; });
-    return JSON.stringify({v:1,mode:S.mode,title:S.title,fi:S.fi,floors:S.floors,project:S.project,prices:S.prices,cfg:cfg},function(k,val){ return (k && k.charAt(0)==="_") ? undefined : val; });
+    return JSON.stringify({v:1,mode:S.mode,title:S.title,fi:S.fi,floors:S.floors,project:S.project,prices:S.prices,cfg:cfg,final:S.final||null},function(k,val){ return (k && k.charAt(0)==="_") ? undefined : val; });
   }
   function projApply(d){
     S.floors=(d.floors&&d.floors.length)?d.floors:[emptyFloor("Planta baja")]; S.fi=Math.min(d.fi||0,S.floors.length-1);
-    S.title=d.title||"Proyecto"; S.project=Object.assign({client:"",addr:"",ref:S.project.ref},d.project||{}); S.prices=d.prices||S.prices;
+    S.final=d.final||null; S.title=d.title||"Proyecto"; S.project=Object.assign({client:"",addr:"",ref:S.project.ref},d.project||{}); S.prices=d.prices||S.prices;
     var c=d.cfg||{};
     if(c.th){ Object.assign(S.th,c.th); syncTh(); }
     if(S.mode==="suelo" && c.uf){ Object.assign(S.uf,c.uf);
@@ -3973,19 +4212,21 @@
   function openProjects(){ if(!AUTH.user) return;
     $("projModal").hidden=false; $("projListTitle").textContent="Mis proyectos de "+(S.mode==="suelo"?"suelo":"techo")+" radiante";
     $("projList").innerHTML='<p class="note">Cargando…</p>';
-    flushSave().then(function(){ return AUTH.sb.from("proyectos").select("id,nombre,actualizado").eq("modo",S.mode).order("actualizado",{ascending:false}); }).then(function(r){
+    flushSave().then(function(){ return AUTH.sb.from("proyectos").select("id,nombre,actualizado,final:datos->final").eq("modo",S.mode).order("actualizado",{ascending:false}); }).then(function(r){
       if(!r || r.error){ $("projList").innerHTML='<p class="note bad">No se han podido cargar tus proyectos. Comprueba la conexión y vuelve a abrir esta ventana.</p>'; return; }
-      var L=r.data||[], cur=CLOUD.id[S.mode];
-      $("projList").innerHTML = L.length ? L.map(function(p){ return '<div class="proj-row'+(p.id===cur?' cur':'')+'" data-id="'+esc(p.id)+'"><div class="proj-name"><b>'+esc(p.nombre)+'</b><span>'+(p.id===cur?'Abierto ahora · ':'')+'Modificado '+esc(fmtWhen(p.actualizado))+'</span></div>'+
-        '<div class="proj-act"><button class="btn small" data-pa="open"'+(p.id===cur?' disabled':'')+'>Abrir</button><button class="btn ghost small" data-pa="dup">Duplicar</button><button class="btn danger small" data-pa="del">Eliminar</button></div></div>'; }).join("")
+      var L=r.data||[], cur=CLOUD.id[S.mode], PP=planKind()==="proyecto";
+      L.forEach(function(p){ if(p.final===undefined) p.final=(p.datos&&p.datos.final)||null; if(p.id===cur) p.final=S.final||null; });
+      var busy=PP && (L.some(function(p){ return !p.final; }) || (!S.final && allRooms().length>0)); $("projNew").hidden=false; if(busy) $("projNew").setAttribute("data-block","1"); else $("projNew").removeAttribute("data-block"); $("projNew").disabled=!!busy; $("projNew").title=busy?"Solo puedes tener un proyecto en curso":"";
+      $("projList").innerHTML = L.length ? L.map(function(p){ return '<div class="proj-row'+(p.id===cur?' cur':'')+'" data-id="'+esc(p.id)+'"><div class="proj-name"><b>'+esc(p.nombre)+'</b><span>'+(p.id===cur?'Abierto ahora · ':'')+(PP?(p.final?'Finalizado · ':'En curso · '):'')+'Modificado '+esc(fmtWhen(p.actualizado))+'</span></div>'+
+        '<div class="proj-act"><button class="btn small" data-pa="open"'+(p.id===cur?' disabled':'')+'>Abrir</button>'+(PP?'':'<button class="btn ghost small" data-pa="dup">Duplicar</button>')+'<button class="btn danger small" data-pa="del">Eliminar</button></div></div>'; }).join("")
         : '<p class="note">Aún no tienes proyectos guardados. Todo lo que dibujes se guarda solo en tu cuenta.</p>';
     }); }
   function closeProjects(){ $("projModal").hidden=true; }
   document.querySelectorAll(".my-projects-btn").forEach(function(b){ b.addEventListener("click",openProjects); });
   $("projClose").addEventListener("click",closeProjects);
   $("projModal").addEventListener("click",function(e){ if(e.target===this) closeProjects(); });
-  $("projNew").addEventListener("click",function(){ closeProjects(); flushSave().then(function(){
-    S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.placing=null; S.zoom=null; S.title="Nuevo proyecto"; S.project.client=""; S.project.addr="";
+  $("projNew").addEventListener("click",function(){ if(!canNew() || $("projNew").getAttribute("data-block")){ $("projListTitle").textContent="Solo puedes tener un proyecto en curso: finalízalo o elimínalo para empezar otro"; return; } closeProjects(); flushSave().then(function(){
+    S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.placing=null; S.zoom=null; S.title="Nuevo proyecto"; S.project.client=""; S.project.addr=""; S.final=null;
     syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true); cloudFresh(); openShape(); }); });
   $("projList").addEventListener("click",function(e){ var b=e.target.closest("[data-pa]"); if(!b) return; var row=b.closest("[data-id]"), id=row.getAttribute("data-id"), a=b.getAttribute("data-pa");
     if(a==="open"){ b.disabled=true; flushSave().then(function(){ return AUTH.sb.from("proyectos").select("id,datos").eq("id",id).single(); }).then(function(r){
@@ -4113,7 +4354,7 @@
     $("tourAsk").hidden=true;
     if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool||$("doorBtn").classList.contains("on")) doorCancel(true); if(S.obstTool) obstTool(false); if(SH) closeShape();
     var hadOwn=allRooms().length>0; cloudSave();
-    var snap={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title,project:JSON.parse(JSON.stringify(S.project||{}))};
+    var snap={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title,final:S.final||null,project:JSON.parse(JSON.stringify(S.project||{}))}; S.final=null;
     S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.zoom=null; S.title="Práctica del tutorial";
     syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true);
     var bl=document.createElement("div"), sp=document.createElement("div"), tp=document.createElement("div"), toast=document.createElement("div");
@@ -4230,7 +4471,7 @@
     [T.bl,T.sp,T.tp,T.toast].forEach(function(n){ if(n.parentNode) n.parentNode.removeChild(n); });
     window.removeEventListener("resize",tourPlace); window.removeEventListener("scroll",tourPlace,true); document.removeEventListener("keydown",tourKey,true);
     if(S.placing) cancelPlacing(); if(SH) closeShape(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool||$("doorBtn").classList.contains("on")) doorCancel(true); if(S.obstTool) obstTool(false);
-    if(how==="back"){ var s=T.snap; S.floors=s.floors; S.fi=s.fi; S.sel=s.sel; S.title=s.title; S.project=s.project; }
+    if(how==="back"){ var s=T.snap; S.floors=s.floors; S.fi=s.fi; S.sel=s.sel; S.title=s.title; S.project=s.project; S.final=s.final||null; }
     else if(how==="fresh"){ S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.title="Nuevo proyecto"; }
     if(how!=="back") cloudFresh();
     if(how==="back"||how==="fresh"){ S.moveId=null; S.zoom=null; syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(how==="fresh"?"Pulsa «+ Estancia» para dibujar la primera estancia de tu proyecto.":""); update(true); }
