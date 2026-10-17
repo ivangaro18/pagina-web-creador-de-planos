@@ -287,6 +287,8 @@
   .p-sub{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.17px;font-weight:500;fill:var(--muted);pointer-events:none;}
   .p-dim{stroke:var(--muted);stroke-width:.014;}
   .p-dimtext{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.2px;fill:var(--muted);}
+  .p-out20{fill:none;stroke:#0F2A3D;stroke-width:.025;stroke-dasharray:.09 .05;}
+  .p-out20t{font-family:"IBM Plex Sans",system-ui,sans-serif;font-weight:700;fill:#0F2A3D;paint-order:stroke;stroke:#fff;stroke-linejoin:round;pointer-events:none;}
   .p-ctext{font-family:"IBM Plex Sans",system-ui,sans-serif;font-weight:700;fill:#fff;pointer-events:none;}
   .p-side{font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--surface-2);stroke-linejoin:round;}
   .p-coll{fill:var(--accent);stroke:var(--wall);stroke-width:.02;}
@@ -1594,6 +1596,8 @@
   }
   // ---- ceiling outlets: each circuit (1–2 panels) goes to its own outlet with 16 mm PEX, or two circuits of the same room
   // (3 or 4 panels) share one outlet with 20 mm PEX up to a brass tee at each end, if that PEX is at most 20 m (ida + retorno)
+  // colour of a panel: by outlet when circuits share one (so the 3–4 panels of a 20 mm outlet look as one)
+  function outIdx(res,ci){ var o=res.outs; if(!o || !o.length || !res.g20) return ci; for(var k=0;k<o.length;k++) if(o[k].ci.indexOf(ci)>=0) return k; return ci; }
   function circsOf(r,res){ var g=[]; res.panels.forEach(function(p){ (g[p.circuit]=g[p.circuit]||[]).push(p); });
     var o=[]; g.forEach(function(ps,i){ if(!ps) return; var pts=ps.map(function(p){ return toW(r,V(p.x+p.w/2,p.y+p.h/2)); }); o.push({i:i,a:pts[0],b:pts[pts.length-1],n:ps.length}); }); return o; }
   function runLen(col,a,b){ var tail=Math.max(0,Math.min(3,S.tail||0)); return Math.max(0,manh(col,a)+S.vert-tail)+Math.max(0,manh(col,b)+S.vert-tail); }
@@ -2588,7 +2592,7 @@
     if(S.mode==="suelo") return o;
     res.strips.forEach(function(s){ o+='<polygon class="p-strip" points="'+ptsStr(rectPoly(r,s.x,s.y,s.w,s.h))+'"/>'; });
     res.panels.forEach(function(p){
-      var fill=byCircuit?' style="fill:'+CC[p.circuit%CC.length]+'"':'';
+      var fill=byCircuit?' style="fill:'+CC[outIdx(res,p.circuit)%CC.length]+'"':'';
       o+='<polygon class="p-panel"'+fill+' points="'+ptsStr(rectPoly(r,p.x,p.y,p.w,p.h))+'"><title>'+esc(p.name)+' · circuito '+(p.circuit+1)+'</title></polygon>';
     });
     res.leds.forEach(function(ln){ var a=toW(r,ln[0]), b=toW(r,ln[1]); o+='<line class="p-led" x1="'+f3(a.x)+'" y1="'+f3(a.y)+'" x2="'+f3(b.x)+'" y2="'+f3(b.y)+'"/>'; });
@@ -2617,7 +2621,7 @@
     rooms.forEach(function(r){ o+='<g class="room-g'+(r.id===S.moveId&&!forExport?' movable':'')+'" data-room="'+r.id+'">'+roomBody(r,results[r.id],S.colorByCircuit)+'</g>'; });
     rooms.forEach(function(r){
       var res=results[r.id], c=res.ctr;
-      var sub=r.active ? fmt(res.area,1)+" m² · "+res.circuits+" circ." : fmt(res.area,1)+" m² · "+(S.mode==="suelo"?"sin suelo radiante":"sin paneles");
+      var sub=r.active ? fmt(res.area,1)+" m² · "+res.circuits+" circ."+(res.g20?" · "+res.outlets+" sal.":"") : fmt(res.area,1)+" m² · "+(S.mode==="suelo"?"sin suelo radiante":"sin paneles");
       var tw=Math.max(r.name.length*0.14, sub.length*0.105)+0.2;
       o+='<rect class="p-tag" x="'+f3(c.x-tw/2)+'" y="'+f3(c.y-0.34)+'" width="'+f3(tw)+'" height="0.56" rx="0.06"/>';
       o+='<text class="p-label" x="'+f3(c.x)+'" y="'+f3(c.y-0.08)+'" text-anchor="middle">'+esc(r.name)+'</text>';
@@ -2704,10 +2708,16 @@
     res.rects.forEach(function(q){ o+='<rect class="p-usable" x="'+f3(q.x)+'" y="'+f3(q.y)+'" width="'+f3(q.w)+'" height="'+f3(q.h)+'"/>'; });
     res.strips.forEach(function(s){ o+='<rect class="p-strip" x="'+f3(s.x)+'" y="'+f3(s.y)+'" width="'+f3(s.w)+'" height="'+f3(s.h)+'"/>'; });
     res.panels.forEach(function(p){
-      o+='<rect class="p-panel" style="fill:'+CC[p.circuit%CC.length]+'" x="'+f3(p.x)+'" y="'+f3(p.y)+'" width="'+f3(p.w)+'" height="'+f3(p.h)+'"/>';
+      o+='<rect class="p-panel" style="fill:'+CC[outIdx(res,p.circuit)%CC.length]+'" x="'+f3(p.x)+'" y="'+f3(p.y)+'" width="'+f3(p.w)+'" height="'+f3(p.h)+'"/>';
       var f=Math.min(0.2,Math.min(p.w,p.h)*0.3);
       o+='<text class="p-ctext" font-size="'+f3(f)+'" x="'+f3(p.x+p.w/2)+'" y="'+f3(p.y+p.h/2+f*0.35)+'" text-anchor="middle">C'+(p.circuit+1)+'</text>';
     });
+    // each 20 mm outlet: a dashed outline round its panels
+    if(res.g20) res.outs.forEach(function(ou,k){ if(ou.d!==20) return; var x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+      res.panels.forEach(function(p){ if(ou.ci.indexOf(p.circuit)<0) return; x0=Math.min(x0,p.x); y0=Math.min(y0,p.y); x1=Math.max(x1,p.x+p.w); y1=Math.max(y1,p.y+p.h); });
+      if(!isFinite(x0)) return; var m=0.04, f=Math.min(0.15,fs*0.6);
+      o+='<rect class="p-out20" x="'+f3(x0-m)+'" y="'+f3(y0-m)+'" width="'+f3(x1-x0+2*m)+'" height="'+f3(y1-y0+2*m)+'" rx="0.05"/>';
+      o+='<text class="p-out20t" font-size="'+f3(f)+'" stroke-width="'+f3(f*0.3)+'" x="'+f3(x0+0.02)+'" y="'+f3(y0-m-0.05)+'">S'+(k+1)+' · 20 mm</text>'; });
     res.leds.forEach(function(ln){ o+='<line class="p-led" x1="'+f3(ln[0].x)+'" y1="'+f3(ln[0].y)+'" x2="'+f3(ln[1].x)+'" y2="'+f3(ln[1].y)+'"/>'; });
     (res.keep||[]).forEach(function(z){ o+='<rect class="p-keep" x="'+f3(z.x0)+'" y="'+f3(z.y0)+'" width="'+f3(z.x1-z.x0)+'" height="'+f3(z.y1-z.y0)+'"/>'; });
     res.lights.forEach(function(l){ o+='<circle class="p-light" cx="'+f3(l.x)+'" cy="'+f3(l.y)+'" r="0.075"/>'; });
