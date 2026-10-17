@@ -293,6 +293,8 @@
   .p-side{font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--surface-2);stroke-linejoin:round;}
   .p-coll{fill:var(--accent);stroke:var(--wall);stroke-width:.02;}
   .p-colltext{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.17px;font-weight:600;fill:var(--accent);paint-order:stroke;stroke:var(--room-fill);stroke-width:.07px;stroke-linejoin:round;pointer-events:none;}
+  .p-via{stroke:#7A4F00;stroke-width:.09;stroke-linecap:round;pointer-events:none;}
+  .p-via-a{fill:#7A4F00;pointer-events:none;}
   .p-reg{fill:rgba(11,127,171,.07);stroke:var(--accent);stroke-width:.014;stroke-dasharray:.06 .04;}
   .p-tcase{fill:none;stroke:#fff;stroke-width:.06;stroke-linejoin:round;stroke-linecap:round;pointer-events:none;}
   .p-tcase.w{stroke-width:.085;}
@@ -464,6 +466,13 @@
   .p-rec-ring{fill:rgba(242,181,58,.28);stroke:#D99A1E;stroke-width:.06;stroke-dasharray:.12 .08;}
   .p-rec-l{stroke:#D99A1E;stroke-width:.04;stroke-dasharray:.15 .1;fill:none;}
   .p-rectext{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.17px;font-weight:700;fill:#7A4F00;paint-order:stroke;stroke:var(--room-fill);stroke-width:.07px;stroke-linejoin:round;pointer-events:none;}
+  /* ---- project name ---- */
+  #projTitle{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 6px;}
+  #projTitle .proj-name{font:inherit !important;color:inherit !important;letter-spacing:inherit;background:transparent !important;border:1px dashed transparent !important;border-radius:8px;padding:0 6px !important;margin-left:-7px;min-width:4ch;max-width:100%;height:auto;box-shadow:none !important;}
+  #projTitle .proj-name:hover{border-color:var(--line) !important;}
+  #projTitle .proj-name:focus{outline:2px solid var(--accent);outline-offset:1px;background:var(--surface) !important;border-color:transparent !important;}
+  .proj-edit{font-size:.55em;color:var(--muted);cursor:pointer;}
+  .proj-area{color:var(--muted);font-weight:600;font-size:.8em;}
   /* ---- thermal ---- */
   .th-adv{margin:0 0 12px;}
   .th-adv summary{cursor:pointer;font-size:.8rem;color:var(--accent);font-weight:600;margin-bottom:8px;}
@@ -798,7 +807,7 @@
   <header class="topbar">
     <div>
       <span class="eyebrow"><span id="appEyebrow">Techo radiante · Planificador</span><span class="save-state" aria-live="polite"></span></span>
-      <h1 id="projTitle">Nuevo proyecto</h1>
+      <h1 id="projTitle"><input id="projName" class="proj-name" type="text" maxlength="120" aria-label="Nombre del proyecto" title="Pulsa para cambiar el nombre del proyecto" placeholder="Nombre del proyecto"><span class="proj-edit" aria-hidden="true">✎</span><span class="proj-area" id="projArea"></span></h1>
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
       <div class="chips" id="chips"></div>
@@ -834,7 +843,8 @@
       <button class="mk-btn" type="button" data-mark="exterior"><i></i>Marcar muro exterior</button>
       <button class="mk-btn only-suelo" type="button" data-mark="escalera"><i></i>Marcar escalera</button>
       <button class="mk-btn only-suelo" type="button" id="doorBtn"><i style="border-top:3px solid var(--wall);width:14px;border-radius:0 0 8px 0;height:8px;border-right:2px solid var(--wall)"></i>Marcar puerta</button>
-      <button class="mk-btn only-suelo" type="button" id="obstBtn"><i style="border:none;width:14px;height:10px;background:repeating-linear-gradient(45deg,#8C9BA7 0 2px,#E6ECF0 2px 4px);border:1px solid #6B7B88"></i>Añadir obstáculo</button>
+      <button class="mk-btn only-techo" type="button" id="viaBtn"><i style="border:none;width:14px;height:4px;background:repeating-linear-gradient(90deg,#C0392B 0 4px,#1F6FB2 4px 8px);border-radius:2px"></i>Marcar paso de tubos</button>
+      <button class="mk-btn" type="button" id="obstBtn"><i style="border:none;width:14px;height:10px;background:repeating-linear-gradient(45deg,#8C9BA7 0 2px,#E6ECF0 2px 4px);border:1px solid #6B7B88"></i>Añadir obstáculo</button>
       <span>Pulsa un botón y luego la pared en el plano. Otra pulsación en la pared la desmarca.<span class="only-techo"> Se usan para el cálculo térmico.</span></span>
     </div>
     <div class="mode-hint" id="modeHint" hidden></div>
@@ -855,8 +865,9 @@
       <span class="only-suelo"><span class="sw dot" style="background:var(--ret)"></span>Retorno en el colector</span>
       <span><span class="lg-mk" style="border-top:6px double #5FB8D8"></span>Ventana</span>
       <span><span class="lg-mk"></span>Muro exterior</span>
+      <span class="only-techo"><span class="lg-mk" style="border-top:5px solid #7A4F00;width:14px"></span>Paso de tubos marcado (los tubos de la estancia entran por ahí)</span>
       <span class="only-suelo"><span class="lg-mk" style="border-top:5px dashed var(--ang)"></span>Escalera (no pasa tubo)</span>
-      <span class="only-suelo"><span class="sw" style="background:repeating-linear-gradient(45deg,#8C9BA7 0 2px,#E6ECF0 2px 4px);border:1px solid #6B7B88"></span>Obstáculo (ducha, bañera, inodoro, mueble fijo…): sin tubo</span>
+      <span><span class="sw" style="background:repeating-linear-gradient(45deg,#8C9BA7 0 2px,#E6ECF0 2px 4px);border:1px solid #6B7B88"></span><span class="only-suelo">Obstáculo (ducha, bañera, inodoro, mueble fijo…): sin tubo</span><span class="only-techo">Obstáculo (muebles hasta el techo, vigas, conductos…): sin paneles</span></span>
       <span class="only-suelo">◜ Puerta: los tubos solo cruzan los tabiques por las puertas (si hay alguna marcada)</span>
       <span><span class="sw" style="background:var(--accent)"></span>Colector</span>
       <span class="pipe-lg only-techo" hidden><span class="lg-line" style="border-color:#2E6F8E"></span>Ida (línea continua)</span>
@@ -1438,13 +1449,13 @@
   }
   function lightKeep(l){ var h=(+l.s||30)/200; return {x0:l.x-h,y0:l.y-h,x1:l.x+h,y1:l.y+h}; }
   function calcRoom(room){
-    var key=JSON.stringify([room.pts,room.bulge,room.active,room.override,room.minPct,room.maxPct,room.lc,room.lp,room.customL||false,room.customL?room.lights||[]:0,room._cko||[],S.gMin,S.gMax,S.clear,S.gap,S.strip,S.panels]);
+    var key=JSON.stringify([room.pts,room.bulge,room.active,room.override,room.minPct,room.maxPct,room.lc,room.lp,room.customL||false,room.customL?room.lights||[]:0,room._cko||[],room.obst||[],S.gMin,S.gMax,S.clear,S.gap,S.strip,S.panels]);
     if(room._ck===key && room._cr) return room._cr;
     var out=localOutline(room), area=Math.abs(signedArea(out));
     var minPct=room.override?room.minPct:S.gMin, maxPct=room.override?room.maxPct:S.gMax; if(maxPct<minPct) maxPct=minPct;
     var res={area:area,minPct:minPct,maxPct:maxPct,minA:area*minPct/100,maxA:area*maxPct/100,panels:[],lights:[],leds:[],ledLen:0,strips:[],rects:[],groups:[],
       circuits:0,covered:0,pct:0,msgs:[],inactive:!room.active,keep:[],removed:0};
-    var CL=!!room.customL, KO=(CL?(room.lights||[]).map(lightKeep):[]).concat(room._cko||[]);
+    var CL=!!room.customL, KO=(CL?(room.lights||[]).map(lightKeep):[]).concat(room._cko||[]).concat((room.obst||[]).map(function(b){ return {x0:b.x0,y0:b.y0,x1:b.x1,y1:b.y1}; }));
     var koIn=function(rect){ return KO.map(function(z){ return {x0:z.x0-rect.x,y0:z.y0-rect.y,x1:z.x1-rect.x,y1:z.y1-rect.y}; }); };
     if(room.active && area>0.2){
       var R=rasterRoom(out,S.clear/100), r1=maxRect(R), lc=CL?"ninguna":(room.lc||"ninguna"), lp=CL?"ninguna":(room.lp||"ninguna"), seen={};
@@ -1473,7 +1484,7 @@
       }
       if(CL) (room.lights||[]).forEach(function(l,i){ res.lights.push(V(l.x,l.y)); res.keep.push(KO[i]); if(!pointIn(V(l.x,l.y),out)) res.msgs.push({t:"warn",x:"El punto de luz "+(i+1)+" queda fuera de la estancia: revisa sus distancias."}); });
       res.reg=(room._cko||[]).slice();
-      if(res.removed) res.msgs.push({t:"ok",x:"Se han quitado "+res.removed+" panel"+(res.removed>1?"es":"")+" que caían encima de "+(CL&&(room.lights||[]).length?(res.reg.length?"los puntos de luz o del registro del colector":"los puntos de luz"):"el registro del colector")+"."});
+      if(res.removed) res.msgs.push({t:"ok",x:"Se han quitado "+res.removed+" panel"+(res.removed>1?"es":"")+" que caían encima de "+[CL&&(room.lights||[]).length?"los puntos de luz":"",res.reg.length?"el registro del colector":"",(room.obst||[]).length?"los obstáculos":""].filter(Boolean).join(", ").replace(/, ([^,]*)$/," o $1")+"."});
       // pair panels of the same model (in layout order); the odd ones left over are paired together
       var pend={}, pairs=[], singles=[];
       res.panels.forEach(function(p,i){ var key=p.tw+"x"+p.th;
@@ -1611,20 +1622,27 @@
   // (3 or 4 panels) share one outlet with 20 mm PEX up to a brass tee at each end, if that PEX is at most 20 m (ida + retorno)
   // colour of a panel: by outlet when circuits share one (so the 3–4 panels of a 20 mm outlet look as one)
   function outIdx(res,ci){ var o=res.outs; if(!o || !o.length || !res.g20) return ci; for(var k=0;k<o.length;k++) if(o[k].ci.indexOf(ci)>=0) return k; return ci; }
+  // ---- pipe passage marked by the user: the tubes of that room come in through that point of its wall
+  function viaGeom(r){ var v=r.via; if(!v) return null; var n=r.pts.length; if(!r.pts[v.edge] || r.bulge[v.edge]) return null;
+    var A=toW(r,r.pts[v.edge]), B=toW(r,r.pts[(v.edge+1)%n]), L=len(sub(B,A)), u=unit(sub(B,A)), t=Math.max(0.1,Math.min(L-0.1,v.t)), nin=mul(outN(A,B),-1);
+    return {A:A,B:B,L:L,u:u,t:t,P:add(A,mul(u,t)),nin:nin}; }
+  function viaFor(r,col){ var g=viaGeom(r); if(!g || !col) return null; if(pointIn(V(col.x,col.y),worldOutline(r))) return null; return g.P; }
+  function viaSvg(r){ var g=viaGeom(r); if(!g) return ""; var a=add(g.P,mul(g.u,-0.22)), b=add(g.P,mul(g.u,0.22)), t1=add(g.P,mul(g.nin,0.28)), w1=add(add(g.P,mul(g.nin,0.1)),mul(g.u,-0.09)), w2=add(add(g.P,mul(g.nin,0.1)),mul(g.u,0.09));
+    return '<line class="p-via" x1="'+f3(a.x)+'" y1="'+f3(a.y)+'" x2="'+f3(b.x)+'" y2="'+f3(b.y)+'"><title>Paso de tubos de '+esc(r.name)+'</title></line><polygon class="p-via-a" points="'+ptsStr([t1,w1,w2])+'"/>'; }
   function circsOf(r,res){ var g=[]; res.panels.forEach(function(p){ (g[p.circuit]=g[p.circuit]||[]).push(p); });
     var o=[]; g.forEach(function(ps,i){ if(!ps) return; var pts=ps.map(function(p){ return toW(r,V(p.x+p.w/2,p.y+p.h/2)); }); o.push({i:i,a:pts[0],b:pts[pts.length-1],n:ps.length}); }); return o; }
-  function runLen(col,a,b){ var tail=Math.max(0,Math.min(3,S.tail||0)); return Math.max(0,manh(col,a)+S.vert-tail)+Math.max(0,manh(col,b)+S.vert-tail); }
-  function outletsFor(cs,col){
+  function runLen(col,a,b,via){ var tail=Math.max(0,Math.min(3,S.tail||0)), d=function(p){ return via?manh(col,via)+manh(via,p):manh(col,p); }; return Math.max(0,d(a)+S.vert-tail)+Math.max(0,d(b)+S.vert-tail); }
+  function outletsFor(cs,col,via){
     var outs=[], used={}, near=[];
     if(S.t20 && col){ var cand=[];
       for(var x=0;x<cs.length;x++) for(var y=x+1;y<cs.length;y++){ var n=cs[x].n+cs[y].n; if(n<3||n>4) continue;
         // each te is reached by the tube that comes on the panels (up to 3 m each side): the two circuits must be close
         var da=manh(cs[x].a,cs[y].a), db=manh(cs[x].b,cs[y].b); if(da>6 || db>6) continue;
-        var Ta=mul(add(cs[x].a,cs[y].a),0.5), Tb=mul(add(cs[x].b,cs[y].b),0.5), L=runLen(col,Ta,Tb); cand.push({x:x,y:y,L:L,Ta:Ta,Tb:Tb,sp:da+db}); }
+        var Ta=mul(add(cs[x].a,cs[y].a),0.5), Tb=mul(add(cs[x].b,cs[y].b),0.5), L=runLen(col,Ta,Tb,via); cand.push({x:x,y:y,L:L,Ta:Ta,Tb:Tb,sp:da+db}); }
       cand.sort(function(p,q){ return (p.sp-q.sp) || (p.L-q.L); });
       cand.forEach(function(c){ if(used[c.x]||used[c.y]) return; if(c.L>20+1e-9){ near.push(c.L); return; } used[c.x]=used[c.y]=1;
         outs.push({ci:[cs[c.x].i,cs[c.y].i],d:20,raw:c.L,a:c.Ta,b:c.Tb,n:cs[c.x].n+cs[c.y].n}); }); }
-    cs.forEach(function(c,k){ if(used[k]) return; outs.push({ci:[c.i],d:16,raw:col?runLen(col,c.a,c.b):0,a:c.a,b:c.b,n:c.n}); });
+    cs.forEach(function(c,k){ if(used[k]) return; outs.push({ci:[c.i],d:16,raw:col?runLen(col,c.a,c.b,via):0,a:c.a,b:c.b,n:c.n}); });
     outs.sort(function(p,q){ return p.ci[0]-q.ci[0]; });
     var rest=outs.filter(function(o){ return o.d===16; }), canPair=false;
     for(var i=0;i<rest.length;i++) for(var j=i+1;j<rest.length;j++){ var nn=rest[i].n+rest[j].n; if(nn>=3&&nn<=4) canPair=true; }
@@ -1644,7 +1662,7 @@
     var items=[];
     fl.rooms.forEach(function(r){
       var res=results[r.id]; if(!res.circuits) return;
-      var d=C.map(function(c){ return manh(c,res.ctr); }), ns=C.map(function(c){ return outletsFor(res.cs,c).length; });
+      var d=C.map(function(c){ return manh(c,res.ctr); }), ns=C.map(function(c){ return outletsFor(res.cs,c,viaFor(r,c)).length; });
       var order=C.map(function(c,ci){return ci;}).sort(function(a,b){return d[a]-d[b];});
       items.push({r:r,n:res.circuits,ns:ns,d:d,order:order,dmin:d.length?Math.min.apply(null,d):0});
     });
@@ -1670,7 +1688,7 @@
       var res=results[r.id], col=res.col, mg=1+S.margin/100;
       // each run (ida and retorno) starts with the tube that comes fitted on the panel: that part is not PEX
       res.cs.forEach(function(c){ res.circ[c.i]={a:c.a,b:c.b,col:col,len:0,n:c.n,d:16}; if(c.n===2) res.mang++; });
-      res.outs=outletsFor(res.cs,col); res.outlets=res.outs.length;
+      res.outs=outletsFor(res.cs,col,viaFor(r,col)); res.outlets=res.outs.length;
       res.outs.forEach(function(o){ var l=col?o.raw*mg:0; o.len=l; res.pex+=l;
         o.ci.forEach(function(i){ var c=res.circ[i]; c.len=l/o.ci.length; c.d=o.d; c.out=o; });
         if(o.d===20){ res.g20++; res.pex20+=l; } else { res.pex16+=l; res.unions+=2; } });
@@ -1710,7 +1728,8 @@
           if(o.d===20){ rt.push({O:O,cls:"ida",p:o.a,d:20}); rt.push({O:O,cls:"ret",p:o.b,d:20}); L.tees.push({p:o.a,O:O}); L.tees.push({p:o.b,O:O}); } });
         // where the bundle goes into the room: the nearest point of a straight wall, square to that wall
         var W=res.wout, inside=pointIn(CP,W), best=null, n=r.pts.length;
-        if(!inside) for(var e=0;e<n;e++){ if(r.bulge[e]) continue; var A=toW(r,r.pts[e]), B=toW(r,r.pts[(e+1)%n]), Lw=len(sub(B,A)); if(Lw<0.4) continue;
+        var vg=inside?null:viaGeom(r); if(vg) best={d:0,A:vg.A,u:vg.u,L:vg.L,t:vg.t};
+        if(!inside && !vg) for(var e=0;e<n;e++){ if(r.bulge[e]) continue; var A=toW(r,r.pts[e]), B=toW(r,r.pts[(e+1)%n]), Lw=len(sub(B,A)); if(Lw<0.4) continue;
           var u=unit(sub(B,A)), t=Math.max(0,Math.min(Lw,dot(sub(CP,A),u))), Q=add(A,mul(u,t)), d=len(sub(CP,Q));
           if(!best || d<best.d) best={d:d,A:A,u:u,L:Lw,t:t}; }
         var m=rt.length;
@@ -2713,7 +2732,7 @@
     }
     var o='<svg viewBox="'+vb.map(f3).join(" ")+'" xmlns="http://www.w3.org/2000/svg"'+(S.showStruct?' class="struct"':'')+(forExport?' width="'+Math.round(vb[2]*160)+'" height="'+Math.round(vb[3]*160)+'"':'')+' role="img" aria-label="Plano general de la planta con paneles">';
     if(forExport) o+='<rect x="'+f3(vb[0])+'" y="'+f3(vb[1])+'" width="'+f3(vb[2])+'" height="'+f3(vb[3])+'" fill="#ffffff"/>';
-    if(S.mode==="suelo") o+=obstDefs(forExport?"obHx":"obHp");
+    o+=obstDefs(forExport?"obHx":"obHp");
     rooms.forEach(function(r){ o+='<g class="room-g'+(r.id===S.moveId&&!forExport?' movable':'')+'" data-room="'+r.id+'">'+roomBody(r,results[r.id],S.colorByCircuit)+'</g>'; });
     rooms.forEach(function(r){
       var res=results[r.id], c=res.ctr;
@@ -2724,7 +2743,9 @@
       o+='<text class="p-sub" x="'+f3(c.x)+'" y="'+f3(c.y+0.14)+'" text-anchor="middle">'+sub+'</text>';
     });
     var pills="";
-    if(S.mode!=="suelo"){ rooms.forEach(function(r){ o+=ufMarksSvg(r,function(p){ return toW(r,p); }); });
+    if(S.mode!=="suelo"){ rooms.forEach(function(r){ o+=ufObstSvg(r,function(p){ return toW(r,p); },forExport?"obHx":"obHp")+ufMarksSvg(r,function(p){ return toW(r,p); })+viaSvg(r); });
+      if(S.obstDraft && !forExport){ var od0=S.obstDraft; o+='<rect class="p-obst draft" x="'+f3(Math.min(od0.a.x,od0.b.x))+'" y="'+f3(Math.min(od0.a.y,od0.b.y))+'" width="'+f3(Math.abs(od0.b.x-od0.a.x))+'" height="'+f3(Math.abs(od0.b.y-od0.a.y))+'"/>';
+        o+='<text class="p-obst-t" x="'+f3((od0.a.x+od0.b.x)/2)+'" y="'+f3((od0.a.y+od0.b.y)/2+0.05)+'" text-anchor="middle">'+fmt(Math.abs(od0.b.x-od0.a.x)*100)+' × '+fmt(Math.abs(od0.b.y-od0.a.y)*100)+' cm</text>'; }
       if(S.markHover && !forExport){ var hr0=S.markHover.room, he0=S.markHover.edge, hn0=hr0.pts.length;
         o+='<polyline class="p-mk hov" points="'+ptsStr(edgeSamples(hr0.pts[he0],hr0.pts[(he0+1)%hn0],hr0.bulge[he0]||0,16).map(function(p){ return toW(hr0,p); }))+'"/>'; } }
     if(S.mode==="suelo"){
@@ -2767,7 +2788,7 @@
     var wrap=$("planWrap");
     $("zoomCtl").hidden=!S.rooms.length;
     wrap.classList.toggle("picking", !!(S.placing && S.placing.step==="target"));
-    wrap.classList.toggle("marking", !!(S.markTool||S.doorTool||S.obstTool));
+    wrap.classList.toggle("marking", !!(S.markTool||S.doorTool||S.obstTool||S.viaTool));
     if(!S.rooms.length){
       var anyRooms=allRooms().length>0;
       wrap.innerHTML='<div class="empty-cta">'+(anyRooms||S.floors.length>1
@@ -2795,6 +2816,7 @@
     o+='<path class="p-room'+(room.active?'':' off')+'" d="'+pathD(out)+'"/>';
     if(S.mode==="suelo"){ var tl=function(p){ return toL(room,p); }; o+=obstDefs("obHd")+ufObstSvg(room,function(p){ return p; },"obHd"); res.circ.forEach(function(c){ o+=ufCircSvg(c,tl); }); o+=ufMarksSvg(room,function(p){ return p; })+sideLabelsSvg(room,fs)+'</svg>'; return o; }
     res.rects.forEach(function(q){ o+='<rect class="p-usable" x="'+f3(q.x)+'" y="'+f3(q.y)+'" width="'+f3(q.w)+'" height="'+f3(q.h)+'"/>'; });
+    o+=obstDefs("obHd")+ufObstSvg(room,function(p){ return p; },"obHd");
     res.strips.forEach(function(s){ o+='<rect class="p-strip" x="'+f3(s.x)+'" y="'+f3(s.y)+'" width="'+f3(s.w)+'" height="'+f3(s.h)+'"/>'; });
     res.panels.forEach(function(p){
       o+='<rect class="p-panel" style="fill:'+CC[outIdx(res,p.circuit)%CC.length]+'" x="'+f3(p.x)+'" y="'+f3(p.y)+'" width="'+f3(p.w)+'" height="'+f3(p.h)+'"/>';
@@ -2839,6 +2861,8 @@
       h+='<p class="layout-line">'+(res.groups.length>1?'Zona '+(i+1)+': ':'Distribución: ')+(k.mp && k.mp.n!==k.c*k.r ? '<b>'+Object.keys(k.mp.tc).map(function(t){ return k.mp.tc[t]+' paneles de '+t.replace('x','×'); }).join(' + ')+'</b>' : '<b>'+k.c+' × '+k.r+' '+esc(k.v.name)+'</b>'+(k.v.rot?' (girados)':''))+', bloque de '+fmt(k.bw*100)+' × '+fmt(k.bh*100)+' cm centrado en la zona libre; '+lt+'.</p>'; });
     var il=[], nm={puntos:"puntos de luz",tira:"tira LED"};
     if(room.lc&&room.lc!=="ninguna") il.push("centro con "+nm[room.lc]); if(room.lp&&room.lp!=="ninguna") il.push("perímetro con "+nm[room.lp]);
+    if(room.obst&&room.obst.length) h+='<p class="layout-line">Obstáculos: <b>'+room.obst.length+'</b> ('+fmt(room.obst.reduce(function(t,b){ return t+(b.x1-b.x0)*(b.y1-b.y0); },0),2)+' m² sin paneles) · <button class="btn ghost small" id="obstClear2" type="button">Quitar todos</button></p>';
+    if(room.via) h+='<p class="layout-line">Paso de tubos marcado en la pared <b>'+LETTER(room.via.edge)+'</b>: los tubos de esta estancia entran por ahí. <button class="btn ghost small" id="viaClear" type="button">Quitar paso</button></p>';
     if(room.customL) il=["personalizada"];
     if(il.length) h+='<p class="layout-line">Iluminación: '+il.join(" y ")+' · <b>'+res.lights.length+' puntos</b>'+(res.leds.length?' · <b>'+fmt(res.ledLen,2)+' m de tira LED</b>':'')+'.</p>';
     if(res.st){ var sb=barsFor(res.st.secLens,S.bar), pb=barsFor(res.st.primLens,S.bar), ab=barsFor(res.st.ang,S.bar);
@@ -2846,6 +2870,8 @@
     if(res.outs && res.outs.length && (res.g20 || S.t20)) h+='<p class="layout-line">Salidas del colector: '+res.outs.map(function(o){ return '<b>'+o.ci.map(function(i){ return 'C'+(i+1); }).join('+')+'</b> '+(o.d===20?'tubo 20':'tubo 16')+(res.col?' · '+fmt(o.len,1)+' m':''); }).join(' · ')+'.'+(res.outs.tooFar?' <span style="color:var(--warn)">Los circuitos que quedan no se agrupan: con tubo de 20 pasarían de 20 m ('+fmt(res.outs.tooFar,1)+' m).</span>':'')+'</p>';
     if(res.circ.length) h+='<p class="layout-line">Tubería: <b>'+fmt(res.pex,1)+' m de PEX</b>'+(res.g20?' ('+fmt(res.pex20,1)+' de 20 y '+fmt(res.pex16,1)+' de 16)':'')+' · '+res.mang+' manguito'+(res.mang===1?'':'s')+' · '+res.outlets+' salida'+(res.outlets===1?'':'s')+(res.col?' · va a <b>'+esc(res.col.name)+'</b>':' · <span style="color:var(--warn)">sin colector: '+esc(res.why||'')+'</span>')+'.</p>';
     out.innerHTML=h+thDetailHtml(room);
+    var oc2=$("obstClear2"); if(oc2) oc2.addEventListener("click",function(){ room.obst=[]; update(false); });
+    var vc=$("viaClear"); if(vc) vc.addEventListener("click",function(){ delete room.via; update(false); });
   }
   function ufDetailHtml(room,res){
     var U=S.uf, h="";
@@ -3014,7 +3040,7 @@
     allUnassigned.forEach(function(u){ rc+='<tr><td style="color:var(--warn)"><b>Sin asignar</b></td><td>'+esc(u.room.name)+'</td><td class="num">'+u.n+'</td><td></td></tr>'; });
     $("reportColl").innerHTML=rc||'<tr><td colspan="4" class="muted">Sin colectores</td></tr>';
     var AR=allRooms(), active=AR.filter(function(r){ return r.active; }).length;
-    $("projTitle").textContent=(S.title||"Proyecto")+(tot.area?" · "+fmt(tot.area,0)+" m²":"");
+    projHead(tot.area);
     $("chips").innerHTML=(multi?'<span class="chip">Plantas <b>'+S.floors.length+'</b></span>':'')+'<span class="chip">Estancias <b>'+active+'/'+AR.length+'</b></span><span class="chip">Circuitos <b>'+tot.c+'</b></span><span class="chip">Colectores <b>'+allColls().length+'</b>'+(allUnassigned.length?' <span class="pill warn">'+allUnassigned.length+' sin asignar</span>':'')+'</span><span class="chip">Tubo <b>'+fmt(Math.ceil(tot.pex))+'</b> m</span>';
     reportRows=[];
     var pd=String(U.plate).split("x"), pa=(parseFloat(pd[0])||1.2)*(parseFloat(pd[1])||0.8), mg=1+U.margin/100;
@@ -3061,7 +3087,7 @@
     allUnassigned.forEach(function(u){ rc+='<tr><td style="color:var(--warn)"><b>Sin asignar</b></td><td>'+esc(u.room.name)+'</td><td class="num">'+u.n+'</td><td></td></tr>'; });
     $("reportColl").innerHTML=rc||'<tr><td colspan="4" class="muted">Sin colectores</td></tr>';
     var AR=allRooms(), active=AR.filter(function(r){return r.active;}).length;
-    $("projTitle").textContent=(S.title||"Proyecto")+(tot.area?" · "+fmt(tot.area,0)+" m²":"");
+    projHead(tot.area);
     $("chips").innerHTML=(multi?'<span class="chip">Plantas <b>'+S.floors.length+'</b></span>':'')+'<span class="chip">Estancias <b>'+active+'/'+AR.length+'</b></span><span class="chip">Paneles <b>'+tot.n+'</b></span><span class="chip">Circuitos <b>'+tot.c+'</b></span><span class="chip">Colectores <b>'+allColls().length+'</b>'+(allUnassigned.length?' <span class="pill warn">'+allUnassigned.length+' sin asignar</span>':'')+'</span><span class="chip">PEX <b>'+fmt(Math.ceil(tot.pex))+'</b> m</span>';
     reportRows=[];
     matOrder.forEach(function(id){ var m=mat[id]; reportRows.push({key:"panel_"+id,label:m.name,note:fmt(m.tw)+"×"+fmt(m.th)+" cm",qty:m.n,unit:"ud."}); });
@@ -3145,6 +3171,11 @@
 
   var today=new Date();
   S.project={client:"",addr:"",ref:"INF-"+today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0")+String(today.getDate()).padStart(2,"0")};
+  function projHead(a){ var i=$("projName"); if(document.activeElement!==i) i.value=S.title||""; i.style.width=Math.min(40,Math.max(6,(i.value||i.placeholder).length+1))+"ch"; $("projArea").textContent=a?"· "+fmt(a,0)+" m²":""; }
+  $("projName").addEventListener("input",function(e){ S.title=e.target.value; $("pTitle").value=S.title; projHead(); });
+  $("projName").addEventListener("keydown",function(e){ if(e.key==="Enter"||e.key==="Escape") e.target.blur(); });
+  $("projName").addEventListener("blur",function(e){ if(!S.title.trim()){ S.title="Proyecto sin nombre"; $("pTitle").value=S.title; } projHead(); renderTables(); });
+  document.querySelector(".proj-edit").addEventListener("click",function(){ var i=$("projName"); i.focus(); i.select(); });
   function syncProjectInputs(){ $("pTitle").value=S.title; $("pClient").value=S.project.client; $("pAddr").value=S.project.addr; $("pRef").value=S.project.ref; }
   $("pTitle").addEventListener("input",function(e){ S.title=e.target.value; renderTables(); });
   [["pClient","client"],["pAddr","addr"],["pRef","ref"]].forEach(function(p){ $(p[0]).addEventListener("input",function(e){ S.project[p[1]]=e.target.value; }); });
@@ -3531,7 +3562,7 @@
     if(e.button!==undefined && e.button!==0) return;
     suppressClick=false;
     if(S.placing || RO()) return;
-    if(S.mode==="suelo" && S.obstTool){
+    if(S.obstTool){
       var oq=svgPointRaw(e.clientX,e.clientY); if(!oq) return; oq=snapPt(V(oq.x,oq.y));
       e.preventDefault(); e.stopImmediatePropagation(); suppressClick=true;
       if(S.obstDraft){ S.obstDraft.b=oq; obstFinish(); return; }
@@ -3541,6 +3572,11 @@
     if(S.mode==="suelo" && S.doorTool){
       var dq=svgPointRaw(e.clientX,e.clientY);
       if(dq && doorClick(V(dq.x,dq.y))){ e.preventDefault(); e.stopImmediatePropagation(); suppressClick=true; }
+      return;
+    }
+    if(S.viaTool && S.mode==="techo"){
+      var vq=svgPointRaw(e.clientX,e.clientY);
+      if(vq && viaClick(V(vq.x,vq.y))){ e.preventDefault(); e.stopImmediatePropagation(); suppressClick=true; }
       return;
     }
     if(S.markTool){
@@ -3619,12 +3655,33 @@
     if(Math.abs(e.clientX-d.sx)>6||Math.abs(e.clientY-d.sy)>6) obstFinish();   // dragged: done; a plain click waits for the second corner
   });
   window.addEventListener("pointermove",function(e){
-    if((!S.markTool && !S.doorTool) || S.drag || S.pan) return;
+    if((!S.markTool && !S.doorTool && !S.viaTool) || S.drag || S.pan) return;
     var q=overPlan(e.clientX,e.clientY)?svgPointRaw(e.clientX,e.clientY):null, hit=q?ufHitEdge(V(q.x,q.y)):null, prev=S.markHover;
     S.markHover=hit?{room:hit.room,edge:hit.edge}:null;
     if((prev&&prev.room)!==(hit&&hit.room) || (prev&&prev.edge)!==(hit&&hit.edge)){ if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); }); }
   });
+  // ---- tool: mark the pipe passage of a room (ceiling)
+  function viaTool(on){
+    if(on){ if(S.markTool) setMarkTool(S.markTool); if(S.obstTool) obstTool(false); }
+    S.viaTool=!!on; S.markHover=null; $("viaBtn").classList.toggle("on",!!on);
+    if(on){ hint('<span><b>Paso de tubos:</b> pulsa la pared por donde tienen que entrar los tubos a una estancia (pulsa un poco dentro de esa estancia), por ejemplo para evitar una viga. Si no marcas nada, se toma el camino más corto. Pulsa un paso ya marcado para quitarlo.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>');
+      $("viaDone").addEventListener("click",function(){ viaTool(false); }); }
+    else hint("");
+    renderPlan();
+  }
+  $("viaBtn").addEventListener("click",function(){ viaTool(!S.viaTool); });
+  function viaClick(q){
+    var gone=null; S.rooms.forEach(function(r){ var g=viaGeom(r); if(g && len(sub(q,g.P))<0.3) gone=r; });
+    if(gone){ delete gone.via; update(gone.id===S.sel); return true; }
+    var hit=ufHitEdge(q); if(!hit) return false; var r=hit.room, e=hit.edge, n=r.pts.length;
+    if(r.bulge[e]){ hint('<span>El paso de tubos tiene que ir en una pared recta.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>',true); $("viaDone").addEventListener("click",function(){ viaTool(false); }); return true; }
+    var A=toW(r,r.pts[e]), B=toW(r,r.pts[(e+1)%n]), L=len(sub(B,A)), t=Math.round(Math.max(0.1,Math.min(L-0.1,dot(sub(q,A),unit(sub(B,A)))))*20)/20;
+    r.via={edge:e,t:t}; update(r.id===S.sel);
+    hint('<span>Paso de tubos de <b>'+esc(r.name)+'</b> marcado en su pared '+LETTER(e)+'. Sigue marcando otras estancias o pulsa Terminar.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>'); $("viaDone").addEventListener("click",function(){ viaTool(false); });
+    return true;
+  }
   function setMarkTool(t){
+    if(S.viaTool && S.markTool!==t) viaTool(false);
     S.markTool = S.markTool===t ? null : t; S.markHover=null;
     document.querySelectorAll("#markBar [data-mark]").forEach(function(b){ b.classList.toggle("on",b.getAttribute("data-mark")===S.markTool); });
     if(S.markTool) hint('Marcando <b>'+MARKS[S.markTool].toLowerCase()+'</b>: pulsa una pared del plano. '+(S.mode!=="suelo"?'Se usa en el cálculo térmico de la estancia. ':S.markTool==="escalera"?'Por esa pared no pasará ningún tubo; lo que quede al otro lado necesita su propio colector. ':S.markTool==="ventana"?'Junto a ella el tubo irá a '+clampSep(S.uf.sepWin)+' cm en una franja de '+fmt(S.uf.winW,1)+' m. ':'Junto a él el tubo irá a '+clampSep(S.uf.sepExt)+' cm en una franja de '+fmt(S.uf.extW,1)+' m. ')+'<button class="btn ghost small" id="markDone">Terminar</button>');
@@ -3661,7 +3718,8 @@
   function obstTool(on){
     if(on){ if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); }
     S.obstTool=!!on; S.obstDraft=null; $("obstBtn").classList.toggle("on",!!on);
-    if(on){ hint('Añadir obstáculo: pincha en una esquina y arrastra hasta la contraria (o pincha una esquina y luego la otra). Verás la medida mientras lo dibujas. Pincha un obstáculo para quitarlo. <button class="btn ghost small" id="obstDone">Terminar</button>'); $("obstDone").addEventListener("click",function(){ obstTool(false); }); }
+    if(on && S.viaTool) viaTool(false);
+    if(on){ hint((S.mode==="techo"?'<b>Obstáculo en el techo</b> (muebles hasta el techo, vigas, conductos…): ahí no van paneles. ':'')+'Añadir obstáculo: pincha en una esquina y arrastra hasta la contraria (o pincha una esquina y luego la otra). Verás la medida mientras lo dibujas. Pincha un obstáculo para quitarlo. <button class="btn ghost small" id="obstDone">Terminar</button>'); $("obstDone").addEventListener("click",function(){ obstTool(false); }); }
     else hint("");
     renderPlan();
   }
@@ -3800,6 +3858,7 @@
     btn.removeAttribute("data-confirm"); btn.textContent="Nuevo proyecto";
     S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.placing=null; S.zoom=null; S.title="Nuevo proyecto"; S.project.client=""; S.project.addr=""; S.final=null;
     syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true); cloudFresh(); openShape();
+    setTimeout(function(){ hint('<span>Proyecto nuevo: ponle nombre arriba, donde pone «Nuevo proyecto» (✎), para encontrarlo luego en «Mis proyectos».</span>'); },50);
   }
   function loadExample(){
     if(planKind()==="proyecto" && !S.final && allRooms().length){ hint("Con el plan por proyecto el ejemplo solo se puede abrir en un proyecto vacío.",true); return; }
@@ -3811,7 +3870,7 @@
   }
   function setMode(m){
     if(m===S.mode) return;
-    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); S.moveId=null;
+    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); if(S.viaTool) viaTool(false); S.moveId=null;
     S.store[S.mode]={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title,final:S.final||null};
     var d=S.store[m]||{floors:[emptyFloor("Planta baja")],fi:0,sel:null,title:"Nuevo proyecto"};
     S.floors=d.floors; S.fi=d.fi; S.sel=d.sel; S.title=d.title; S.final=d.final||null; S.zoom=null; S.mode=m;
@@ -3825,6 +3884,7 @@
   $("addRoom").addEventListener("click",function(){ if(S.placing) cancelPlacing(); openShape(); });
   document.addEventListener("keydown",function(e){
     if(e.key!=="Escape") return;
+    if(S.viaTool){ viaTool(false); return; }
     if(S.obstTool){ if(S.obstDraft){ S.obstDraft=null; renderPlan(); } else obstTool(false); return; }
     if(S.doorTool){ doorCancel(); return; }
     if(S.markTool){ setMarkTool(S.markTool); return; }
@@ -4223,7 +4283,7 @@
     MO_ON=true;
   }
   // ---- a finished project is read only: everything that edits is switched off
-  var RO_KEEP='[data-go],#tourBtn,.my-projects-btn,.logout-btn,#openCompany,#downloadReport,.zoom-ctl button,#colorByCircuit,#showPipes,#showStruct,#floorBar [data-floor],#planBanner button,#report .proj-grid input,#reportBody input,#planBtn,#newProject';
+  var RO_KEEP='[data-go],#tourBtn,.my-projects-btn,.logout-btn,#openCompany,#downloadReport,.zoom-ctl button,#colorByCircuit,#showPipes,#showStruct,#floorBar [data-floor],#planBanner button,#report .proj-grid input,#reportBody input,#planBtn,#newProject,#projName';
   function roApply(){
     var ro=RO();
     document.querySelectorAll("#appView input, #appView select, #appView textarea, #appView button").forEach(function(el){
