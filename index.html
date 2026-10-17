@@ -918,8 +918,7 @@
           <div class="field"><label class="lbl" for="sVert">Subida colector–techo (m)</label><input type="number" id="sVert" min="0" step="0.1"></div>
           <div class="field"><label class="lbl" for="sMargin">Margen de tubo (%)</label><input type="number" id="sMargin" min="0" step="1"></div>
         </div>
-        <label class="check only-techo"><input type="checkbox" id="sT20"> Agrupar circuitos con tubo de 20 mm (hasta 4 paneles por salida)</label>
-        <p class="note only-techo" style="margin-top:0;">Dos circuitos de la misma estancia (3 o 4 paneles) comparten una salida del colector: tubo PEX de 20 hasta una te de latón en la ida y otra en el retorno, de donde salen los tubos de los paneles. Solo si el PEX de 20 no pasa de 20 m sumando ida y retorno (sin contar el tubo del panel) y las tes quedan al alcance del tubo propio de los paneles (hasta 3 m); se agrupan los circuitos más próximos entre sí. Lo que no se puede agrupar va con tubo de 16, como siempre.</p>
+        <p class="note only-techo" style="margin-top:0;"><b>Tubo de 20 mm:</b> dos circuitos de la misma estancia (3 o 4 paneles) comparten una salida del colector: tubo PEX de 20 hasta una te de latón en la ida y otra en el retorno, de donde salen los tubos de los paneles. Solo si el PEX de 20 no pasa de 20 m sumando ida y retorno (sin contar el tubo del panel) y las tes quedan al alcance del tubo propio de los paneles (hasta 3 m); se agrupan los circuitos más próximos entre sí. Lo que no se puede agrupar va con tubo de 16, como siempre.</p>
         <div class="field only-techo"><label class="lbl" for="sTail">Tubo del panel aprovechado por tramo (m)</label><input type="number" id="sTail" min="0" max="3" step="0.1"></div>
         <p class="note only-techo" style="margin-top:0;">Los paneles traen un tramo de tubo propio (hasta 3 m). Esta medida se descuenta de cada tramo de ida y de retorno.</p>
         <p class="note only-techo">Indica las salidas de cada colector. Las estancias se asignan enteras al colector más cercano con salidas suficientes.</p>
@@ -1192,7 +1191,7 @@
   function emptyFloor(name){ return {id:nid(), name:name||"Planta baja", rooms:[], collectors:[]}; }
   var S={
     panels:[{id:nid(),name:"Panel 80×150",w:80,h:150},{id:nid(),name:"Panel 40×150",w:40,h:150},{id:nid(),name:"Panel 80×100",w:80,h:100},{id:nid(),name:"Panel 40×100",w:40,h:100}],
-    t20:false,gMin:30,gMax:60,clear:10,gap:2,strip:30,vert:1.5,margin:10,tail:1,secCm:40,primCm:90,bar:3,hang:1.2,board:"1.2x2.5",showStruct:false,
+    t20:true,gMin:30,gMax:60,clear:10,gap:2,strip:30,vert:1.5,margin:10,tail:1,secCm:40,primCm:90,bar:3,hang:1.2,board:"1.2x2.5",showStruct:false,
     colorByCircuit:false, showPipes:false, prices:{},
     floors:[emptyFloor("Planta baja")], fi:0, sel:null, drag:null, frozenVB:null,
     title:"Nuevo proyecto", placing:null,
@@ -3749,7 +3748,6 @@
   $("uPlate").value=S.uf.plate; $("uPlate").addEventListener("change",function(e){ S.uf.plate=e.target.value; renderTables(); });
   function bindNum(id,key){ var el=$(id); el.value=S[key]; el.addEventListener("input",function(){ var v=parseFloat(el.value); if(isFinite(v)){ S[key]=v; update(false);} }); }
   bindNum("gMin","gMin"); bindNum("gMax","gMax"); bindNum("sClear","clear"); bindNum("sGap","gap"); bindNum("sStrip","strip"); bindNum("sVert","vert"); bindNum("sMargin","margin"); bindNum("sTail","tail"); bindNum("sSec","secCm"); bindNum("sPrim","primCm"); bindNum("sBar","bar"); bindNum("sHang","hang");
-  $("sT20").checked=!!S.t20; $("sT20").addEventListener("change",function(e){ S.t20=e.target.checked; update(false); });
   $("sBoard").value=S.board; $("sBoard").addEventListener("change",function(e){ S.board=e.target.value; update(false); });
   function syncStructLegend(){ document.querySelectorAll(".struct-lg").forEach(function(x){ x.hidden=!S.showStruct; }); }
   $("showStruct").addEventListener("change",function(e){ S.showStruct=e.target.checked; syncStructLegend(); update(false); });
@@ -4314,7 +4312,7 @@
   $("companySave").addEventListener("click",function(){ saveCompanyToCloud(); });
 
   // ---- projects: what is saved, and putting it back
-  var CFG_TECHO=["t20","panels","gMin","gMax","clear","gap","strip","vert","margin","tail","secCm","primCm","bar","hang","board"];
+  var CFG_TECHO=["panels","gMin","gMax","clear","gap","strip","vert","margin","tail","secCm","primCm","bar","hang","board"];
   function projSnapshot(){
     var cfg={th:S.th}; if(S.mode==="suelo") cfg.uf=S.uf; else CFG_TECHO.forEach(function(k){ cfg[k]=S[k]; });
     return JSON.stringify({v:1,mode:S.mode,title:S.title,fi:S.fi,floors:S.floors,project:S.project,prices:S.prices,cfg:cfg,final:S.final||null},function(k,val){ return (k && k.charAt(0)==="_") ? undefined : val; });
@@ -4327,7 +4325,7 @@
     if(S.mode==="suelo" && c.uf){ Object.assign(S.uf,c.uf);
       [["uSep","sep"],["uMax","maxLen"],["uSepWin","sepWin"],["uWinW","winW"],["uSepExt","sepExt"],["uExtW","extW"],["uWall","wallCm"],["uVert","vert"],["uMargin","margin"],["uPlate","plate"]].forEach(function(p){ var el=$(p[0]); if(el) el.value=S.uf[p[1]]; }); }
     if(S.mode==="techo"){ CFG_TECHO.forEach(function(k){ if(c[k]!=null) S[k]=c[k]; });
-      $("sT20").checked=!!S.t20; [["gMin","gMin"],["gMax","gMax"],["sClear","clear"],["sGap","gap"],["sStrip","strip"],["sVert","vert"],["sMargin","margin"],["sTail","tail"],["sSec","secCm"],["sPrim","primCm"],["sBar","bar"],["sHang","hang"],["sBoard","board"]].forEach(function(p){ var el=$(p[0]); if(el) el.value=S[p[1]]; });
+      [["gMin","gMin"],["gMax","gMax"],["sClear","clear"],["sGap","gap"],["sStrip","strip"],["sVert","vert"],["sMargin","margin"],["sTail","tail"],["sSec","secCm"],["sPrim","primCm"],["sBar","bar"],["sHang","hang"],["sBoard","board"]].forEach(function(p){ var el=$(p[0]); if(el) el.value=S[p[1]]; });
       renderCatalog(); }
     var r0=S.rooms[0]; S.sel=r0?r0.id:null; S.moveId=null; S.placing=null; S.zoom=null;
     syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true);
