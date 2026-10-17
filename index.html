@@ -38,6 +38,7 @@
   .p-mk.win-o{stroke:var(--wall);stroke-width:.18;}
   .p-mk.win-i{stroke:#BFE3F2;stroke-width:.09;}
   .p-mk.ext{stroke:var(--wall);stroke-width:.24;}
+  .p-mk.acc{stroke:#2F7D5B;stroke-width:.24;stroke-dasharray:.32 .08;}
   .p-mk.esc{stroke:var(--ang);stroke-width:.2;stroke-dasharray:.16 .08;}
   .p-mk.hov{stroke:var(--warm);stroke-width:.22;opacity:.8;}
   .p-ctext.uf{font-size:.15px;fill:var(--ink);font-weight:700;}
@@ -841,6 +842,7 @@
     <div class="mark-bar" id="markBar">
       <button class="mk-btn" type="button" data-mark="ventana"><i></i>Marcar ventana</button>
       <button class="mk-btn" type="button" data-mark="exterior"><i></i>Marcar muro exterior</button>
+      <button class="mk-btn only-techo" type="button" data-mark="acceso"><i style="border-top:4px dashed #2F7D5B;width:14px;height:0;border-radius:0"></i>Marcar puerta de acceso</button>
       <button class="mk-btn only-suelo" type="button" data-mark="escalera"><i></i>Marcar escalera</button>
       <button class="mk-btn only-suelo" type="button" id="doorBtn"><i style="border-top:3px solid var(--wall);width:14px;border-radius:0 0 8px 0;height:8px;border-right:2px solid var(--wall)"></i>Marcar puerta</button>
       <button class="mk-btn only-techo" type="button" id="viaBtn"><i style="border:none;width:14px;height:4px;background:repeating-linear-gradient(90deg,#C0392B 0 4px,#1F6FB2 4px 8px);border-radius:2px"></i>Marcar paso de tubos</button>
@@ -865,6 +867,7 @@
       <span class="only-suelo"><span class="sw dot" style="background:var(--ret)"></span>Retorno en el colector</span>
       <span><span class="lg-mk" style="border-top:6px double #5FB8D8"></span>Ventana</span>
       <span><span class="lg-mk"></span>Muro exterior</span>
+      <span class="only-techo"><span class="lg-mk" style="border-top:5px dashed #2F7D5B;width:14px"></span>Puerta de acceso (los paneles se acercan a ella y a las ventanas)</span>
       <span class="only-techo"><span class="lg-mk" style="border-top:5px solid #7A4F00;width:14px"></span>Paso de tubos marcado (los tubos de la estancia entran por ahí)</span>
       <span class="only-suelo"><span class="lg-mk" style="border-top:5px dashed var(--ang)"></span>Escalera (no pasa tubo)</span>
       <span><span class="sw" style="background:repeating-linear-gradient(45deg,#8C9BA7 0 2px,#E6ECF0 2px 4px);border:1px solid #6B7B88"></span><span class="only-suelo">Obstáculo (ducha, bañera, inodoro, mueble fijo…): sin tubo</span><span class="only-techo">Obstáculo (muebles hasta el techo, vigas, conductos…): sin paneles</span></span>
@@ -1269,14 +1272,23 @@
       if(Math.abs(w-h)>EPS) out.push({typeId:t.id,name:t.name,tw:t.w,th:t.h,w:h,h:w,a:w*h,rot:true}); });
     return out;
   }
-  function lightsInBands(W,L,bx,by){
+  function lightsInBands(W,L,bx,by,bx1,by1){
+    if(bx1!=null){ var pts2=[]; if(Math.max(bx,by,bx1,by1)<0.2) return pts2;
+      if(by+by1>=bx+bx1){ var k3=Math.max(1,Math.round(W/1.6)); for(var j3=0;j3<k3;j3++){ var x3=W*(j3+.5)/k3; if(by>=0.2) pts2.push(V(x3,by/2)); if(by1>=0.2) pts2.push(V(x3,L-by1/2)); } }
+      else { var k4=Math.max(1,Math.round(L/1.6)); for(var i4=0;i4<k4;i4++){ var y4=L*(i4+.5)/k4; if(bx>=0.2) pts2.push(V(bx/2,y4)); if(bx1>=0.2) pts2.push(V(W-bx1/2,y4)); } }
+      return pts2; }
     var pts=[]; if(Math.max(bx,by)<0.2) return pts;
     if(by>=bx){ var k=Math.max(1,Math.round(W/1.6)); for(var j=0;j<k;j++){ var x=W*(j+.5)/k; pts.push(V(x,by/2)); pts.push(V(x,L-by/2)); } }
     else { var k2=Math.max(1,Math.round(L/1.6)); for(var i=0;i<k2;i++){ var y=L*(i+.5)/k2; pts.push(V(bx/2,y)); pts.push(V(W-bx/2,y)); } }
     return pts;
   }
   // best grid of panels inside a W×L rectangle (clearance already applied)
-  function bandLines(W,L,bx,by){
+  function bandLines(W,L,bx,by,bx1,by1){
+    if(bx1!=null){ var o2=[], i2=0.15;
+      if(Math.min(bx,by,bx1,by1)>=0.2){ var X0=bx/2,Y0=by/2,X1=W-bx1/2,Y1=L-by1/2; o2.push([V(X0,Y0),V(X1,Y0)],[V(X1,Y0),V(X1,Y1)],[V(X1,Y1),V(X0,Y1)],[V(X0,Y1),V(X0,Y0)]); return o2; }
+      if(by+by1>=bx+bx1){ if(by>=0.2) o2.push([V(i2,by/2),V(W-i2,by/2)]); if(by1>=0.2) o2.push([V(i2,L-by1/2),V(W-i2,L-by1/2)]); }
+      else { if(bx>=0.2) o2.push([V(bx/2,i2),V(bx/2,L-i2)]); if(bx1>=0.2) o2.push([V(W-bx1/2,i2),V(W-bx1/2,L-i2)]); }
+      return o2; }
     var o=[], i=0.15;
     if(Math.min(bx,by)>=0.2){ var x0=bx/2,y0=by/2,x1=W-bx/2,y1=L-by/2; o.push([V(x0,y0),V(x1,y0)],[V(x1,y0),V(x1,y1)],[V(x1,y1),V(x0,y1)],[V(x0,y1),V(x0,y0)]); }
     else if(Math.max(bx,by)>=0.2){ if(by>=bx){ o.push([V(i,by/2),V(W-i,by/2)],[V(i,L-by/2),V(W-i,L-by/2)]); } else { o.push([V(bx/2,i),V(bx/2,L-i)],[V(W-bx/2,i),V(W-bx/2,L-i)]); } }
@@ -1314,7 +1326,7 @@
     return best;
   }
   // lc: light in the central strip, lp: light in the perimeter band — each "ninguna" | "puntos" | "tira"
-  function gridLayout(W,L,minA,maxA,lc,lp,ko){
+  function gridLayout(W,L,minA,maxA,lc,lp,ko,pri){
     var g=S.gap/1000, s=S.strip/100, res={panels:[],lights:[],lines:[],strip:null,choice:null,area:0,msgs:[],fail:false,removed:0};
     ko=(ko||[]).filter(function(z){ return z.x1>0 && z.y1>0 && z.x0<W && z.y0<L; });
     var koHit=function(x0,y0,x1,y1){ for(var q=0;q<ko.length;q++){ var z=ko[q]; if(x0<z.x1-1e-6 && x1>z.x0+1e-6 && y0<z.y1-1e-6 && y1>z.y0+1e-6) return true; } return false; };
@@ -1336,12 +1348,17 @@
       }
     }); });
     if(!cands.length){ res.fail=true; return res; }
+    var prefAt=function(k){ var sx=W-k.bw, sy=L-k.bh, m=0, px=sx/2, py=sy/2;
+      if(pri && sx>2*m){ if(pri.l&&!pri.r) px=m; else if(pri.r&&!pri.l) px=sx-m; }
+      if(pri && sy>2*m){ if(pri.t&&!pri.b) py=m; else if(pri.b&&!pri.t) py=sy-m; }
+      return {x:px,y:py}; };
+    if(pri && (pri.l||pri.r||pri.t||pri.b)) cands.forEach(function(k){ var pf=prefAt(k); k.bx=pf.x; k.by=pf.y; });
     if(ko.length){
       var badAt=function(k,bx,by){ var bad=0; for(var ci=0;ci<k.c;ci++){ var x=bx+ci*(k.v.w+g)+(k.so==="v"&&ci>=k.c/2?s-g:0);
           for(var ri=0;ri<k.r;ri++){ var y=by+ri*(k.v.h+g)+(k.so==="h"&&ri>=k.r/2?s-g:0); if(koHit(x,y,x+k.v.w,y+k.v.h)) bad++; } } return bad; };
       cands.forEach(function(k){ var sx=W-k.bw, sy=L-k.bh, best={bad:badAt(k,k.bx,k.by),bx:k.bx,by:k.by,d:0};
         if(best.bad){ var nx=Math.min(8,Math.floor(sx/0.05)), ny=Math.min(8,Math.floor(sy/0.05));
-          for(var a=0;a<=nx;a++) for(var b2=0;b2<=ny;b2++){ var bx=nx?sx*a/nx:sx/2, by=ny?sy*b2/ny:sy/2, bad=badAt(k,bx,by), d=Math.abs(bx-sx/2)+Math.abs(by-sy/2);
+          var pf0=prefAt(k); for(var a=0;a<=nx;a++) for(var b2=0;b2<=ny;b2++){ var bx=nx?sx*a/nx:sx/2, by=ny?sy*b2/ny:sy/2, bad=badAt(k,bx,by), d=Math.abs(bx-pf0.x)+Math.abs(by-pf0.y);
             if(bad<best.bad || (bad===best.bad && d<best.d)) best={bad:bad,bx:bx,by:by,d:d}; } }
         k.bx=best.bx; k.by=best.by; k.bad=best.bad; k.a=(k.n-best.bad)*k.v.a; });
     }
@@ -1378,7 +1395,7 @@
         if(!kc) res.removed++; });
       res.panels=kept; }
     res.area=res.panels.reduce(function(t,p){ return t+p.w*p.h; },0);
-    function band(type){ if(type==="tira") res.lines=res.lines.concat(bandLines(W,L,k.bx,k.by)); else res.lights=res.lights.concat(lightsInBands(W,L,k.bx,k.by)); }
+    function band(type){ var bx1=W-k.bw-k.bx, by1=L-k.bh-k.by; if(type==="tira") res.lines=res.lines.concat(bandLines(W,L,k.bx,k.by,bx1,by1)); else res.lights=res.lights.concat(lightsInBands(W,L,k.bx,k.by,bx1,by1)); }
     if(wantC){
       if(k.so==="v"){ var le=k.bx+(k.c/2)*k.v.w+(k.c/2-1)*g, n1=Math.max(1,Math.round(k.bh/1.2)); res.strip={x:le,y:k.by,w:s,h:k.bh};
         if(lc==="tira") res.lines.push([V(le+s/2,k.by+0.05),V(le+s/2,k.by+k.bh-0.05)]); else for(var j=0;j<n1;j++) res.lights.push(V(le+s/2,k.by+k.bh*(j+.5)/n1)); }
@@ -1449,12 +1466,18 @@
   }
   function lightKeep(l){ var h=(+l.s||30)/200; return {x0:l.x-h,y0:l.y-h,x1:l.x+h,y1:l.y+h}; }
   function calcRoom(room){
-    var key=JSON.stringify([room.pts,room.bulge,room.active,room.override,room.minPct,room.maxPct,room.lc,room.lp,room.customL||false,room.customL?room.lights||[]:0,room._cko||[],room.obst||[],S.gMin,S.gMax,S.clear,S.gap,S.strip,S.panels]);
+    var key=JSON.stringify([room.marks||{},room.pts,room.bulge,room.active,room.override,room.minPct,room.maxPct,room.lc,room.lp,room.customL||false,room.customL?room.lights||[]:0,room._cko||[],room.obst||[],S.gMin,S.gMax,S.clear,S.gap,S.strip,S.panels]);
     if(room._ck===key && room._cr) return room._cr;
     var out=localOutline(room), area=Math.abs(signedArea(out));
     var minPct=room.override?room.minPct:S.gMin, maxPct=room.override?room.maxPct:S.gMax; if(maxPct<minPct) maxPct=minPct;
     var res={area:area,minPct:minPct,maxPct:maxPct,minA:area*minPct/100,maxA:area*maxPct/100,panels:[],lights:[],leds:[],ledLen:0,strips:[],rects:[],groups:[],
       circuits:0,covered:0,pct:0,msgs:[],inactive:!room.active,keep:[],removed:0};
+    // panels first next to windows and the entrance door: the sides of the free rectangle that face those walls
+    var priOf=function(rect){ var P={l:false,r:false,t:false,b:false}, n=room.pts.length, mk=room.marks||{}, cx=rect.x+rect.w/2, cy=rect.y+rect.h/2;
+      for(var e=0;e<n;e++){ var t=mk[e]; if(t!=="ventana" && t!=="acceso") continue; var A=room.pts[e], B=room.pts[(e+1)%n], M=mul(add(A,B),0.5), dx=Math.abs(B.x-A.x), dy=Math.abs(B.y-A.y);
+        if(dy>dx){ var y0=Math.min(A.y,B.y), y1=Math.max(A.y,B.y); if(y1<rect.y+0.05 || y0>rect.y+rect.h-0.05) continue; if(M.x<cx) P.l=true; else P.r=true; }
+        else { var x0=Math.min(A.x,B.x), x1=Math.max(A.x,B.x); if(x1<rect.x+0.05 || x0>rect.x+rect.w-0.05) continue; if(M.y<cy) P.t=true; else P.b=true; } }
+      return P; };
     var CL=!!room.customL, KO=(CL?(room.lights||[]).map(lightKeep):[]).concat(room._cko||[]).concat((room.obst||[]).map(function(b){ return {x0:b.x0,y0:b.y0,x1:b.x1,y1:b.y1}; }));
     var koIn=function(rect){ return KO.map(function(z){ return {x0:z.x0-rect.x,y0:z.y0-rect.y,x1:z.x1-rect.x,y1:z.y1-rect.y}; }); };
     if(room.active && area>0.2){
@@ -1469,14 +1492,14 @@
       };
       if(!r1 || r1.w<0.3 || r1.h<0.3){ res.msgs.push({t:"warn",x:"La estancia es demasiado pequeña para respetar la distancia a pared."}); }
       else {
-        var g1=gridLayout(r1.w,r1.h,res.minA,res.maxA,lc,lp,koIn(r1));
+        var g1=gridLayout(r1.w,r1.h,res.minA,res.maxA,lc,lp,koIn(r1),priOf(r1));
         if(!g1.fail) push(r1,g1);
         if(res.covered<res.minA-EPS){
           var m=Math.round(0.15/R.res);
           for(var j=r1.r0-m;j<=r1.r1+m;j++) for(var i=r1.c0-m;i<=r1.c1+m;i++){ if(i>=0&&j>=0&&i<R.nx&&j<R.ny) R.g[j*R.nx+i]=0; }
           var r2=maxRect(R);
           if(r2 && r2.w>=0.6 && r2.h>=0.6){
-            var g2=gridLayout(r2.w,r2.h,Math.max(0,res.minA-res.covered),res.maxA-res.covered,lc,lp,koIn(r2));
+            var g2=gridLayout(r2.w,r2.h,Math.max(0,res.minA-res.covered),res.maxA-res.covered,lc,lp,koIn(r2),priOf(r2));
             if(!g2.fail && g2.area>0) push(r2,g2);
           }
         }
@@ -1833,7 +1856,7 @@
 
   // ================= SUELO RADIANTE =================
   var UFC=["#C0392B","#1F6FB2","#2E8B57","#8E44AD","#D35400","#16A085","#B7950B","#2C3E50","#E84393","#6D4C41","#0097A7","#7CB342","#5E35B1","#F39C12","#455A64","#AD1457"];
-  var MARKS={ventana:"Ventana",exterior:"Muro exterior",escalera:"Escalera"}, COLL_D=0.12, LANE=0.05;
+  var MARKS={ventana:"Ventana",exterior:"Muro exterior",escalera:"Escalera",acceso:"Puerta de acceso"}, COLL_D=0.12, LANE=0.05;
   var PLATES={"1.2x0.8":"1200 × 800 mm","1.4x0.8":"1400 × 800 mm","1.45x0.85":"1450 × 850 mm","1.0x1.0":"1000 × 1000 mm"};
   function clampSep(v){ v=Math.round((+v||15)/5)*5; return Math.max(5,Math.min(30,v)); }
   function collLen(c){ return Math.min(1.2,0.25+0.05*(c.cap||0)); }
@@ -2655,7 +2678,7 @@
     for(var e=0;e<n;e++){ var t=mk[e]; if(!t) continue;
       var pts=ptsStr(edgeSamples(r.pts[e],r.pts[(e+1)%n],r.bulge[e]||0,16).map(tf));
       if(t==="ventana") o+='<polyline class="p-mk win-o" points="'+pts+'"/><polyline class="p-mk win-i" points="'+pts+'"/>';
-      else o+='<polyline class="p-mk '+(t==="escalera"?'esc':'ext')+'" points="'+pts+'"><title>'+MARKS[t]+'</title></polyline>';
+      else o+='<polyline class="p-mk '+(t==="escalera"?'esc':t==="acceso"?'acc':'ext')+'" points="'+pts+'"><title>'+MARKS[t]+'</title></polyline>';
     }
     return o;
   }
@@ -2934,7 +2957,7 @@
     var n=room.pts.length, rows="";
     for(var i=0;i<n;i++){
       var a=room.pts[i], b=room.pts[(i+1)%n], h=room.bulge[i]||0;
-      var mkc='<td><select class="mk-sel" data-mk="'+i+'" aria-label="Tipo de muro del lado '+LETTER(i)+'"><option value="">Normal</option><option value="ventana">Ventana</option><option value="exterior">Exterior</option>'+(S.mode==="suelo"?'<option value="escalera">Escalera</option>':'')+'</select></td>';
+      var mkc='<td><select class="mk-sel" data-mk="'+i+'" aria-label="Tipo de muro del lado '+LETTER(i)+'"><option value="">Normal</option><option value="ventana">Ventana</option><option value="exterior">Exterior</option>'+(S.mode==="suelo"?'<option value="escalera">Escalera</option>':'<option value="acceso">Puerta de acceso</option>')+'</select></td>';
       rows+= h ? '<tr><td><span class="letter">'+LETTER(i)+'</span></td><td class="muted">Curvo · cuerda '+fmt(len(sub(b,a)),2)+' m</td><td><input type="number" step="1" data-flecha="'+i+'" value="'+Math.round(curveDepth(a,b,h)*100)+'" aria-label="Flecha del lado '+LETTER(i)+' en cm"></td><td class="muted">cm flecha</td>'+mkc+'</tr>'
                : '<tr><td><span class="letter">'+LETTER(i)+'</span></td><td class="muted">Recto</td><td><input type="number" step="0.01" min="0.1" data-side="'+i+'" value="'+(Math.round(len(sub(b,a))*100)/100)+'" aria-label="Longitud del lado '+LETTER(i)+' en metros"></td><td class="muted">m</td>'+mkc+'</tr>';
     }
@@ -3721,7 +3744,7 @@
     if(S.viaTool && S.markTool!==t) viaTool(false);
     S.markTool = S.markTool===t ? null : t; S.markHover=null;
     document.querySelectorAll("#markBar [data-mark]").forEach(function(b){ b.classList.toggle("on",b.getAttribute("data-mark")===S.markTool); });
-    if(S.markTool) hint('Marcando <b>'+MARKS[S.markTool].toLowerCase()+'</b>: pulsa una pared del plano. '+(S.mode!=="suelo"?'Se usa en el cálculo térmico de la estancia. ':S.markTool==="escalera"?'Por esa pared no pasará ningún tubo; lo que quede al otro lado necesita su propio colector. ':S.markTool==="ventana"?'Junto a ella el tubo irá a '+clampSep(S.uf.sepWin)+' cm en una franja de '+fmt(S.uf.winW,1)+' m. ':'Junto a él el tubo irá a '+clampSep(S.uf.sepExt)+' cm en una franja de '+fmt(S.uf.extW,1)+' m. ')+'<button class="btn ghost small" id="markDone">Terminar</button>');
+    if(S.markTool) hint('Marcando <b>'+MARKS[S.markTool].toLowerCase()+'</b>: pulsa una pared del plano. '+(S.mode!=="suelo"?(S.markTool==="acceso"?'Es la puerta de la calle: los paneles de esa estancia se colocan pegados a esta pared, igual que junto a las ventanas. Las puertas entre estancias no cuentan. ':S.markTool==="ventana"?'Los paneles se colocan pegados a las ventanas y la pared cuenta en el cálculo térmico. ':'Se usa en el cálculo térmico de la estancia. '):S.markTool==="escalera"?'Por esa pared no pasará ningún tubo; lo que quede al otro lado necesita su propio colector. ':S.markTool==="ventana"?'Junto a ella el tubo irá a '+clampSep(S.uf.sepWin)+' cm en una franja de '+fmt(S.uf.winW,1)+' m. ':'Junto a él el tubo irá a '+clampSep(S.uf.sepExt)+' cm en una franja de '+fmt(S.uf.extW,1)+' m. ')+'<button class="btn ghost small" id="markDone">Terminar</button>');
     else hint("");
     var md=$("markDone"); if(md) md.addEventListener("click",function(){ setMarkTool(S.markTool); });
     renderPlan();
@@ -3966,7 +3989,7 @@
     return {below:TH_BELOW[t.below]?t.below:(i<=0?"terreno":"cal"), above:TH_ABOVE[t.above]?t.above:(i===n-1?"cub":"cal")}; }
   function thLoad(r,fl){
     var T=S.th, ti=thTi(r), dT=Math.max(0,ti-T.te), n=r.pts.length, h=T.h, wv=0, we=0, mk=r.marks||{};
-    for(var e=0;e<n;e++){ var t=mk[e]; if(t!=="ventana" && t!=="exterior") continue;
+    for(var e=0;e<n;e++){ var t=mk[e]; if(t==="acceso") t="exterior"; if(t!=="ventana" && t!=="exterior") continue;
       var L=edgeLength(r.pts[e],r.pts[(e+1)%n],r.bulge[e]||0); if(t==="ventana") wv+=L*h; else we+=L*h; }
     var auto=wv*T.win/100, Aw=thSet(r.winA) ? Math.max(0,Math.min(+r.winA,wv+we)) : auto, Awall=Math.max(0,wv+we-Aw);
     var area=Math.abs(signedArea(localOutline(r))), ft=flTh(fl);
@@ -4665,6 +4688,7 @@
           {when:function(){ return !!S.obstTool; },el:function(T){ return roomSel(T.dorm); },x:"<p>Pincha en una esquina dentro del <b>Dormitorio</b> y arrastra hasta la contraria, como si fuera un armario hasta el techo. Ahí no se pondrán paneles.</p><p>Si dibujas otro pegado o encima, se unen en una sola figura (una L, por ejemplo).</p>"},
           {when:function(){ return true; },el:"#obstBtn",x:"<p>Los muebles que llegan al techo, las vigas o los conductos ocupan sitio donde no puede ir ningún panel. Pulsa <b>Añadir obstáculo</b>.</p>"}
         ]});
+      P.push({info:true,el:'#markBar [data-mark="acceso"]',t:"Puerta de acceso",x:"<p>Marca la pared de la <b>puerta de la calle</b>. Igual que con las ventanas, los paneles de esa estancia se colocan pegados a ella, que es por donde más frío entra. Las puertas entre estancias no cuentan.</p>"});
       P.push({info:true,el:"#viaBtn",t:"Paso de tubos",x:"<p>Si por el camino más corto hay una viga o algo que no se puede atravesar, pulsa <b>Marcar paso de tubos</b> y luego la pared por donde tienen que entrar los tubos a esa estancia. Los metros de tubo se calculan por ahí. Si no marcas nada, se toma el camino más corto.</p>"});
       P.push({mission:true,t:"Muestra la tubería",badge:"Tubería a la vista",
         done:function(){ return !!S.showPipes; },
