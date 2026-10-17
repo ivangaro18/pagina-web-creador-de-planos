@@ -293,6 +293,18 @@
   .p-side{font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--surface-2);stroke-linejoin:round;}
   .p-coll{fill:var(--accent);stroke:var(--wall);stroke-width:.02;}
   .p-colltext{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.17px;font-weight:600;fill:var(--accent);paint-order:stroke;stroke:var(--room-fill);stroke-width:.07px;stroke-linejoin:round;pointer-events:none;}
+  .p-reg{fill:rgba(11,127,171,.07);stroke:var(--accent);stroke-width:.014;stroke-dasharray:.06 .04;}
+  .p-tcase{fill:none;stroke:#fff;stroke-width:.06;stroke-linejoin:round;stroke-linecap:round;pointer-events:none;}
+  .p-tcase.w{stroke-width:.085;}
+  .p-tube{fill:none;stroke-width:.028;stroke-linejoin:round;stroke-linecap:round;pointer-events:none;}
+  .p-tube.w{stroke-width:.05;}
+  .p-tube.ret{stroke-dasharray:.1 .055;stroke-linecap:butt;}
+  .p-tbr{fill:none;stroke-width:.016;stroke-linecap:round;pointer-events:none;}
+  .p-tbr.ret{stroke-dasharray:.05 .035;}
+  .p-tee{fill:#fff;stroke:#0F2A3D;stroke-width:.016;pointer-events:none;}
+  .p-teet{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:.075px;font-weight:700;fill:#0F2A3D;pointer-events:none;}
+  .p-onum{stroke:#fff;stroke-width:.012;pointer-events:none;}
+  .p-onumt{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.085px;font-weight:700;fill:#fff;pointer-events:none;}
   .p-end.ida{fill:var(--ida);} .p-end.ret{fill:var(--ret);}
   .p-trunk{fill:none;stroke-width:.03;stroke-linejoin:round;pointer-events:none;}
   .p-trunk.ida{stroke:var(--ida);} .p-trunk.ret{stroke:var(--ret);}
@@ -847,8 +859,9 @@
       <span class="only-suelo"><span class="sw" style="background:repeating-linear-gradient(45deg,#8C9BA7 0 2px,#E6ECF0 2px 4px);border:1px solid #6B7B88"></span>Obstáculo (ducha, bañera, inodoro, mueble fijo…): sin tubo</span>
       <span class="only-suelo">◜ Puerta: los tubos solo cruzan los tabiques por las puertas (si hay alguna marcada)</span>
       <span><span class="sw" style="background:var(--accent)"></span>Colector</span>
-      <span class="pipe-lg only-techo" hidden><span class="lg-line" style="border-color:var(--ida)"></span>Ida</span>
-      <span class="pipe-lg only-techo" hidden><span class="lg-line" style="border-color:var(--ret)"></span>Retorno</span>
+      <span class="pipe-lg only-techo" hidden><span class="lg-line" style="border-color:#2E6F8E"></span>Ida (línea continua)</span>
+      <span class="pipe-lg only-techo" hidden><span class="lg-line" style="border-color:#2E6F8E;border-top-style:dashed"></span>Retorno (discontinua)</span>
+      <span class="pipe-lg only-techo" hidden>Cada color es una salida del colector, con su número en el colector y en el panel · <b>T</b>: te del tubo de 20</span>
       <span class="pipe-lg only-techo" hidden><span class="lg-bridge"><i></i><b></b><i></i></span>Paneles unidos (mismo circuito)</span>
       <span class="struct-lg" hidden><span class="lg-line" style="border-color:var(--ang)"></span>Angular perimetral</span>
       <span class="struct-lg" hidden><span class="lg-line" style="border-color:var(--prim)"></span>Primario (cada 90 cm)</span>
@@ -1179,7 +1192,7 @@
     // a rounded bay window on the living room to show curved walls
     var sal=rooms[0]; sal.bulge[3]={u:0,v:0.9/4.8}; sal.tx=0.9;
     rooms.forEach(function(r,i){ if(i>0) r.tx+=0.9; });
-    return {id:nid(), name:"Planta baja", rooms:rooms, collectors:[{id:nid(),name:"Colector 1",x:4.8,y:5.35,cap:9},{id:nid(),name:"Colector 2",x:11.5,y:5.35,cap:8}]};
+    return {id:nid(), name:"Planta baja", rooms:rooms, collectors:[{id:nid(),name:"Colector 1",x:3.9,y:5.35,cap:9},{id:nid(),name:"Colector 2",x:11.2,y:5.35,cap:8}]};
   }
   function exampleFloorUF(){
     var f=exampleFloor(), R=f.rooms, M=function(i,o){ R[i].marks=o; };
@@ -1425,13 +1438,13 @@
   }
   function lightKeep(l){ var h=(+l.s||30)/200; return {x0:l.x-h,y0:l.y-h,x1:l.x+h,y1:l.y+h}; }
   function calcRoom(room){
-    var key=JSON.stringify([room.pts,room.bulge,room.active,room.override,room.minPct,room.maxPct,room.lc,room.lp,room.customL||false,room.customL?room.lights||[]:0,S.gMin,S.gMax,S.clear,S.gap,S.strip,S.panels]);
+    var key=JSON.stringify([room.pts,room.bulge,room.active,room.override,room.minPct,room.maxPct,room.lc,room.lp,room.customL||false,room.customL?room.lights||[]:0,room._cko||[],S.gMin,S.gMax,S.clear,S.gap,S.strip,S.panels]);
     if(room._ck===key && room._cr) return room._cr;
     var out=localOutline(room), area=Math.abs(signedArea(out));
     var minPct=room.override?room.minPct:S.gMin, maxPct=room.override?room.maxPct:S.gMax; if(maxPct<minPct) maxPct=minPct;
     var res={area:area,minPct:minPct,maxPct:maxPct,minA:area*minPct/100,maxA:area*maxPct/100,panels:[],lights:[],leds:[],ledLen:0,strips:[],rects:[],groups:[],
       circuits:0,covered:0,pct:0,msgs:[],inactive:!room.active,keep:[],removed:0};
-    var CL=!!room.customL, KO=CL?(room.lights||[]).map(lightKeep):[];
+    var CL=!!room.customL, KO=(CL?(room.lights||[]).map(lightKeep):[]).concat(room._cko||[]);
     var koIn=function(rect){ return KO.map(function(z){ return {x0:z.x0-rect.x,y0:z.y0-rect.y,x1:z.x1-rect.x,y1:z.y1-rect.y}; }); };
     if(room.active && area>0.2){
       var R=rasterRoom(out,S.clear/100), r1=maxRect(R), lc=CL?"ninguna":(room.lc||"ninguna"), lp=CL?"ninguna":(room.lp||"ninguna"), seen={};
@@ -1458,8 +1471,9 @@
         }
         if(!res.panels.length) res.msgs.push({t:"warn",x:"Ningún panel del catálogo cabe dentro del máximo indicado ("+fmt(maxPct)+"%) respetando la distancia a pared. Sube el % máximo o añade un modelo más pequeño."});
       }
-      if(CL){ (room.lights||[]).forEach(function(l,i){ res.lights.push(V(l.x,l.y)); res.keep.push(KO[i]); if(!pointIn(V(l.x,l.y),out)) res.msgs.push({t:"warn",x:"El punto de luz "+(i+1)+" queda fuera de la estancia: revisa sus distancias."}); });
-        if(res.removed) res.msgs.push({t:"ok",x:"Se han quitado "+res.removed+" panel"+(res.removed>1?"es":"")+" que caían encima de los puntos de luz."}); }
+      if(CL) (room.lights||[]).forEach(function(l,i){ res.lights.push(V(l.x,l.y)); res.keep.push(KO[i]); if(!pointIn(V(l.x,l.y),out)) res.msgs.push({t:"warn",x:"El punto de luz "+(i+1)+" queda fuera de la estancia: revisa sus distancias."}); });
+      res.reg=(room._cko||[]).slice();
+      if(res.removed) res.msgs.push({t:"ok",x:"Se han quitado "+res.removed+" panel"+(res.removed>1?"es":"")+" que caían encima de "+(CL&&(room.lights||[]).length?(res.reg.length?"los puntos de luz o del registro del colector":"los puntos de luz"):"el registro del colector")+"."});
       // pair panels of the same model (in layout order); the odd ones left over are paired together
       var pend={}, pairs=[], singles=[];
       res.panels.forEach(function(p,i){ var key=p.tw+"x"+p.th;
@@ -1621,6 +1635,9 @@
     var unas=[], C=fl.collectors;
     C.forEach(function(c){ collStats[c.id]={n:0,pex:0,rooms:[]}; });
     fl.rooms.forEach(function(r){
+      var Wr=worldOutline(r);
+      // a collector in the ceiling needs its access panel: no ceiling panel may go over it
+      r._cko=C.filter(function(c){ return pointIn(V(c.x,c.y),Wr); }).map(function(c){ var q=toL(r,V(c.x,c.y)), hw=Math.max(0.4,collLen(c)/2+0.1), hh=0.3; return {x0:q.x-hw,y0:q.y-hh,x1:q.x+hw,y1:q.y+hh}; });
       var res=calcRoom(r); res.col=null; res.circ=[]; res.pex=0; res.mang=0; res.unions=0; res.why=null; res.outs=[]; res.outlets=res.circuits; res.g20=0; res.pex20=0; res.pex16=0; res.cs=circsOf(r,res);
       res.wout=worldOutline(r); res.ctr=centroid(res.wout); res.st=r.active?structRoom(r,res):null; results[r.id]=res;
     });
@@ -1673,6 +1690,85 @@
   }
 
   // ---------------- piping sketch ----------------
+  // ---- ceiling piping sketch: every run (ida and retorno) has its own port on the collector and its own lane, all square;
+  // it crosses into its room square to the wall and then goes to its panel. Colour = collector outlet (numbered at both ends),
+  // solid = ida, dashed = retorno; a 20 mm outlet runs thicker to its brass tee (T), and the panel tubes go on from there.
+  function pipeLayout(fl){
+    var L={tubes:[],branches:[],bridges:[],ends:[],tees:[],nums:[]}, g=0.065;
+    fl.collectors.forEach(function(col){
+      var st=collStats[col.id]; if(!st || !st.rooms.length) return;
+      var CP=V(col.x,col.y), tubes=[], outlets=[];
+      st.rooms.forEach(function(x){ var r=x.room, res=results[r.id]; if(!res || res.col!==col || !res.outs || !res.outs.length) return;
+        var cs={}; (res.cs||[]).forEach(function(c){ cs[c.i]=c; });
+        var ends=function(c){ var single=c.n<2; return {single:single, na: single?V(c.a.x-0.05,c.a.y):add(c.a,mul(sub(c.b,c.a),0.25)), nb: single?V(c.b.x+0.05,c.b.y):sub(c.b,mul(sub(c.b,c.a),0.25))}; };
+        var rt=[];
+        res.outs.forEach(function(o){ var O={tubes:[],d:o.d}; outlets.push(O);
+          o.ci.forEach(function(i){ var c=cs[i]; if(!c) return; var e=ends(c);
+            if(e.single){ L.ends.push({p:e.na,O:O,cls:"ida"}); L.ends.push({p:e.nb,O:O,cls:"ret"}); } else L.bridges.push([e.na,e.nb]);
+            if(o.d===20){ L.branches.push({pts:[o.a,V(e.na.x,o.a.y),e.na],O:O,cls:"ida"}); L.branches.push({pts:[o.b,V(e.nb.x,o.b.y),e.nb],O:O,cls:"ret"}); }
+            else { rt.push({O:O,cls:"ida",p:e.na,d:16}); rt.push({O:O,cls:"ret",p:e.nb,d:16}); } });
+          if(o.d===20){ rt.push({O:O,cls:"ida",p:o.a,d:20}); rt.push({O:O,cls:"ret",p:o.b,d:20}); L.tees.push({p:o.a,O:O}); L.tees.push({p:o.b,O:O}); } });
+        // where the bundle goes into the room: the nearest point of a straight wall, square to that wall
+        var W=res.wout, inside=pointIn(CP,W), best=null, n=r.pts.length;
+        if(!inside) for(var e=0;e<n;e++){ if(r.bulge[e]) continue; var A=toW(r,r.pts[e]), B=toW(r,r.pts[(e+1)%n]), Lw=len(sub(B,A)); if(Lw<0.4) continue;
+          var u=unit(sub(B,A)), t=Math.max(0,Math.min(Lw,dot(sub(CP,A),u))), Q=add(A,mul(u,t)), d=len(sub(CP,Q));
+          if(!best || d<best.d) best={d:d,A:A,u:u,L:Lw,t:t}; }
+        var m=rt.length;
+        if(best){ var nin=mul(V(best.u.y,-best.u.x),-1), half=(m-1)*g/2; if(!pointIn(add(add(best.A,mul(best.u,best.t)),mul(nin,0.05)),W)) nin=mul(nin,-1);
+          var tc=best.L<2*half+0.3 ? best.L/2 : Math.max(0.15+half,Math.min(best.L-0.15-half,best.t)), E=add(best.A,mul(best.u,tc)), u=best.u;
+          rt.sort(function(a,b){ return dot(a.p,u)-dot(b.p,u); });
+          rt.forEach(function(tb,i){ tb.slot=add(E,mul(u,(i-(m-1)/2)*g)); tb.u=u; tb.nin=nin; tb.E=E; });
+          // inside: the ones that go furthest to each side run nearest the wall, so no two cross
+          [-1,1].forEach(function(sd){ var side=rt.filter(function(tb){ var v=dot(sub(tb.p,tb.slot),u); return sd<0?v<0:v>=0; });
+            side.sort(function(a,b){ return sd*(dot(b.p,u)-dot(a.p,u)); });
+            side.forEach(function(tb,k){ var q1=add(tb.slot,mul(nin,0.18+k*g)), q2=add(q1,mul(u,dot(sub(tb.p,q1),u))); tb.inPts=[tb.slot,q1,q2,tb.p]; }); });
+        } else rt.forEach(function(tb){ tb.slot=null; tb.inPts=null; });
+        rt.forEach(function(tb){ tb.room=r; tubes.push(tb); });
+      });
+      if(!tubes.length) return;
+      // ports along the collector, in the order the runs leave it (left to right), so they fan out without crossing
+      var key=function(tb){ return tb.slot?tb.slot.x:tb.p.x; };
+      tubes.sort(function(a,b){ return key(a)-key(b) || (a.slot&&b.slot?a.slot.y-b.slot.y:0); });
+      var M=tubes.length, gp=Math.min(0.06,0.52/Math.max(1,M-1));
+      tubes.forEach(function(tb,j){ tb.P0=V(col.x+(j-(M-1)/2)*gp,col.y); });
+      // outlet numbers in port order
+      var num=0; tubes.forEach(function(tb){ if(tb.O.n==null) tb.O.n=++num; });
+      // lanes next to the collector: one per run, nested so that runs going the same way never cross
+      [-1,1].forEach(function(sg){ var grp=tubes.filter(function(tb){ var ty=tb.slot?tb.slot.y:tb.p.y; return sg<0?ty<col.y:ty>=col.y; });
+        var right=grp.filter(function(tb){ return key(tb)>=tb.P0.x; }).sort(function(a,b){ return b.P0.x-a.P0.x; }), left=grp.filter(function(tb){ return key(tb)<tb.P0.x; }).sort(function(a,b){ return a.P0.x-b.P0.x; });
+        [right,left].forEach(function(lst){ lst.forEach(function(tb,k){ tb.yl=col.y+sg*(0.16+k*g); }); }); });
+      var xa={};
+      tubes.forEach(function(tb){ var P0=tb.P0, pts=[P0,V(P0.x,tb.yl)];
+        if(!tb.slot){ pts.push(V(tb.p.x,tb.yl),tb.p); }
+        else if(Math.abs(tb.u.x)>=Math.abs(tb.u.y)){ pts.push(V(tb.slot.x,tb.yl)); pts=pts.concat(tb.inPts); }
+        else { var rk=tb.room.id+"_"+(tb.nin.x>0?1:0); xa[rk]=(xa[rk]||0)+1; var x0=tb.slot.x-tb.nin.x*(0.12+(xa[rk]-1)*g);
+          pts.push(V(x0,tb.yl),V(x0,tb.slot.y)); pts=pts.concat(tb.inPts); }
+        // drop repeated points and straight-through ones
+        var q=[]; pts.forEach(function(p){ if(!q.length || len(sub(p,q[q.length-1]))>1e-6) q.push(p); });
+        tb.pts=q; L.tubes.push(tb); });
+      tubes.forEach(function(tb){ if(tb.cls==="ida") L.nums.push({p:tb.P0,O:tb.O,at:"port",sg:tb.yl<col.y?1:-1,cid:col.id}); });
+    });
+    L.tubes.forEach(function(tb){ tb.color=CC[((tb.O.n||1)-1)%CC.length]; });
+    L.tubes.forEach(function(tb){ if(tb.cls==="ida") L.nums.push({p:tb.p,O:tb.O,at:"end"}); });
+    return L;
+  }
+  function pipesSvg(fl){
+    var L=pipeLayout(fl), o="", col=function(O){ return CC[((O.n||1)-1)%CC.length]; };
+    L.tubes.forEach(function(t){ o+='<polyline class="p-tcase'+(t.d===20?' w':'')+'" points="'+ptsStr(t.pts)+'"/>'; });
+    L.branches.forEach(function(b){ o+='<polyline class="p-tcase" style="stroke-width:.04" points="'+ptsStr(b.pts)+'"/>'; });
+    L.tubes.forEach(function(t){ o+='<polyline class="p-tube '+t.cls+(t.d===20?' w':'')+'" style="stroke:'+t.color+'" points="'+ptsStr(t.pts)+'"><title>Salida '+t.O.n+' · '+(t.cls==="ida"?"ida":"retorno")+(t.d===20?' · tubo 20':'')+' · '+esc(t.room.name)+'</title></polyline>'; });
+    L.branches.forEach(function(b){ o+='<polyline class="p-tbr '+b.cls+'" style="stroke:'+col(b.O)+'" points="'+ptsStr(b.pts)+'"/>'; });
+    L.bridges.forEach(function(b){ o+='<line class="p-bridge" x1="'+f3(b[0].x)+'" y1="'+f3(b[0].y)+'" x2="'+f3(b[1].x)+'" y2="'+f3(b[1].y)+'"/><circle class="p-node" cx="'+f3(b[0].x)+'" cy="'+f3(b[0].y)+'" r="0.07"/><circle class="p-node" cx="'+f3(b[1].x)+'" cy="'+f3(b[1].y)+'" r="0.07"/>'; });
+    L.ends.forEach(function(e){ o+='<circle class="p-node" style="stroke:'+col(e.O)+'" cx="'+f3(e.p.x)+'" cy="'+f3(e.p.y)+'" r="0.05"/>'; });
+    L.tees.forEach(function(t){ o+='<rect class="p-tee" x="'+f3(t.p.x-0.06)+'" y="'+f3(t.p.y-0.06)+'" width="0.12" height="0.12" rx="0.02"/><text class="p-teet" x="'+f3(t.p.x)+'" y="'+f3(t.p.y+0.027)+'" text-anchor="middle">T</text>'; });
+    // outlet numbers at the collector: one row on the side the tubes do not take, spread so they do not overlap
+    var grp={}; L.nums.forEach(function(nm){ if(nm.at!=="port") return; var k=nm.cid+"_"+nm.sg; (grp[k]=grp[k]||[]).push(nm); });
+    Object.keys(grp).forEach(function(k){ var gl=grp[k].sort(function(a,b){ return a.p.x-b.p.x; }), sp=0.15, w=(gl.length-1)*sp, cx=gl.reduce(function(t,n){ return t+n.p.x; },0)/gl.length;
+      gl.forEach(function(n,i){ n.lx=cx-w/2+i*sp; }); });
+    L.nums.forEach(function(nm){ var c=col(nm.O), p=nm.at==="port"?V(nm.lx,nm.p.y+(nm.sg>0?0.52:-0.2)):V(nm.p.x+0.11,nm.p.y-0.11);
+      o+='<circle class="p-onum" style="fill:'+c+'" cx="'+f3(p.x)+'" cy="'+f3(p.y)+'" r="0.065"/><text class="p-onumt" x="'+f3(p.x)+'" y="'+f3(p.y+0.03)+'" text-anchor="middle">'+nm.O.n+'</text>'; });
+    return o;
+  }
   function routeRoom(r,res){
     var col=res&&res.col; if(!col||!res.circ.length) return null;
     var st=collStats[col.id], k=0, n=st.rooms.length;
@@ -2596,6 +2692,7 @@
     });
     res.leds.forEach(function(ln){ var a=toW(r,ln[0]), b=toW(r,ln[1]); o+='<line class="p-led" x1="'+f3(a.x)+'" y1="'+f3(a.y)+'" x2="'+f3(b.x)+'" y2="'+f3(b.y)+'"/>'; });
     (res.keep||[]).forEach(function(z){ o+='<polygon class="p-keep" points="'+ptsStr(rectPoly(r,z.x0,z.y0,z.x1-z.x0,z.y1-z.y0))+'"/>'; });
+    (res.reg||[]).forEach(function(z){ o+='<polygon class="p-reg" points="'+ptsStr(rectPoly(r,z.x0,z.y0,z.x1-z.x0,z.y1-z.y0))+'"><title>Registro del colector: sin paneles</title></polygon>'; });
     res.lights.forEach(function(l){ var w=toW(r,l); o+='<circle class="p-light" cx="'+f3(w.x)+'" cy="'+f3(w.y)+'" r="0.07"/>'; });
     if(S.showStruct && res.st) o+=structSvg(r,res.st,false,false);
     return o;
@@ -2640,14 +2737,7 @@
         o+='<polyline class="p-mk hov" points="'+ptsStr(edgeSamples(hr.pts[he],hr.pts[(he+1)%hn],hr.bulge[he]||0,16).map(function(p){ return toW(hr,p); }))+'"/>'; }
       rooms.forEach(function(r){ results[r.id].circ.forEach(function(c){ o+=ufCircSvg(c,function(p){ return p; }); }); });
     }
-    else if(S.showPipes){
-      rooms.forEach(function(r){
-        var rt=routeRoom(r,results[r.id]); if(!rt) return;
-        o+=pipeSvg(rt);
-        if(rt.E){ var tx=rt.n+" circ.", pw=tx.length*0.09+0.12;
-          pills+='<rect class="p-pill" x="'+f3(rt.E.x-pw/2)+'" y="'+f3(rt.E.y-0.11)+'" width="'+f3(pw)+'" height="0.22" rx="0.1"/><text class="p-pilltext" x="'+f3(rt.E.x)+'" y="'+f3(rt.E.y+0.05)+'" text-anchor="middle">'+tx+'</text>'; }
-      });
-    }
+    else if(S.showPipes){ o+=pipesSvg(fl); }
     allUnassigned.forEach(function(u){ if(u.floor!==fl) return; o+='<path class="p-unas" d="'+pathD(results[u.room.id].wout)+'"/>'; });
     if(S.mode==="suelo") rooms.forEach(function(r){ var rr=results[r.id]; if(rr.routeFail && rr.col) o+='<path class="p-unas" d="'+pathD(rr.wout)+'"><title>'+esc(r.name)+': faltan circuitos por falta de paso</title></path>'; });
     fl.collectors.forEach(function(c){
@@ -2719,6 +2809,7 @@
       o+='<text class="p-out20t" font-size="'+f3(f)+'" stroke-width="'+f3(f*0.3)+'" x="'+f3(x0+0.02)+'" y="'+f3(y0-m-0.05)+'">S'+(k+1)+' · 20 mm</text>'; });
     res.leds.forEach(function(ln){ o+='<line class="p-led" x1="'+f3(ln[0].x)+'" y1="'+f3(ln[0].y)+'" x2="'+f3(ln[1].x)+'" y2="'+f3(ln[1].y)+'"/>'; });
     (res.keep||[]).forEach(function(z){ o+='<rect class="p-keep" x="'+f3(z.x0)+'" y="'+f3(z.y0)+'" width="'+f3(z.x1-z.x0)+'" height="'+f3(z.y1-z.y0)+'"/>'; });
+    (res.reg||[]).forEach(function(z){ o+='<rect class="p-reg" x="'+f3(z.x0)+'" y="'+f3(z.y0)+'" width="'+f3(z.x1-z.x0)+'" height="'+f3(z.y1-z.y0)+'"/>'; });
     res.lights.forEach(function(l){ o+='<circle class="p-light" cx="'+f3(l.x)+'" cy="'+f3(l.y)+'" r="0.075"/>'; });
     if(room.customL) (room.lights||[]).forEach(function(l,i){ var P=V(l.x,l.y);
       lightWalls(room,l).forEach(function(e){ var F=lightFoot(room,l,e), d=lightDist(room,l,e), m=mul(add(P,F),0.5), vert=Math.abs(F.x-P.x)<Math.abs(F.y-P.y), f=fs*0.8;
