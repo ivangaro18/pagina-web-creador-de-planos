@@ -266,6 +266,21 @@
   svg.struct .p-panel{opacity:.45;}
   .p-led{stroke:var(--light);stroke-width:.06;stroke-linecap:round;fill:none;}
   .p-strip{fill:var(--light);opacity:.16;}
+  .p-keep{fill:rgba(242,181,58,.18);stroke:#B9770E;stroke-width:.012;stroke-dasharray:.04 .03;}
+  .p-ldim{stroke:#B9770E;stroke-width:.012;stroke-dasharray:.05 .035;}
+  .p-ldimt{font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600;fill:#7A4F00;paint-order:stroke;stroke:#fff;stroke-linejoin:round;pointer-events:none;}
+  .p-lnum{font-family:"IBM Plex Sans",system-ui,sans-serif;font-weight:700;fill:#3B2600;pointer-events:none;}
+  .detail-plan.adding svg{cursor:crosshair;}
+  .light-box{margin:4px 0 12px;}
+  .light-tbl{width:100%;border-collapse:collapse;font-size:.8rem;margin:6px 0;}
+  .light-tbl th{font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:4px 4px;}
+  .light-tbl td{padding:4px 4px;border-top:1px solid var(--line);vertical-align:middle;}
+  .light-tbl input{width:58px;padding:5px 6px;}
+  .light-tbl .lw{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
+  .light-tbl .lw .letter{transform:scale(.85);}
+  .light-tbl .ln{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#F2B53A;color:#3B2600;font-weight:700;font-size:.72rem;}
+  .light-tbl .ldel{border:none;background:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 6px;}
+  .light-tbl .ldel:hover{color:var(--warn);}
   .p-usable{fill:none;stroke:var(--muted);stroke-width:.012;stroke-dasharray:.06 .05;}
   .p-tag{fill:var(--room-fill);opacity:.72;pointer-events:none;}
   .p-label{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:.24px;font-weight:600;fill:var(--ink);pointer-events:none;}
@@ -1272,8 +1287,10 @@
     return best;
   }
   // lc: light in the central strip, lp: light in the perimeter band — each "ninguna" | "puntos" | "tira"
-  function gridLayout(W,L,minA,maxA,lc,lp){
-    var g=S.gap/1000, s=S.strip/100, res={panels:[],lights:[],lines:[],strip:null,choice:null,area:0,msgs:[],fail:false};
+  function gridLayout(W,L,minA,maxA,lc,lp,ko){
+    var g=S.gap/1000, s=S.strip/100, res={panels:[],lights:[],lines:[],strip:null,choice:null,area:0,msgs:[],fail:false,removed:0};
+    ko=(ko||[]).filter(function(z){ return z.x1>0 && z.y1>0 && z.x0<W && z.y0<L; });
+    var koHit=function(x0,y0,x1,y1){ for(var q=0;q<ko.length;q++){ var z=ko[q]; if(x0<z.x1-1e-6 && x1>z.x0+1e-6 && y0<z.y1-1e-6 && y1>z.y0+1e-6) return true; } return false; };
     var wantC=lc&&lc!=="ninguna", wantP=lp&&lp!=="ninguna";
     var cands=[], stripOpts= wantC ? ["v","h","none"] : ["none"], vars=variants();
     vars.forEach(function(v){ stripOpts.forEach(function(so){
@@ -1292,6 +1309,15 @@
       }
     }); });
     if(!cands.length){ res.fail=true; return res; }
+    if(ko.length){
+      var badAt=function(k,bx,by){ var bad=0; for(var ci=0;ci<k.c;ci++){ var x=bx+ci*(k.v.w+g)+(k.so==="v"&&ci>=k.c/2?s-g:0);
+          for(var ri=0;ri<k.r;ri++){ var y=by+ri*(k.v.h+g)+(k.so==="h"&&ri>=k.r/2?s-g:0); if(koHit(x,y,x+k.v.w,y+k.v.h)) bad++; } } return bad; };
+      cands.forEach(function(k){ var sx=W-k.bw, sy=L-k.bh, best={bad:badAt(k,k.bx,k.by),bx:k.bx,by:k.by,d:0};
+        if(best.bad){ var nx=Math.min(8,Math.floor(sx/0.05)), ny=Math.min(8,Math.floor(sy/0.05));
+          for(var a=0;a<=nx;a++) for(var b2=0;b2<=ny;b2++){ var bx=nx?sx*a/nx:sx/2, by=ny?sy*b2/ny:sy/2, bad=badAt(k,bx,by), d=Math.abs(bx-sx/2)+Math.abs(by-sy/2);
+            if(bad<best.bad || (bad===best.bad && d<best.d)) best={bad:bad,bx:bx,by:by,d:d}; } }
+        k.bx=best.bx; k.by=best.by; k.bad=best.bad; k.a=(k.n-best.bad)*k.v.a; });
+    }
     var wl=cands.filter(function(k){return k.lightOk;}), pool0=wl.length?wl:cands;
     var fe=pool0.filter(function(k){return k.a>=minA-EPS;}), pool=fe.length?fe:pool0;
     var bestA=Math.max.apply(null,pool.map(function(k){return k.a;}));
@@ -1301,6 +1327,7 @@
       if(p.mp.odd!==q.mp.odd) return p.mp.odd-q.mp.odd;
       if(wantC){ var sp=p.so==="none"?1:0, sq=q.so==="none"?1:0; if(sp!==sq) return sp-sq; }
       if(Math.abs(p.a-q.a)>EPS) return q.a-p.a;
+      if((p.bad||0)!==(q.bad||0)) return (p.bad||0)-(q.bad||0);
       if(p.mp.n!==q.mp.n) return p.mp.n-q.mp.n;
       return p.aspect-q.aspect;
     });
@@ -1315,6 +1342,14 @@
       if(oi%2) line.reverse();
       res.panels=res.panels.concat(line);
     }
+    if(ko.length){ var kept=[], v0=k.v;
+      res.panels.forEach(function(pn){ if(!koHit(pn.x,pn.y,pn.x+pn.w,pn.y+pn.h)){ kept.push(pn); return; }
+        // a long panel over a light point: keep the cells of it that are clear, as single base panels
+        var mx=Math.max(1,Math.round(pn.w/v0.w)), my=Math.max(1,Math.round(pn.h/v0.h)), kc=0;
+        if(mx*my>1) for(var i=0;i<mx;i++) for(var j=0;j<my;j++){ var x=pn.x+i*(v0.w+g), y=pn.y+j*(v0.h+g);
+          if(!koHit(x,y,x+v0.w,y+v0.h)){ kept.push({x:x,y:y,w:v0.w,h:v0.h,typeId:v0.typeId,name:v0.name,tw:v0.tw,th:v0.th}); kc++; } }
+        if(!kc) res.removed++; });
+      res.panels=kept; }
     res.area=res.panels.reduce(function(t,p){ return t+p.w*p.h; },0);
     function band(type){ if(type==="tira") res.lines=res.lines.concat(bandLines(W,L,k.bx,k.by)); else res.lights=res.lights.concat(lightsInBands(W,L,k.bx,k.by)); }
     if(wantC){
@@ -1362,38 +1397,66 @@
     if(!best) return null;
     return {x:R.x0+best.c0*R.res, y:R.y0+best.r0*R.res, w:(best.c1-best.c0+1)*R.res, h:(best.r1-best.r0+1)*R.res, c0:best.c0,c1:best.c1,r0:best.r0,r1:best.r1};
   }
+  // ---------------- custom light points (ceiling) ----------------
+  // each point keeps the two walls it is measured from (the nearest one and the nearest one that is not parallel to it)
+  function lightRefs(room,l){
+    var n=room.pts.length, c=[], P=V(l.x,l.y);
+    for(var e=0;e<n;e++){ if(room.bulge[e]) continue; var A=room.pts[e], B=room.pts[(e+1)%n]; if(len(sub(B,A))<0.05) continue; c.push({e:e,d:segDist(P,A,B),u:unit(sub(B,A))}); }
+    c.sort(function(a,b){ return a.d-b.d; }); if(!c.length) return [];
+    var a=c[0], b=c.filter(function(x){ return Math.abs(a.u.x*x.u.y-a.u.y*x.u.x)>0.5; })[0];
+    return b ? [a.e,b.e] : [a.e];
+  }
+  function lightWalls(room,l){
+    var n=room.pts.length, ok=function(e){ return e!=null && e<n && !room.bulge[e]; };
+    if(!(ok(l.ea) && (l.eb==null || ok(l.eb))) || l.ea===l.eb){ var r=lightRefs(room,l); l.ea=r[0]; l.eb=r.length>1?r[1]:null; }
+    return [l.ea,l.eb].filter(function(e){ return e!=null; });
+  }
+  function wallIn(room,e){ var n=room.pts.length, A=room.pts[e], B=room.pts[(e+1)%n], u=unit(sub(B,A)); return {A:A,B:B,u:u,nin:mul(outN(A,B),-1)}; }
+  function lightDist(room,l,e){ var w=wallIn(room,e); return dot(sub(V(l.x,l.y),w.A),w.nin); }
+  function lightFoot(room,l,e){ var w=wallIn(room,e), d=lightDist(room,l,e); return sub(V(l.x,l.y),mul(w.nin,d)); }
+  // move the point so it is d metres from wall e, sliding along the other wall (so that distance does not change)
+  function lightSetDist(room,l,e,d){
+    var ws=lightWalls(room,l), w=wallIn(room,e), dd=d-lightDist(room,l,e), o=ws.filter(function(x){ return x!==e; })[0], mv=mul(w.nin,dd);
+    if(o!=null){ var u=wallIn(room,o).u, k=dot(u,w.nin); if(Math.abs(k)>0.2) mv=mul(u,dd/k); }
+    l.x=Math.round((l.x+mv.x)*1000)/1000; l.y=Math.round((l.y+mv.y)*1000)/1000;
+  }
+  function lightKeep(l){ var h=(+l.s||30)/200; return {x0:l.x-h,y0:l.y-h,x1:l.x+h,y1:l.y+h}; }
   function calcRoom(room){
-    var key=JSON.stringify([room.pts,room.bulge,room.active,room.override,room.minPct,room.maxPct,room.lc,room.lp,S.gMin,S.gMax,S.clear,S.gap,S.strip,S.panels]);
+    var key=JSON.stringify([room.pts,room.bulge,room.active,room.override,room.minPct,room.maxPct,room.lc,room.lp,room.customL||false,room.customL?room.lights||[]:0,S.gMin,S.gMax,S.clear,S.gap,S.strip,S.panels]);
     if(room._ck===key && room._cr) return room._cr;
     var out=localOutline(room), area=Math.abs(signedArea(out));
     var minPct=room.override?room.minPct:S.gMin, maxPct=room.override?room.maxPct:S.gMax; if(maxPct<minPct) maxPct=minPct;
     var res={area:area,minPct:minPct,maxPct:maxPct,minA:area*minPct/100,maxA:area*maxPct/100,panels:[],lights:[],leds:[],ledLen:0,strips:[],rects:[],groups:[],
-      circuits:0,covered:0,pct:0,msgs:[],inactive:!room.active};
+      circuits:0,covered:0,pct:0,msgs:[],inactive:!room.active,keep:[],removed:0};
+    var CL=!!room.customL, KO=CL?(room.lights||[]).map(lightKeep):[];
+    var koIn=function(rect){ return KO.map(function(z){ return {x0:z.x0-rect.x,y0:z.y0-rect.y,x1:z.x1-rect.x,y1:z.y1-rect.y}; }); };
     if(room.active && area>0.2){
-      var R=rasterRoom(out,S.clear/100), r1=maxRect(R), lc=room.lc||"ninguna", lp=room.lp||"ninguna", seen={};
+      var R=rasterRoom(out,S.clear/100), r1=maxRect(R), lc=CL?"ninguna":(room.lc||"ninguna"), lp=CL?"ninguna":(room.lp||"ninguna"), seen={};
       var push=function(rect,gl){
         gl.panels.forEach(function(p){ p.x+=rect.x; p.y+=rect.y; res.panels.push(p); });
         gl.lights.forEach(function(l){ res.lights.push(V(l.x+rect.x,l.y+rect.y)); });
         gl.lines.forEach(function(ln){ res.leds.push([V(ln[0].x+rect.x,ln[0].y+rect.y),V(ln[1].x+rect.x,ln[1].y+rect.y)]); res.ledLen+=len(sub(ln[1],ln[0])); });
         if(gl.strip) res.strips.push({x:gl.strip.x+rect.x,y:gl.strip.y+rect.y,w:gl.strip.w,h:gl.strip.h});
         gl.msgs.forEach(function(m){ if(!seen[m.x]){ seen[m.x]=1; res.msgs.push(m); } });
-        res.rects.push(rect); res.groups.push({rect:rect,choice:gl.choice}); res.covered+=gl.area;
+        res.rects.push(rect); res.groups.push({rect:rect,choice:gl.choice}); res.covered+=gl.area; res.removed+=gl.removed||0;
       };
       if(!r1 || r1.w<0.3 || r1.h<0.3){ res.msgs.push({t:"warn",x:"La estancia es demasiado pequeña para respetar la distancia a pared."}); }
       else {
-        var g1=gridLayout(r1.w,r1.h,res.minA,res.maxA,lc,lp);
+        var g1=gridLayout(r1.w,r1.h,res.minA,res.maxA,lc,lp,koIn(r1));
         if(!g1.fail) push(r1,g1);
         if(res.covered<res.minA-EPS){
           var m=Math.round(0.15/R.res);
           for(var j=r1.r0-m;j<=r1.r1+m;j++) for(var i=r1.c0-m;i<=r1.c1+m;i++){ if(i>=0&&j>=0&&i<R.nx&&j<R.ny) R.g[j*R.nx+i]=0; }
           var r2=maxRect(R);
           if(r2 && r2.w>=0.6 && r2.h>=0.6){
-            var g2=gridLayout(r2.w,r2.h,Math.max(0,res.minA-res.covered),res.maxA-res.covered,lc,lp);
+            var g2=gridLayout(r2.w,r2.h,Math.max(0,res.minA-res.covered),res.maxA-res.covered,lc,lp,koIn(r2));
             if(!g2.fail && g2.area>0) push(r2,g2);
           }
         }
         if(!res.panels.length) res.msgs.push({t:"warn",x:"Ningún panel del catálogo cabe dentro del máximo indicado ("+fmt(maxPct)+"%) respetando la distancia a pared. Sube el % máximo o añade un modelo más pequeño."});
       }
+      if(CL){ (room.lights||[]).forEach(function(l,i){ res.lights.push(V(l.x,l.y)); res.keep.push(KO[i]); if(!pointIn(V(l.x,l.y),out)) res.msgs.push({t:"warn",x:"El punto de luz "+(i+1)+" queda fuera de la estancia: revisa sus distancias."}); });
+        if(res.removed) res.msgs.push({t:"ok",x:"Se han quitado "+res.removed+" panel"+(res.removed>1?"es":"")+" que caían encima de los puntos de luz."}); }
       // pair panels of the same model (in layout order); the odd ones left over are paired together
       var pend={}, pairs=[], singles=[];
       res.panels.forEach(function(p,i){ var key=p.tw+"x"+p.th;
@@ -2507,6 +2570,7 @@
       o+='<polygon class="p-panel"'+fill+' points="'+ptsStr(rectPoly(r,p.x,p.y,p.w,p.h))+'"><title>'+esc(p.name)+' · circuito '+(p.circuit+1)+'</title></polygon>';
     });
     res.leds.forEach(function(ln){ var a=toW(r,ln[0]), b=toW(r,ln[1]); o+='<line class="p-led" x1="'+f3(a.x)+'" y1="'+f3(a.y)+'" x2="'+f3(b.x)+'" y2="'+f3(b.y)+'"/>'; });
+    (res.keep||[]).forEach(function(z){ o+='<polygon class="p-keep" points="'+ptsStr(rectPoly(r,z.x0,z.y0,z.x1-z.x0,z.y1-z.y0))+'"/>'; });
     res.lights.forEach(function(l){ var w=toW(r,l); o+='<circle class="p-light" cx="'+f3(w.x)+'" cy="'+f3(w.y)+'" r="0.07"/>'; });
     if(S.showStruct && res.st) o+=structSvg(r,res.st,false,false);
     return o;
@@ -2623,7 +2687,13 @@
       o+='<text class="p-ctext" font-size="'+f3(f)+'" x="'+f3(p.x+p.w/2)+'" y="'+f3(p.y+p.h/2+f*0.35)+'" text-anchor="middle">C'+(p.circuit+1)+'</text>';
     });
     res.leds.forEach(function(ln){ o+='<line class="p-led" x1="'+f3(ln[0].x)+'" y1="'+f3(ln[0].y)+'" x2="'+f3(ln[1].x)+'" y2="'+f3(ln[1].y)+'"/>'; });
+    (res.keep||[]).forEach(function(z){ o+='<rect class="p-keep" x="'+f3(z.x0)+'" y="'+f3(z.y0)+'" width="'+f3(z.x1-z.x0)+'" height="'+f3(z.y1-z.y0)+'"/>'; });
     res.lights.forEach(function(l){ o+='<circle class="p-light" cx="'+f3(l.x)+'" cy="'+f3(l.y)+'" r="0.075"/>'; });
+    if(room.customL) (room.lights||[]).forEach(function(l,i){ var P=V(l.x,l.y);
+      lightWalls(room,l).forEach(function(e){ var F=lightFoot(room,l,e), d=lightDist(room,l,e), m=mul(add(P,F),0.5), vert=Math.abs(F.x-P.x)<Math.abs(F.y-P.y), f=fs*0.8;
+        o+='<line class="p-ldim" x1="'+f3(P.x)+'" y1="'+f3(P.y)+'" x2="'+f3(F.x)+'" y2="'+f3(F.y)+'"/>';
+        o+='<text class="p-ldimt" font-size="'+f3(f)+'" stroke-width="'+f3(f*0.3)+'" x="'+f3(m.x+(vert?f*0.4:0))+'" y="'+f3(m.y+(vert?f*0.35:-f*0.35))+'" text-anchor="'+(vert?'start':'middle')+'">'+fmt(d*100)+'</text>'; });
+      o+='<text class="p-lnum" font-size="'+f3(fs*0.75)+'" x="'+f3(P.x)+'" y="'+f3(P.y-0.12)+'" text-anchor="middle">'+(i+1)+'</text>'; });
     if(S.showStruct && res.st) o+=structSvg(room,res.st,true,true);
     o+=sideLabelsSvg(room,fs);
     o+='</svg>';
@@ -2633,7 +2703,7 @@
     var room=S.rooms.filter(function(r){return r.id===S.sel;})[0];
     var out=$("detailOut"), box=$("detailSvg"); if(!room||!out) return;
     var res=results[room.id];
-    box.innerHTML=renderDetailSvg(room,res);
+    box.innerHTML=renderDetailSvg(room,res); box.classList.toggle("adding",LADD===room.id);
     var h="";
     if(S.mode==="suelo"){ out.innerHTML=ufDetailHtml(room,res)+thDetailHtml(room); var oc=$("obstClear"); if(oc) oc.addEventListener("click",function(){ room.obst=[]; update(false); }); return; }
     if(!room.active) h+='<div class="msg ok">Estancia marcada sin paneles. No suma circuitos.</div>';
@@ -2647,6 +2717,7 @@
       h+='<p class="layout-line">'+(res.groups.length>1?'Zona '+(i+1)+': ':'Distribución: ')+(k.mp && k.mp.n!==k.c*k.r ? '<b>'+Object.keys(k.mp.tc).map(function(t){ return k.mp.tc[t]+' paneles de '+t.replace('x','×'); }).join(' + ')+'</b>' : '<b>'+k.c+' × '+k.r+' '+esc(k.v.name)+'</b>'+(k.v.rot?' (girados)':''))+', bloque de '+fmt(k.bw*100)+' × '+fmt(k.bh*100)+' cm centrado en la zona libre; '+lt+'.</p>'; });
     var il=[], nm={puntos:"puntos de luz",tira:"tira LED"};
     if(room.lc&&room.lc!=="ninguna") il.push("centro con "+nm[room.lc]); if(room.lp&&room.lp!=="ninguna") il.push("perímetro con "+nm[room.lp]);
+    if(room.customL) il=["personalizada"];
     if(il.length) h+='<p class="layout-line">Iluminación: '+il.join(" y ")+' · <b>'+res.lights.length+' puntos</b>'+(res.leds.length?' · <b>'+fmt(res.ledLen,2)+' m de tira LED</b>':'')+'.</p>';
     if(res.st){ var sb=barsFor(res.st.secLens,S.bar), pb=barsFor(res.st.primLens,S.bar), ab=barsFor(res.st.ang,S.bar);
       h+='<p class="layout-line">Estructura'+(res.st.rot?' (rotada)':'')+': <b>'+fmt(sb.total,1)+' m de TC</b> ('+sb.bars+' barras) · <b>'+fmt(pb.total,1)+' m de primario</b> ('+pb.bars+') · <b>'+fmt(ab.total,1)+' m de angular</b> ('+ab.bars+') · <b>'+res.st.boards+' placas</b> para '+fmt(res.st.need,2)+' m² de techo sin paneles.'+(S.showStruct?'':' Activa «Estructura de pladur» para verla dibujada.')+'</p>'; }
@@ -2673,6 +2744,7 @@
   }
   function buildEditor(){
     var card=$("detailCard"), room=S.rooms.filter(function(r){return r.id===S.sel;})[0];
+    if(LADD!=null && (!room || room.id!==LADD || S.mode!=="techo")) lightAddStop();
     if(!room){ card.innerHTML='<p class="muted" style="margin:0;">'+(S.rooms.length?'Pulsa una estancia del plano para ver su detalle y editarla.':'Aquí verás el detalle de cada estancia.')+'</p>'; return; }
     var n=room.pts.length, rows="";
     for(var i=0;i<n;i++){
@@ -2693,6 +2765,7 @@
         (S.mode==="suelo" ? '<div class="field"><label class="lbl" for="rSep">Separación del tubo</label><select id="rSep"><option value="0">General ('+clampSep(S.uf.sep)+' cm)</option>'+[5,10,15,20,25,30].map(function(v){ return '<option value="'+v+'">'+v+' cm</option>'; }).join("")+'</select></div>' : '')+
         (S.mode==="suelo"?'':'<span class="section-title" style="margin:2px 0 6px;">Iluminación</span><div class="grid2"><div class="field"><label class="lbl" for="rLc">Centro (entre paneles)</label><select id="rLc"><option value="ninguna">Sin luz</option><option value="puntos">Puntos de luz</option><option value="tira">Tira LED</option></select></div>'+
         '<div class="field"><label class="lbl" for="rLp">Perímetro (junto a paredes)</label><select id="rLp"><option value="ninguna">Sin luz</option><option value="puntos">Puntos de luz</option><option value="tira">Tira LED</option></select></div></div>'+
+        '<label class="check"><input type="checkbox" id="rCustL"> Iluminación personalizada</label><div class="light-box" id="lightBox"></div>'+
         '<label class="check"><input type="checkbox" id="rOver"> Rango de cobertura propio</label>'+
         '<div class="grid2" id="overFields"><div class="field"><label class="lbl" for="rMin">% mínimo</label><input type="number" id="rMin" min="0" max="100"></div><div class="field"><label class="lbl" for="rMax">% máximo</label><input type="number" id="rMax" min="0" max="100"></div></div>'+
         '<span class="section-title" style="margin:6px 0 6px;">Estructura de techo</span><div class="btn-row" style="margin-bottom:10px;"><button class="btn ghost small" id="rRotate">Rotar estructura</button><span class="note" style="margin:0;" id="rRotInfo"></span></div>')+
@@ -2721,11 +2794,50 @@
     $("rRotInfo").textContent=room.structRot?"Secundarios cruzados a los paneles":"Secundarios a lo largo de los paneles";
     $("rRotate").addEventListener("click",function(){ room.structRot=!room.structRot; $("rRotInfo").textContent=room.structRot?"Secundarios cruzados a los paneles":"Secundarios a lo largo de los paneles"; if(!S.showStruct){ S.showStruct=true; $("showStruct").checked=true; syncStructLegend(); } update(false); });
     $("rLc").value=room.lc||"ninguna"; $("rLp").value=room.lp||"ninguna";
+    var lgrid=$("rLc").closest(".grid2"); lgrid.hidden=!!room.customL; $("rCustL").checked=!!room.customL; renderLightBox(room);
+    $("rCustL").addEventListener("change",function(e){ room.customL=e.target.checked; room.lights=room.lights||[]; lgrid.hidden=room.customL; if(!room.customL) lightAddStop(); renderLightBox(room); update(false);
+      if(room.customL && !room.lights.length) lightAddStart(room); });
     $("rLc").addEventListener("change",function(e){ room.lc=e.target.value; update(false); });
     $("rLp").addEventListener("change",function(e){ room.lp=e.target.value; update(false); });
     $("rOver").addEventListener("change",function(e){ room.override=e.target.checked; if(room.override){ room.minPct=S.gMin; room.maxPct=S.gMax; $("rMin").value=room.minPct; $("rMax").value=room.maxPct; } $("overFields").hidden=!room.override; update(false); });
     [["rMin","minPct"],["rMax","maxPct"]].forEach(function(p){ $(p[0]).addEventListener("input",function(e){ var v=parseFloat(e.target.value); if(isFinite(v)){ room[p[1]]=v; update(false);} }); });
   }
+  // ---- custom light points: table in the room editor, points placed with a click on the room detail
+  var LADD=null;
+  function renderLightBox(room){
+    var box=$("lightBox"); if(!box) return;
+    if(!room.customL){ box.innerHTML=""; return; }
+    var L=room.lights||[], h='<div class="btn-row" style="margin:2px 0 4px;"><button class="btn small'+(LADD===room.id?'':' ghost')+'" type="button" id="lightAdd">'+(LADD===room.id?'Terminar de añadir':'+ Añadir punto de luz')+'</button></div>';
+    if(!L.length) h+='<p class="note" style="margin:4px 0 0;">Pulsa «Añadir punto de luz» y luego, en el plano de la estancia, el sitio aproximado del punto. Después ajusta las distancias a las paredes.</p>';
+    else { h+='<table class="light-tbl"><thead><tr><th></th><th>Distancia a pared (cm)</th><th>Hueco (cm)</th><th></th></tr></thead><tbody>';
+      L.forEach(function(l,i){ var ws=lightWalls(room,l);
+        h+='<tr><td><span class="ln">'+(i+1)+'</span></td><td>'+ws.map(function(e){ return '<span class="lw"><span class="letter">'+LETTER(e)+'</span><input type="number" step="1" min="0" data-ld="'+i+'_'+e+'" value="'+Math.round(lightDist(room,l,e)*100)+'" aria-label="Distancia del punto '+(i+1)+' a la pared '+LETTER(e)+' en cm"></span>'; }).join(' ')+'</td>'+
+          '<td><span class="lw"><input type="number" step="1" min="5" max="200" data-ls="'+i+'" value="'+(+l.s||30)+'" aria-label="Lado del hueco sin paneles del punto '+(i+1)+' en cm"></span></td>'+
+          '<td><button class="ldel" type="button" data-ldel="'+i+'" aria-label="Quitar el punto de luz '+(i+1)+'">✕</button></td></tr>'; });
+      h+='</tbody></table><p class="note" style="margin:0;">Cada distancia es desde el centro del punto hasta la pared indicada. El hueco es el cuadrado centrado en el punto (lado en cm, 30 = 30 × 30 cm) donde no se coloca ningún panel.</p>'; }
+    box.innerHTML=h;
+    $("lightAdd").addEventListener("click",function(){ if(LADD===room.id) lightAddStop(); else lightAddStart(room); });
+    box.querySelectorAll("[data-ld]").forEach(function(inp){ inp.addEventListener("change",function(){ var a=inp.getAttribute("data-ld").split("_"), l=L[+a[0]], v=parseFloat(String(inp.value).replace(",","."));
+      if(!l || !isFinite(v) || v<0) return; lightSetDist(room,l,+a[1],v/100); update(false); renderLightBox(room); }); });
+    box.querySelectorAll("[data-ls]").forEach(function(inp){ inp.addEventListener("change",function(){ var l=L[+inp.getAttribute("data-ls")], v=parseFloat(String(inp.value).replace(",","."));
+      if(!l || !isFinite(v) || v<5) return; l.s=Math.round(v); update(false); renderLightBox(room); }); });
+    box.querySelectorAll("[data-ldel]").forEach(function(b){ b.addEventListener("click",function(){ L.splice(+b.getAttribute("data-ldel"),1); update(false); renderLightBox(room); }); });
+  }
+  function lightAddStart(room){ LADD=room.id; var dp=$("detailSvg"); if(dp) dp.classList.add("adding"); renderLightBox(room);
+    hint('<span>Pulsa en el <b>plano de '+esc(room.name)+'</b> (el dibujo grande de la estancia) donde va el punto de luz. Luego ajusta las distancias en la tabla.</span><button class="btn ghost small" id="lightDone" type="button">Terminar</button>');
+    $("lightDone").addEventListener("click",lightAddStop);
+    var dpl=$("detailSvg"); if(dpl && dpl.scrollIntoView) dpl.scrollIntoView({behavior:"smooth",block:"nearest"}); }
+  function lightAddStop(){ if(LADD==null) return; var r=roomById(LADD); LADD=null; var dp=$("detailSvg"); if(dp) dp.classList.remove("adding"); hint(""); if(r && r.id===S.sel) renderLightBox(r); }
+  $("detailCard").addEventListener("click",function(e){
+    if(LADD==null || S.mode!=="techo") return; var svg=e.target.closest && e.target.closest("#detailSvg svg"); if(!svg) return;
+    var room=roomById(LADD); if(!room || room.id!==S.sel){ lightAddStop(); return; }
+    var pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY; var q=pt.matrixTransform(svg.getScreenCTM().inverse());
+    if(!pointIn(V(q.x,q.y),localOutline(room))){ hint('<span>Ese punto queda fuera de la estancia: pulsa dentro de '+esc(room.name)+'.</span><button class="btn ghost small" id="lightDone" type="button">Terminar</button>',true); $("lightDone").addEventListener("click",lightAddStop); return; }
+    var l={x:Math.round(q.x*100)/100,y:Math.round(q.y*100)/100,s:30}; room.lights=room.lights||[]; room.lights.push(l); lightWalls(room,l);
+    update(false); renderLightBox(room);
+    hint('<span>Punto de luz '+room.lights.length+' añadido. Pulsa otro sitio para añadir más, o ajusta las distancias en la tabla.</span><button class="btn ghost small" id="lightDone" type="button">Terminar</button>'); $("lightDone").addEventListener("click",lightAddStop);
+  });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape" && LADD!=null) lightAddStop(); });
   function bindSideCommon(card,room){
     card.querySelectorAll("[data-side]").forEach(function(inp){ inp.addEventListener("change",function(){ editSide(room,parseInt(inp.getAttribute("data-side"),10),parseFloat(String(inp.value).replace(",","."))); }); });
     card.querySelectorAll("[data-flecha]").forEach(function(inp){ inp.addEventListener("change",function(){ var i=parseInt(inp.getAttribute("data-flecha"),10), v=parseFloat(String(inp.value).replace(",",".")), cv=room.bulge[i], c=len(sub(room.pts[(i+1)%room.pts.length],room.pts[i])); if(isFinite(v)&&Math.abs(v)>=1&&cv&&c>0){ room.bulge[i]={u:cv.u, v:v/100/c}; update(true); } }); });
