@@ -1179,7 +1179,7 @@
     // a rounded bay window on the living room to show curved walls
     var sal=rooms[0]; sal.bulge[3]={u:0,v:0.9/4.8}; sal.tx=0.9;
     rooms.forEach(function(r,i){ if(i>0) r.tx+=0.9; });
-    return {id:nid(), name:"Planta baja", rooms:rooms, collectors:[{id:nid(),name:"Colector 1",x:4.8,y:5.35,cap:16},{id:nid(),name:"Colector 2",x:11.5,y:5.35,cap:16}]};
+    return {id:nid(), name:"Planta baja", rooms:rooms, collectors:[{id:nid(),name:"Colector 1",x:4.8,y:5.35,cap:9},{id:nid(),name:"Colector 2",x:11.5,y:5.35,cap:8}]};
   }
   function exampleFloorUF(){
     var f=exampleFloor(), R=f.rooms, M=function(i,o){ R[i].marks=o; };
@@ -4415,7 +4415,7 @@
   // ---- what the user practises, in order. Each mission: steps picked by when(), done() ends it, skip() does it for them
   function tourPlan(m){
     var suelo=m==="suelo", P=[];
-    P.push({info:true,t:"Aprende haciéndolo",x:"<p>Vamos a dibujar juntos una vivienda pequeña: <b>dos estancias</b>"+(suelo?", una <b>ventana</b>, una <b>puerta</b>":"")+" y un <b>colector</b>. Tú haces cada paso y yo te voy diciendo dónde pulsar.</p><p>Cada misión superada es un <b>logro</b>. Si alguna se te atasca puedes saltarla y la hago yo.</p>"+
+    P.push({info:true,t:"Aprende haciéndolo",x:"<p>Vamos a dibujar juntos una vivienda pequeña: <b>dos estancias</b>, una <b>ventana</b>"+(suelo?", una <b>puerta</b>":", un <b>punto de luz a medida</b>")+" y un <b>colector</b>. Tú haces cada paso y yo te voy diciendo dónde pulsar.</p><p>Cada misión superada es un <b>logro</b>. Si alguna se te atasca puedes saltarla y la hago yo.</p>"+
       (TOUR.hadOwn?"<p style='color:var(--muted)'>Practicarás en un proyecto aparte: el tuyo se guarda y podrás volver a él al terminar.</p>":""),btn:"Empezar"});
     // 1. first room
     P.push({mission:true,t:"Crea tu primera estancia",badge:"Primera estancia",
@@ -4447,15 +4447,15 @@
         {when:function(){ return true; },el:"#addRoom",x:"<p>Vamos con la segunda. Pulsa <b>+ Estancia</b> otra vez.</p>"}
       ]});
     P.push({info:true,el:".plan-stage",t:"Muévete por el plano",x:"<ul><li><b>Arrastra</b> el fondo para desplazarte y usa la <b>rueda</b> o <b>+ / −</b> para el zoom.</li><li><b>Doble clic</b> en una estancia la coge para moverla; se pega sola al muro más cercano.</li><li><b>Un clic</b> abre su ficha (lo probaremos al final).</li></ul>"});
-    if(suelo){
-      P.push({mission:true,t:"Marca una ventana",badge:"Ventana marcada",
+    P.push({mission:true,t:"Marca una ventana",badge:"Ventana marcada",
         done:function(){ return S.rooms.some(function(r){ return Object.keys(r.marks||{}).some(function(k){ return r.marks[k]==="ventana"; }); }); },
         after:function(){ if(S.markTool) setMarkTool(S.markTool); },
         skip:function(T){ if(S.markTool) setMarkTool(S.markTool); var r=roomById(T.salon)||S.rooms[0]; if(r){ r.marks=r.marks||{}; r.marks[0]="ventana"; update(true); } },
         steps:[
-          {when:function(){ return S.markTool==="ventana"; },el:function(T){ return roomSel(T.salon); },x:"<p>Ahora pulsa en el plano la pared de arriba del <b>Salón</b>. Se pintará como ventana y verás que el tubo se aprieta junto a ella cuando haya colector.</p>"},
-          {when:function(){ return true; },el:'#markBar [data-mark="ventana"]',x:"<p>Las ventanas y muros exteriores hacen que el tubo vaya más junto. Pulsa <b>Marcar ventana</b>.</p>"}
+          {when:function(){ return S.markTool==="ventana"; },el:function(T){ return roomSel(T.salon); },x:suelo?"<p>Ahora pulsa en el plano la pared de arriba del <b>Salón</b>. Se pintará como ventana y verás que el tubo se aprieta junto a ella cuando haya colector.</p>":"<p>Ahora pulsa en el plano la pared de arriba del <b>Salón</b>. Se pintará como ventana.</p>"},
+          {when:function(){ return true; },el:'#markBar [data-mark="ventana"]',x:suelo?"<p>Las ventanas y muros exteriores hacen que el tubo vaya más junto y cuentan en el cálculo térmico. Pulsa <b>Marcar ventana</b>.</p>":"<p>Las ventanas y los muros exteriores son por donde se pierde el calor: con ellos se hace el <b>cálculo térmico</b> de cada estancia. Pulsa <b>Marcar ventana</b>.</p>"}
         ]});
+    if(suelo){
       P.push({mission:true,t:"Pon una puerta",badge:"Puerta colocada",
         start:function(T){ T.base=tDoors(); },
         done:function(T){ return tDoors()>T.base && !S.doorTool; },
@@ -4485,23 +4485,40 @@
           ? (suelo?"<p>Pulsa el <b>Colector</b>: se colocará solo en la pared recomendada, donde menos tubo hace falta.</p><p>Luego podrás arrastrarlo por el plano a otra pared.</p>":"<p>Pulsa el <b>Colector</b>: aparecerá en el plano pegado a la pared más cercana.</p><p>Luego podrás arrastrarlo por el plano a otra pared.</p>")
           : (suelo?"<p>Mantén pulsado el <b>Colector</b> y arrástralo hasta una pared del <b>Salón</b>. Suéltalo cerca de la pared y se pegará solo.</p><p>En cuanto lo sueltes, verás aparecer los circuitos. Si solo lo pulsas, se coloca solo en la pared recomendada.</p>"
                   :"<p>Arrastra el <b>Colector</b> dentro del <b>Salón</b> (o simplemente púlsalo). Las estancias se asignan solas al colector más cercano con salidas libres.</p>"); }}]});
+    if(suelo) P.push({info:true,el:".coll-bar",t:"Ubicación recomendada",x:"<p>Al pulsar el colector, se coloca solo en la pared donde menos tubo hace falta. Si después cambias estancias o puertas y hay un sitio mejor, aquí aparece el aviso <b>Ubicación recomendada</b>: lo ves en el plano y decides <b>Colocar aquí</b> o <b>Descartar</b>.</p>"});
+    else P.push({info:true,el:"#planWrap",t:"Salidas con tubo de 20",x:"<p>Dos circuitos de la misma estancia (3 o 4 paneles) comparten una salida del colector con <b>tubo de 20</b> hasta una te de latón, siempre que el PEX de 20 no pase de 20 m (ida + retorno). Se hace solo.</p><p>Con «Colorear por circuito» los paneles de una misma salida salen del mismo color; en la ficha llevan el contorno <b>S1 · 20 mm</b>. Lo que no se puede agrupar va con tubo de 16.</p>"});
     P.push({mission:true,t:"Abre la ficha de una estancia",badge:"Ficha consultada",
       done:function(T){ return S.sel===T.salon && !S.moveId; },
       skip:function(T){ if(T.salon) select(T.salon); },
       steps:[{when:function(){ return true; },el:function(T){ return roomSel(T.salon); },x:"<p>Haz <b>un clic</b> sobre el <b>Salón</b> para abrir su ficha.</p>"}]});
-    P.push({info:true,el:"#detailCard",t:"La ficha de la estancia",x:suelo?"<p>Aquí cambias el nombre, la medida y el tipo de cada pared (normal, exterior, ventana) y la separación del tubo de esta estancia.</p><p>Si una estancia se queda sin circuito, aquí te explica el motivo y qué cambiar.</p>":"<p>Medidas de cada lado, iluminación (puntos de luz o tira LED), cobertura propia y giro de la estructura de esta estancia.</p>"});
+    P.push({info:true,el:"#detailCard",t:"La ficha de la estancia",x:suelo?"<p>Aquí cambias el nombre, la medida y el tipo de cada pared (normal, exterior, ventana), la separación del tubo y el pavimento de esta estancia.</p><p>Si una estancia se queda sin circuito, aquí te explica el motivo y qué cambiar. Más abajo tienes su cálculo térmico.</p>":"<p>Medidas y tipo de cada lado, iluminación, cobertura propia, giro de la estructura y la temperatura de la estancia. Más abajo, sus salidas del colector y su cálculo térmico.</p>"});
+    if(!suelo){
+      P.push({mission:true,t:"Añade un punto de luz a medida",badge:"Luz a medida",
+        done:function(T){ var r=roomById(T.salon); return !!(r && r.customL && (r.lights||[]).length); },
+        after:function(){ lightAddStop(); },
+        skip:function(T){ var r=roomById(T.salon)||S.rooms[0]; if(!r) return; lightAddStop(); r.customL=true; r.lights=r.lights||[]; var o=localOutline(r), c=centroid(o); r.lights.push({x:Math.round(c.x*100)/100,y:Math.round(c.y*100)/100,s:30}); if(S.sel!==r.id) select(r.id); update(true); },
+        steps:[
+          {when:function(T){ var r=roomById(T.salon); return !!(r && r.customL && LADD===r.id); },el:"#detailSvg",place:"left",x:"<p>Pulsa en el <b>plano del Salón</b> (este dibujo grande) más o menos donde va el punto de luz.</p><p>Se trazan solas dos cotas a las paredes más cercanas; luego podrás ajustarlas al centímetro.</p>"},
+          {when:function(T){ var r=roomById(T.salon); return !!(r && r.customL); },el:"#lightBox",x:"<p>Pulsa <b>+ Añadir punto de luz</b>.</p>"},
+          {when:function(){ return true; },el:function(){ return $("rCustL")?"#rCustL":"#detailCard"; },x:"<p>Si el techo ya tiene puntos de luz, o los quieres en un sitio exacto, márcalos tú. Marca la casilla <b>Iluminación personalizada</b>.</p>"}
+        ]});
+      P.push({info:true,el:"#lightBox",t:"Cotas y hueco del punto de luz",x:"<p>En la tabla cambias las dos <b>distancias a pared</b> (en cm) y el punto se mueve a la medida exacta.</p><p>Al lado está el <b>hueco sin paneles</b> (30 = 30 × 30 cm): los paneles lo esquivan solos.</p>"});
+    }
     if(suelo){
       P.push({info:true,el:"#ufRulesCard",t:"Reglas del suelo",x:"<p>Separación del tubo, longitud máxima por circuito, franjas junto a ventanas y muros… Cambia cualquier valor y el plano se recalcula al momento.</p>"});
       P.push({info:true,el:"#collCard",t:"Salidas de los colectores",x:"<p>Indica cuántas salidas tiene cada colector. El programa reparte las estancias sin que ningún circuito se cruce.</p>"});
     } else {
-      P.push({info:true,el:"#catalogCard",t:"Tus paneles",x:"<p>Medidas de los paneles que uses, de cualquier fabricante. Se coloca siempre el más grande que quepa, con máximo 2 paneles por circuito.</p>"});
+      P.push({info:true,el:"#catalogCard",t:"Tus paneles",x:"<p>Medidas de los paneles que uses, de cualquier fabricante. Se coloca siempre el más grande que quepa, con máximo 2 paneles por circuito (y hasta 4 por salida con tubo de 20).</p>"});
       P.push({info:true,el:"#coverCard",t:"Cobertura",x:"<p>Qué porcentaje del techo quieres cubrir con paneles.</p>"});
       P.push({info:true,el:"#pladurCard",t:"Techo de pladur",x:"<p>Placa, perfiles y cuelgues para calcular la estructura completa.</p>"});
-      P.push({info:true,el:"#collCard",t:"Colectores y tubería",x:"<p>Salidas de cada colector, subida al techo y margen de tubo.</p>"});
+      P.push({info:true,el:"#collCard",t:"Colectores y tubería",x:"<p>Salidas de cada colector, subida al techo y margen de tubo. Aquí también se explica la regla del tubo de 20.</p>"});
     }
+    P.push({info:true,el:"#thermCard",t:"Cálculo térmico",x:"<p>Zona climática, aislamiento de la vivienda, temperatura y qué hay encima y debajo de cada planta. Con eso y las ventanas y muros exteriores marcados, se calculan las pérdidas de cada estancia.</p>"});
+    P.push({info:true,el:"#thermRes",top:true,t:"Potencias y caudales",x:"<p>Potencia que necesita cada estancia y la que da "+(suelo?"el suelo":"el techo")+", la <b>temperatura de impulsión</b> de diseño (para elegir la aerotermia) y el <b>caudal de cada salida</b> en l/min para ajustar el caudalímetro del colector.</p><p>Si una estancia no llega, te dice por qué.</p>"});
     P.push({info:true,el:"#tablesCard",t:"Resumen de circuitos",x:"<p>Circuitos y metros de tubo por estancia y por colector, con las salidas usadas y libres.</p>"});
     P.push({info:true,el:"#report",top:true,t:"Material e informe",x:"<p>Material con cantidades. Escribe tus precios para ver el coste aproximado, rellena cliente y obra, y descarga el <b>informe en PDF</b>.</p>"});
     P.push({info:true,el:"#openCompany",t:"Tus datos de empresa",x:"<p>Nombre, logotipo y contacto: salen en la cabecera del informe.</p>"});
+    P.push({info:true,el:"#planBtn",t:"Tu plan",x:"<p>Con el plan <b>por proyecto</b> tienes todas las herramientas y avisos, y los resultados se ven al <b>finalizar</b> el proyecto. Con la <b>suscripción de empresa</b> lo ves todo en tiempo real. Pulsa aquí para ver los planes.</p>"});
     P.push({final:true});
     return P;
   }
