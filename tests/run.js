@@ -187,6 +187,31 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("«Ocultar» quita el fondo del plano", await p.evaluate(() => !document.querySelector("#planWrap image")));
   await p.close();
 
+  // 7. borde curvo: se elige una pared y se dibuja a mano alzada; queda una curva lisa, también en la estancia vecina
+  out.push("Borde curvo");
+  p = await open("#planificador");
+  await p.evaluate(() => { const D = window.__dbg, S = D.S; S.floors = [{ id: D.nid(), name: "P", rooms: [D.rectRoom("Salón", 0, 0, 4, 3), D.rectRoom("Cocina", 0, 3, 4, 3)], collectors: [] }]; S.fi = 0; D.update(true); });
+  const w2s = (x, y) => p.evaluate(([x, y]) => { const svg = document.querySelector("#planWrap svg"), q = new DOMPoint(x, y).matrixTransform(svg.getScreenCTM()); return [q.x, q.y]; }, [x, y]);
+  await p.click('#bgBar [data-bg="curve"]'); await p.waitForTimeout(200);
+  let [cx, cy] = await w2s(2, 3.02); await p.mouse.move(cx, cy); await p.waitForTimeout(80); await p.mouse.click(cx, cy); await p.waitForTimeout(200);
+  ok("al pinchar la pared se pasa a dibujar la curva", await p.evaluate(() => window.__dbg.S.curve.stage === "draw"));
+  // a hand-drawn arc from (0,3) to (4,3), 0,5 m deep into the kitchen, with ±3 cm of shake
+  let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647 - 0.5) * 0.06;
+  [cx, cy] = await w2s(0, 3); await p.mouse.move(cx, cy); await p.mouse.down();
+  for (let i = 1; i <= 40; i++) { const t = i / 40, x = 4 * t, y = 3 + 4 * 0.5 * t * (1 - t) + (i < 40 ? rnd() : 0); [cx, cy] = await w2s(x, y); await p.mouse.move(cx, cy); }
+  await p.mouse.up(); await p.waitForTimeout(500);
+  const cv = await p.evaluate(() => { const D = window.__dbg, R = D.S.rooms, sag = (r, e) => { const b = r.bulge[e]; return b ? b.v * 4 : 0; };
+    const ie = r => r.pts.findIndex((q, i) => { const a = D.toW(r, q), b = D.toW(r, r.pts[(i + 1) % r.pts.length]); return Math.abs(a.y - 3) < 1e-6 && Math.abs(b.y - 3) < 1e-6; });
+    const e0 = ie(R[0]), e1 = ie(R[1]);
+    return { s0: sag(R[0], e0), s1: sag(R[1], e1), u0: R[0].bulge[e0] && R[0].bulge[e0].u, a0: D.results[R[0].id].area, a1: D.results[R[1].id].area }; });
+  ok("la pared queda curva con la flecha dibujada (0,50 m ± 3 cm) y lisa", Math.abs(Math.abs(cv.s0) - 0.5) < 0.03 && Math.abs(cv.u0) < 0.03, JSON.stringify(cv));
+  ok("la estancia vecina recibe la misma curva", Math.abs(cv.s0 + cv.s1) < 1e-6 && Math.abs(cv.s1) > 0.4, JSON.stringify(cv));
+  ok("las superficies cambian a la par (lo que gana una lo pierde la otra)", Math.abs(cv.a0 + cv.a1 - 24) < 0.05 && Math.abs(cv.a0 - 12) > 1, JSON.stringify(cv));
+  await p.keyboard.press("Escape"); await p.waitForTimeout(500);
+  await p.click("#undoBtn"); await p.waitForTimeout(400);
+  ok("deshacer deja la pared recta otra vez", await p.evaluate(() => window.__dbg.S.rooms.every(r => r.bulge.every(b => !b))));
+  await p.close();
+
   ok("sin errores de JavaScript durante las pruebas", errors.length === 0, errors.join(" | "));
   await browser.close(); server.close();
   console.log(out.join("\n"));

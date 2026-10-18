@@ -373,6 +373,9 @@
   .p-cal{stroke:var(--warm);stroke-width:calc(var(--pu,.01px)*2.5);stroke-linecap:round;pointer-events:none;}
   .p-cal-pt{fill:var(--warm);stroke:#fff;stroke-width:calc(var(--pu,.01px)*1.5);pointer-events:none;}
   .plan-wrap.bgmove svg{cursor:move;}
+  .p-curve-sel{fill:none;stroke:var(--warm);stroke-width:calc(var(--pu,.01px)*5);stroke-linecap:round;opacity:.7;pointer-events:none;}
+  .p-curve-draw{fill:none;stroke:var(--warm);stroke-width:calc(var(--pu,.01px)*2.5);stroke-linecap:round;stroke-linejoin:round;pointer-events:none;}
+  .p-curve-end{fill:var(--warm);stroke:#fff;stroke-width:calc(var(--pu,.01px)*1.5);pointer-events:none;}
   .mode-hint input.bg-cal-in{width:90px !important;display:inline-block;margin:0 4px;padding:3px 6px !important;vertical-align:middle;}
   .file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;}
   .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center;}
@@ -879,6 +882,7 @@
       <span class="mk-btn file-btn" id="bgImport"><span id="bgImportT">Importar plano (PDF o imagen)</span><input type="file" id="bgFile" accept="application/pdf,image/png,image/jpeg,image/webp" aria-label="Importar plano de fondo"></span>
       <button class="mk-btn" type="button" data-bg="cal" hidden>1 · Calibrar escala</button>
       <button class="mk-btn" type="button" data-bg="trace" hidden>2 · Calcar estancias</button>
+      <button class="mk-btn" type="button" data-bg="curve" hidden>Marcar borde curvo</button>
       <button class="mk-btn" type="button" data-bg="move" hidden>Mover plano</button>
       <label class="bg-op" id="bgOpL" hidden>Opacidad <input type="range" id="bgOp" min="10" max="100" step="5" aria-label="Opacidad del plano de fondo"></label>
       <button class="mk-btn" type="button" id="bgShow" hidden>Ocultar</button>
@@ -3018,7 +3022,7 @@
     var wrap=$("planWrap");
     $("zoomCtl").hidden=!planHas();
     wrap.classList.toggle("picking", !!(S.placing && S.placing.step==="target"));
-    wrap.classList.toggle("marking", !!(S.markTool||S.doorTool||S.obstTool||S.viaTool||S.bgTool==="cal"||S.bgTool==="trace"));
+    wrap.classList.toggle("marking", !!(S.markTool||S.doorTool||S.obstTool||S.viaTool||S.bgTool==="cal"||S.bgTool==="trace"||S.bgTool==="curve"));
     wrap.classList.toggle("bgmove", S.bgTool==="move"); bgBar();
     if(!planHas()){
       var anyRooms=allRooms().length>0;
@@ -3806,6 +3810,8 @@
     if(e.button!==undefined && e.button!==0) return;
     suppressClick=false;
     if(S.placing || RO()) return;
+    if(S.bgTool==="curve" && S.curve.stage==="draw"){ var cq=svgPointRaw(e.clientX,e.clientY); if(!cq) return; e.preventDefault(); e.stopImmediatePropagation(); suppressClick=true;
+      S.curve.drawing=true; S.curve.pts=[V(cq.x,cq.y)]; S.curve.sx=e.clientX; S.curve.sy=e.clientY; S.frozenVB=S.lastVB; return; }
     if(S.bgTool==="move" && curFloor().bg){ var bsv=$("planWrap").querySelector("svg"); if(!bsv || !S.lastVB) return; e.preventDefault(); e.stopImmediatePropagation();
       S.bgDrag={sx:e.clientX,sy:e.clientY,x0:curFloor().bg.x,y0:curFloor().bg.y,scale:S.lastVB[2]/bsv.getBoundingClientRect().width}; S.frozenVB=S.lastVB; return; }
     if(S.obstTool){
@@ -4105,7 +4111,7 @@
   function planHas(){ return S.rooms.length>0 || bgShown(); }
   function bgBar(){ var b=curFloor().bg, on=!!b;
     ["bgOpL","bgShow","bgDel","bgSt"].forEach(function(id){ $(id).hidden=!on; });
-    document.querySelectorAll("#bgBar [data-bg]").forEach(function(x){ x.hidden=!on; x.classList.toggle("on",S.bgTool===x.getAttribute("data-bg")); });
+    document.querySelectorAll("#bgBar [data-bg]").forEach(function(x){ var t=x.getAttribute("data-bg"); x.hidden=t==="curve"?!S.rooms.length:!on; x.classList.toggle("on",S.bgTool===t); });
     $("bgImportT").textContent=on?"Cambiar plano":"Importar plano (PDF o imagen)";
     if(on){ $("bgOp").value=Math.round((b.op!=null?b.op:0.6)*100); $("bgShow").textContent=b.show===false?"Mostrar":"Ocultar";
       var st=$("bgSt"); st.textContent=b.cal?"Escala calibrada":"Sin calibrar: empieza por «Calibrar escala»"; st.className="bg-st "+(b.cal?"ok":"no"); } }
@@ -4144,11 +4150,12 @@
   function bgTool(t,quiet){
     if(t && RO()) return;
     if(t){ if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); if(S.viaTool) viaTool(false); }
-    S.bgTool=t||null; S.bgCal=null; S.trace={pts:[],hover:null}; S.bgDrag=null;
+    S.bgTool=t||null; S.bgCal=null; S.trace={pts:[],hover:null}; S.bgDrag=null; S.curve={stage:"pick",hover:null,room:null,edge:-1,pts:[],drawing:false};
     var b=curFloor().bg; if(t && b && b.show===false) b.show=true;
     if(!quiet){
       if(t==="cal") hint('<b>Calibrar escala.</b> Pincha los dos extremos de una pared o cota cuya medida real conozcas (cuanto más larga, mejor) y escribe esa medida. Arrastra para moverte por el plano y usa la rueda para acercarte.');
       else if(t==="trace") hint('<b>Calcar estancias.</b> Pincha las esquinas de una estancia <b>por el centro de las paredes</b>, en orden, y ciérrala pinchando de nuevo en la primera (o pulsa Intro). Se ajusta sola a ángulos rectos y a las esquinas y paredes de las estancias ya calcadas. Retroceso quita el último punto; Esc termina.'+(b&&!b.cal?' <b>Aún no has calibrado la escala.</b>':''));
+      else if(t==="curve") hint('<b>Marcar borde curvo.</b> Pincha la pared que es curva (calcada recta). Después dibuja a mano alzada su forma, de un extremo al otro: el programa la alisa y la pared pasa a ser curva. Esc termina.');
       else if(t==="move") hint('<b>Mover plano.</b> Arrastra el plano para colocarlo debajo de las estancias. Pulsa otra vez «Mover plano» para terminar.');
       else hint("");
     }
@@ -4191,7 +4198,38 @@
       for(var i=1;i<Q.length;i++){ var a=Q[i-1], b=Q[i], m=mul(add(a,b),0.5), l=len(sub(b,a)); if(l<0.2) continue;
         o+='<text class="p-trace-len" style="font-size:'+fs+'px" x="'+f3(m.x)+'" y="'+f3(m.y-4*k)+'" text-anchor="middle">'+fmt(l,2)+' m</text>'; }
       if(h && h.kind) o+=h.kind==="v"?'<circle class="p-trace-snap" cx="'+f3(h.p.x)+'" cy="'+f3(h.p.y)+'" r="'+f3(8*k)+'"/>':'<rect class="p-trace-snap" x="'+f3(h.p.x-6*k)+'" y="'+f3(h.p.y-6*k)+'" width="'+f3(12*k)+'" height="'+f3(12*k)+'"/>'; }
+    if(S.bgTool==="curve" && S.curve){ var K=S.curve, eg=function(r,e2){ var n=r.pts.length; return edgeSamples(r.pts[e2],r.pts[(e2+1)%n],r.bulge[e2]||0,24).map(function(q){ return toW(r,q); }); };
+      if(K.stage==="pick" && K.hover) o+='<polyline class="p-mk hov" points="'+ptsStr(eg(K.hover.room,K.hover.edge))+'"/>';
+      if(K.stage==="draw"){ var se=eg(K.room,K.edge); o+='<polyline class="p-curve-sel" points="'+ptsStr(se)+'"/>';
+        [se[0],se[se.length-1]].forEach(function(q){ o+='<circle class="p-curve-end" cx="'+f3(q.x)+'" cy="'+f3(q.y)+'" r="'+f3(5*k)+'"/>'; });
+        if(K.pts.length>1) o+='<polyline class="p-curve-draw" points="'+ptsStr(K.pts)+'"/>'; } }
     return o; }
+  // the smooth curve (the same kind as the shape editor's curved sides: a quadratic arc through the corners) closest to a freehand stroke
+  function curveFit(a,b,Q){
+    var ab=sub(b,a), L2=dot(ab,ab); if(L2<1e-6 || Q.length<3) return null;
+    var T=Q.map(function(q){ return Math.max(0,Math.min(1,dot(sub(q,a),ab)/L2)); }), C=null;
+    for(var it=0;it<5;it++){
+      var nx=0, ny=0, dd=0; Q.forEach(function(q,i){ var t=T[i], w=2*t*(1-t), r=sub(q,add(mul(a,(1-t)*(1-t)),mul(b,t*t))); nx+=w*r.x; ny+=w*r.y; dd+=w*w; });
+      if(dd<1e-9) return null; C=V(nx/dd,ny/dd);
+      var sm=[]; for(var j=0;j<=200;j++){ var t2=j/200; sm.push(add(add(mul(a,(1-t2)*(1-t2)),mul(C,2*t2*(1-t2))),mul(b,t2*t2))); }
+      T=Q.map(function(q){ var bj=0, bd=Infinity; for(var j=0;j<=200;j++){ var d=len(sub(q,sm[j])); if(d<bd){ bd=d; bj=j; } } return bj/200; }); }
+    var P=add(add(mul(a,0.25),mul(C,0.5)),mul(b,0.25)), m=mul(add(a,b),0.5), c=Math.sqrt(L2), rel=sub(P,m);
+    return {u:Math.round(dot(rel,unit(ab))/c*1000)/1000, v:Math.round(dot(rel,outN(a,b))/c*1000)/1000, sag:Math.abs(dot(rel,outN(a,b)))};
+  }
+  // the same wall seen from the room next door (same two corners): it gets the same curve
+  function curveTwin(r,e){ var n=r.pts.length, A=toW(r,r.pts[e]), B=toW(r,r.pts[(e+1)%n]), tw=null;
+    S.rooms.forEach(function(o){ if(o===r || tw) return; var m=o.pts.length; for(var i=0;i<m;i++){ var P=toW(o,o.pts[i]), Q=toW(o,o.pts[(i+1)%m]);
+      if(len(sub(P,B))<0.02 && len(sub(Q,A))<0.02){ tw={room:o,edge:i,k:-1}; return; } if(len(sub(P,A))<0.02 && len(sub(Q,B))<0.02){ tw={room:o,edge:i,k:1}; return; } } });
+    return tw; }
+  function curveSet(r,e,cv){ r.bulge[e]=cv; var tw=curveTwin(r,e); if(tw) tw.room.bulge[tw.edge]=cv?{u:cv.u*tw.k,v:cv.v*tw.k}:0; return tw; }
+  function curveFinish(){ var K=S.curve, r=K.room, e=K.edge, n=r.pts.length, a=r.pts[e], b=r.pts[(e+1)%n];
+    var Q=K.pts.map(function(q){ return toL(r,q); }); K.pts=[];
+    var cv=Q.length>=5 ? curveFit(a,b,Q) : null;
+    if(!cv){ hint("Dibuja la curva de un extremo de la pared al otro, sin soltar.",true); renderPlan(); return; }
+    var c=len(sub(b,a)), tw;
+    if(cv.sag<0.03){ tw=curveSet(r,e,0); hint("La línea que has dibujado es casi recta: la pared se queda recta.",true); }
+    else { tw=curveSet(r,e,{u:cv.u,v:cv.v}); hint('<b>Pared curva</b> en '+esc(r.name)+': '+fmt(c,2)+' m entre esquinas y '+fmt(cv.sag*100,0)+' cm de flecha'+(tw?' (también en '+esc(tw.room.name)+', que comparte esa pared)':'')+'. Si no es lo que querías, pulsa Deshacer o vuelve a dibujarla. Pincha otra pared o pulsa Esc para terminar.'); }
+    K.stage="pick"; K.room=null; K.edge=-1; S.frozenVB=null; update(true); }
   function bgCalAsk(){
     hint('Medida real entre los dos puntos: <input class="inp bg-cal-in" id="bgCalLen" type="text" inputmode="decimal" autocomplete="off" placeholder="p. ej. 3,20"> m <button class="btn small" id="bgCalOk" type="button">Aplicar</button> <button class="btn ghost small" id="bgCalNo" type="button">Repetir</button>');
     var inp=$("bgCalLen"); inp.focus();
@@ -4218,18 +4256,28 @@
     hint('<b>'+esc(room.name)+'</b> creada ('+fmt(Math.abs(signedArea(o)),2)+' m²). Cámbiale el nombre en su panel, debajo del plano. Sigue con la siguiente estancia o pulsa Esc para terminar.'+(over?' <b>Ojo:</b> queda encima de '+esc(over.name)+'; si no querías eso, pulsa Deshacer.':''),!!over); }
   $("planWrap").addEventListener("pointermove",function(e){
     if(S.bgDrag){ var b=curFloor().bg; if(!b) return; b.x=S.bgDrag.x0+(e.clientX-S.bgDrag.sx)*S.bgDrag.scale; b.y=S.bgDrag.y0+(e.clientY-S.bgDrag.sy)*S.bgDrag.scale; if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); }); return; }
+    if(S.bgTool==="curve"){ var K=S.curve, cq=svgPointRaw(e.clientX,e.clientY); if(!cq) return; cq=V(cq.x,cq.y);
+      if(K.drawing){ if(Math.hypot(e.clientX-K.sx,e.clientY-K.sy)<3) return; K.sx=e.clientX; K.sy=e.clientY; K.pts.push(cq); }
+      else if(K.stage==="pick" && !(S.pan && S.pan.moved)) K.hover=ufHitEdge(cq); else return;
+      if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); }); return; }
     if((S.bgTool!=="cal" && S.bgTool!=="trace") || (S.pan && S.pan.moved)) return;
     var q=svgPointRaw(e.clientX,e.clientY); if(!q) return; q=V(q.x,q.y);
     if(S.bgTool==="cal"){ if(S.bgCal && !S.bgCal.b){ S.bgCal.hover=calSnap(q); if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); }); } return; }
     S.trace.hover=traceSnap(q); if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); });
   });
-  window.addEventListener("pointerup",function(){ if(S.bgDrag){ S.bgDrag=null; S.frozenVB=null; renderPlan(); histNote(); } });
+  window.addEventListener("pointerup",function(){ if(S.curve && S.curve.drawing){ S.curve.drawing=false; curveFinish(); return; } if(S.bgDrag){ S.bgDrag=null; S.frozenVB=null; renderPlan(); histNote(); } });
   // a click (not a drag, which moves the view) puts down a point
   $("planWrap").addEventListener("click",function(e){
-    if(S.bgTool!=="cal" && S.bgTool!=="trace") return;
+    if(S.bgTool!=="cal" && S.bgTool!=="trace" && S.bgTool!=="curve") return;
     if(e.target.closest && e.target.closest("[data-cta],button,a,input")) return;
     e.stopImmediatePropagation(); e.preventDefault(); if(suppressClick || RO()) return;
     var q=svgPointRaw(e.clientX,e.clientY); if(!q) return; q=V(q.x,q.y);
+    if(S.bgTool==="curve"){ var hit=ufHitEdge(q); if(!hit) return; var K=S.curve; K.stage="draw"; K.room=hit.room; K.edge=hit.edge; K.hover=null;
+      var cur=!!hit.room.bulge[hit.edge];
+      hint('Ahora <b>dibuja a mano alzada</b> la forma de la pared: pulsa en un extremo (punto naranja), arrastra siguiendo la curva y suelta en el otro. Arrastrar fuera de la pared no mueve el plano mientras dibujas.'+(cur?' <button class="btn ghost small" id="curveFlat" type="button">Dejarla recta</button>':'')+' <button class="btn ghost small" id="curveOther" type="button">Elegir otra pared</button>');
+      if(cur) $("curveFlat").addEventListener("click",function(){ var tw=curveSet(K.room,K.edge,0); K.stage="pick"; K.room=null; hint("Pared recta otra vez"+(tw?" (también en "+esc(tw.room.name)+")":"")+"."); update(true); });
+      $("curveOther").addEventListener("click",function(){ bgTool("curve"); });
+      renderPlan(); return; }
     if(S.bgTool==="cal"){ if(!curFloor().bg) return;
       if(!S.bgCal || S.bgCal.b){ S.bgCal={a:q,b:null,hover:null}; hint("Ahora pincha el otro extremo."); renderPlan(); return; }
       var B=calSnap(q); if(len(sub(B,S.bgCal.a))<0.05) return; S.bgCal.b=B; renderPlan(); bgCalAsk(); return; }
