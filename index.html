@@ -2647,11 +2647,14 @@
       // a small landing in front of the ribbon is kept out of the lattice, so the circuits can spread out to their cells
       var rsL=resv.slice(), hwL=rb.w/2+0.12, rcL=Math.ceil((hwL+0.4)/res), ciL=Math.floor((E.x-R.x0)/res), cjL=Math.floor((E.y-R.y0)/res);
       for(var djL=-rcL;djL<=rcL;djL++) for(var diL=-rcL;diL<=rcL;diL++){ var iiL=ciL+diL, jjL=cjL+djL; if(iiL<0||jjL<0||iiL>=R.nx||jjL>=R.ny) continue; var rlL=sub(V(R.x0+(iiL+.5)*res,R.y0+(jjL+.5)*res),E), dpL=dot(rlL,eDir), ltL=dot(rlL,nrm); if(dpL>=-0.02&&dpL<=0.22&&Math.abs(ltL)<=hwL) rsL[jjL*R.nx+iiL]=1; }
-      // tries: with the landing, without it, then both again with tighter clearances
+      // tries: with the landing, without it, then both again with tighter clearances.
+      // A room only goes without a circuit of its own because it is small when tubes of other rooms really cross it (they heat it);
+      // a small room nobody crosses (a little room with the collector in it) still gets its own loop, however small
+      var crossed=ribs.some(function(o){ return o!==rb && o.path.some(function(st){ return st.ri===x && st.b; }); });
       for(var att=0;att<4;att++){ var useLand=att%2===0, rlx=att>=2;
       var L=ufLattice(R,useLand?rsL:resv,zi,E);
-      if(L && L.small && useLand) continue;
-      if(L && L.small){ rb.fan={small:true}; rb.okc=[]; return; }
+      if(L && L.small && useLand && crossed) continue;
+      if(L && L.small && crossed){ rb.fan={small:true}; rb.okc=[]; return; }
       if(L){ var mine=new Uint8Array(N); ufReserveRect(R,mine,add(rb.s,mul(eDir,0.03)),E,Math.max(0.026,rb.w/2-0.02));
         var blk=new Uint8Array(N), inL=new Uint8Array(N);
         for(var q=0;q<N;q++){ var cq=L.cellAt(q); inL[q]=(cq>=0&&L.comp[cq])?1:0; blk[q]=(!R.pass[q]||R.roomOf[q]!==x||(resv[q]&&!mine[q]))?1:0; }
@@ -2693,7 +2696,7 @@
           return; } } }
       // no clean way from the ribbon to the room's own floor: if what is left of the floor is small, the tubes passing heat it;
       // otherwise this room gives way (planned again without it, or from the other collector)
-      var Lr=ufLattice(R,resv,zi,E); rb.entryFail=true; rb.busy=!Lr || Lr.area<0.5*R.zones[zi].area; rb.okc=null; return;
+      var Lr=ufLattice(R,resv,zi,E); rb.entryFail=true; rb.busy=crossed && (!Lr || Lr.area<0.5*R.zones[zi].area); rb.okc=null; return;
 });
     ribs.forEach(function(rb){ if(rb.entryFail && fails.indexOf(rb)<0) fails.push(rb); });
     ribs.forEach(function(rb){ if(fails.indexOf(rb)>=0||!rb.okc) { return; }

@@ -212,6 +212,26 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("deshacer deja la pared recta otra vez", await p.evaluate(() => window.__dbg.S.rooms.every(r => r.bulge.every(b => !b))));
   await p.close();
 
+  // 7b. suelo radiante en una vivienda real (reconstruida de un plano de un usuario): una estancia pequeña con el colector en su
+  // pared y otra estrecha entre otras deben llevar su circuito, sin el aviso de «ocupada por tubos que pasan» si no pasa ninguno
+  out.push("Suelo radiante en una vivienda real");
+  for (const e8top of [5.31, 5.42]) {
+    p = await open("#suelo");
+    const r = await p.evaluate((e8top) => { const D = window.__dbg, S = D.S, V = D.V;
+      const P = (name, W) => { const mx = Math.min(...W.map(q => q[0])), my = Math.min(...W.map(q => q[1])); return { id: D.nid(), name, pts: W.map(q => V(+(q[0] - mx).toFixed(3), +(q[1] - my).toFixed(3))), bulge: W.map(() => 0), tx: mx, ty: my, rot: 0, attach: null, active: true, override: false, minPct: 30, maxPct: 60, lc: "puntos", lp: "ninguna" }; };
+      const B = (n, x0, y0, x1, y1) => P(n, [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]);
+      const E3 = B("Estancia 3", 4.70, 3.13, 7.68, 11.29), E9 = B("Estancia 9", 10.53, 2.55, 11.67, 4.34);
+      const rooms = [B("Estancia 1", 0, 3.13, 4.70, 11.29), P("Estancia 2", [[4.07, 0], [8.96, 0], [8.96, 2.38], [7.68, 2.38], [7.68, 3.13], [4.07, 3.13]]), E3, B("Estancia 4", 7.68, 2.38, 10.04, 5.31),
+        B("Estancia 5", 7.68, 8.04, 11.96, 11.29), B("Estancia 6", 11.96, 8.04, 13.13, 10.70), P("Estancia 7", [[10.04, 4.34], [13.03, 4.34], [13.03, 6.99], [11.06, 6.99], [11.06, 6.43], [10.04, 6.43]]),
+        P("Estancia 8", [[7.68, e8top], [10.04, e8top], [10.04, 6.40], [7.68, 6.33]]), E9];
+      S.floors = [{ id: D.nid(), name: "Planta baja", rooms, collectors: [{ id: D.nid(), name: "Colector 1", cap: 12, room: E3.id, edge: 3, off: 7.0 }, { id: D.nid(), name: "Colector 2", cap: 3, room: E9.id, edge: 2, off: 0.85 }] }]; S.fi = 0; D.update(true);
+      return rooms.map(q => { const x = D.results[q.id]; return { n: q.name, c: x.circuits, col: x.col ? x.col.name : null, busy: (x.dmsgs || []).some(m => /ocupada por los tubos/.test(m.x)) }; }); }, e8top);
+    const sin = r.filter(q => !q.col || !q.c).map(q => q.n), e9 = r.find(q => q.n === "Estancia 9");
+    ok("vivienda real (" + (e8top > 5.31 ? "Estancia 8 sin tocar la 4" : "Estancia 8 pegada a la 4") + "): las 9 estancias llevan circuito", !sin.length, "sin circuito: " + sin.join(", "));
+    ok("  y la Estancia 9 (colector en su pared) no dice que la ocupen tubos ajenos", !e9.busy && e9.col === "Colector 2", JSON.stringify(e9));
+    await p.close();
+  }
+
   // 8. tutorial: se recorre entero en techo y suelo (saltando las misiones) y salen los pasos de lo nuevo
   out.push("Tutorial");
   for (const [h, nm] of [["#planificador", "techo"], ["#suelo", "suelo"]]) {
