@@ -1870,12 +1870,18 @@
     // distance to the outside of the house, in metres
     var dout=new Float32Array(N).fill(1e9), q=[]; for(var k2=0;k2<N;k2++) if(rid[k2]<0){ dout[k2]=0; q.push(k2); }
     for(var h=0;h<q.length;h++){ var a=q[h], ax=a%nx, ay=(a/nx)|0; [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){ var bx=ax+d[0], by=ay+d[1]; if(bx<0||by<0||bx>=nx||by>=ny) return; var b=by*nx+bx; if(dout[b]>dout[a]+res){ dout[b]=dout[a]+res; q.push(b); } }); }
-    // a passage joins the room it was marked in and the room on the other side of that wall: between those two rooms
-    // the tubes cross only there. It is the way in of its own room only: it costs the same as any other wall, so no other
-    // tube goes out of its way to use it, and the other walls cost the same with or without passages.
-    var pas=[]; rs.forEach(function(r,ri){ var g=viaGeom(r); if(!g) return; var Q=add(g.P,mul(g.nin,-0.12)), other=-1; W.forEach(function(w,wi){ if(wi!==ri && other<0 && pointIn(Q,w)) other=wi; }); pas.push({P:g.P,a:ri,b:other}); });
+    // a passage is a hole in a wall: every tube that crosses that wall, into or out of either room and whatever room is on the
+    // other side of each stretch of it, goes through the hole. The wall is the straight side it was marked on, joined with the
+    // side of the room behind the hole (so it does not matter from which room it was marked). Elsewhere a hole changes nothing.
+    var pas=[]; rs.forEach(function(r,ri){ var g=viaGeom(r); if(!g) return; var Q=add(g.P,mul(g.nin,-0.12)), other=-1; W.forEach(function(w,wi){ if(wi!==ri && other<0 && pointIn(Q,w)) other=wi; });
+      var lo=0, hi=g.L, segs=[];
+      if(other>=0){ var o=rs[other], m=o.pts.length; for(var e=0;e<m;e++){ if(o.bulge[e]) continue; var C=toW(o,o.pts[e]), D=toW(o,o.pts[(e+1)%m]);
+        if(Math.abs(dot(sub(C,g.A),g.nin))>0.05 || Math.abs(dot(sub(D,g.A),g.nin))>0.05) continue;
+        var tc=dot(sub(C,g.A),g.u), td=dot(sub(D,g.A),g.u); if(Math.min(tc,td)>g.t+1e-6 || Math.max(tc,td)<g.t-1e-6) continue; lo=Math.min(lo,tc,td); hi=Math.max(hi,tc,td); } }
+      pas.push({P:g.P,A:add(g.A,mul(g.u,lo)),u:g.u,n:g.nin,len:hi-lo}); });
+    var onWall=function(m,w){ var d=sub(m,w.A), t=dot(d,w.u); return Math.abs(dot(d,w.n))<0.13 && t>-0.05 && t<w.len+0.05; };
     var cross=function(m,ra,rb){ for(var i=0;i<pas.length;i++) if(len(sub(m,pas[i].P))<0.2) return 0.6;
-      for(var j=0;j<pas.length;j++){ var g2=pas[j]; if((g2.a===ra&&g2.b===rb)||(g2.a===rb&&g2.b===ra)) return 80; }
+      for(var j=0;j<pas.length;j++) if(onWall(m,pas[j])) return 80;
       return 0.6; };
     var cellOf=function(p){ var i=Math.floor((p.x-x0)/res), j=Math.floor((p.y-y0)/res); if(i<0||j<0||i>=nx||j>=ny) return -1; return j*nx+i; };
     var inside=function(p){ var k=cellOf(p); if(k>=0 && rid[k]>=0) return k; var best=-1, bd=Infinity;
@@ -1927,6 +1933,9 @@
           if(cells && cells.length){ var ei=cells.length-1; for(var i=0;i<cells.length;i++){ if(F.ridOf(cells[i])===ri){ ei=i; break; } }
             trunk=corners(cells.slice(0,Math.min(cells.length,ei+2)).map(F.ctrOf)); } }
         if(!trunk) trunk=[CP];
+        // come in deep enough for all the lanes before turning along the wall (else the outer lanes are drawn over the wall)
+        var lh=Math.min(0.05,1.0/Math.max(1,tubes.length))*(tubes.length-1)/2+0.06;
+        if(trunk.length>1){ var Ez=trunk[trunk.length-1], dz=unit(sub(Ez,trunk[trunk.length-2])), Ed=add(Ez,mul(dz,lh)); if(pointIn(Ed,W)) trunk[trunk.length-1]=Ed; }
         var E=trunk[trunk.length-1];
         // the turn inside the room: along the wall first; when that run is too short for the lanes to turn cleanly, straight in first
         var mnRun=Math.min(0.05,1.0/Math.max(1,tubes.length))*(tubes.length-1)+0.05;
