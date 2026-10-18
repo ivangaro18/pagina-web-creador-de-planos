@@ -5053,6 +5053,7 @@
       (TOUR.hadOwn?"<p style='color:var(--muted)'>Practicarás en un proyecto aparte: el tuyo se guarda y podrás volver a él al terminar.</p>":""),btn:"Empezar"});
     // 1. first room
     P.push({info:true,el:"#projName",t:"El nombre del proyecto",x:"<p>Pulsa el título de arriba (✎) para ponerle nombre al proyecto, por ejemplo <b>Casa García</b>. Con ese nombre se guarda en «Mis proyectos» y sale en el informe.</p>"});
+    P.push({info:true,el:"#bgImport",t:"¿Tienes un plano de la vivienda?",x:"<p>Con <b>Importar plano</b> subes un PDF o una foto del plano (también uno simple, sin cotas) y queda de fondo en la planta. Después:</p><ol><li><b>Calibrar escala</b>: pinchas los dos extremos de una pared y escribes su medida real, la que mides en obra.</li><li><b>Calcar estancias</b>: pinchas las esquinas de cada estancia por el centro de las paredes. Se ajustan solas a ángulos rectos y se pegan a las ya calcadas.</li></ol><p>Del plano solo se usan las estancias: armarios, textos o m² escritos se quedan en la imagen. En este tutorial dibujaremos las estancias a mano.</p>"});
     P.push({mission:true,t:"Crea tu primera estancia",badge:"Primera estancia",
       start:function(T){ T.base=S.rooms.length; },
       done:function(T){ return S.rooms.length>T.base && !S.placing && $("shapeModal").hidden; },
@@ -5082,6 +5083,8 @@
         {when:function(){ return true; },el:"#addRoom",x:"<p>Vamos con la segunda. Pulsa <b>+ Estancia</b> otra vez.</p>"}
       ]});
     P.push({info:true,el:".plan-stage",t:"Muévete por el plano",x:"<ul><li><b>Arrastra</b> el fondo para desplazarte y usa la <b>rueda</b> o <b>+ / −</b> para el zoom.</li><li><b>Doble clic</b> en una estancia la coge para moverla; se pega sola al muro más cercano.</li><li><b>Un clic</b> abre su ficha (lo probaremos al final).</li></ul>"});
+    P.push({info:true,el:["#undoBtn","#redoBtn"],t:"Deshacer y rehacer",x:"<p>Si te equivocas, <b>↶ Deshacer</b> vuelve atrás (también con <b>Ctrl+Z</b>) y <b>↷ Rehacer</b> vuelve adelante (<b>Ctrl+Y</b>): estancias, marcas, colectores, ajustes, precios… En el tutorial están desactivados; en tus proyectos los tienes siempre.</p>"});
+    P.push({info:true,el:'#bgBar [data-bg="curve"]',t:"Paredes curvas",x:"<p>Dibuja o calca siempre las paredes rectas. Si alguna es curva (un mirador, una esquina redondeada), pulsa <b>Marcar borde curvo</b>, pincha esa pared y dibuja su forma a mano alzada de un extremo al otro: se alisa sola y la pared pasa a ser curva. Si la comparte otra estancia, también se curva en ella.</p>"});
     P.push({mission:true,t:"Marca una ventana",badge:"Ventana marcada",
         done:function(){ return S.rooms.some(function(r){ return Object.keys(r.marks||{}).some(function(k){ return r.marks[k]==="ventana"; }); }); },
         after:function(){ if(S.markTool) setMarkTool(S.markTool); },
@@ -5112,7 +5115,7 @@
           {when:function(){ return true; },el:"#obstBtn",x:"<p>Los muebles que llegan al techo, las vigas o los conductos ocupan sitio donde no puede ir ningún panel. Pulsa <b>Añadir obstáculo</b>.</p>"}
         ]});
       P.push({info:true,el:'#markBar [data-mark="acceso"]',t:"Puerta de acceso",x:"<p>Marca la pared de la <b>puerta de la calle</b>. Igual que con las ventanas, la primera fila de paneles de esa estancia va pegada a ella, que es por donde más frío entra, y el resto se reparte por igual por la estancia para que se note lo mismo en toda ella. Las puertas entre estancias no cuentan.</p>"});
-      P.push({info:true,el:"#viaBtn",t:"Paso de tubos",x:"<p>Si por el camino más corto hay una viga o algo que no se puede atravesar, pulsa <b>Marcar paso de tubos</b> y luego la pared por donde tienen que entrar los tubos a esa estancia. Los metros de tubo se calculan por ahí. Si no marcas nada, se toma el camino más corto.</p>"});
+      P.push({info:true,el:"#viaBtn",t:"Paso de tubos",x:"<p>Si por el camino más corto hay una viga o algo que no se puede atravesar, pulsa <b>Marcar paso de tubos</b> y luego la pared por donde tienen que entrar los tubos a esa estancia. Solo los tubos de esa estancia entran por ahí (los demás siguen su camino) y sus metros se calculan por ese recorrido. Si no marcas nada, se toma el camino más corto.</p>"});
       P.push({mission:true,t:"Muestra la tubería",badge:"Tubería a la vista",
         done:function(){ return !!S.showPipes; },
         skip:function(){ var c=$("showPipes"); if(c && !c.checked){ c.checked=true; c.dispatchEvent(new Event("change")); } },
@@ -5163,6 +5166,7 @@
     P.push({info:true,el:"#thermRes",top:true,t:"Potencias y caudales",x:"<p>Potencia que necesita cada estancia y la que da "+(suelo?"el suelo":"el techo")+", la <b>temperatura de impulsión</b> de diseño (para elegir la aerotermia) y el <b>caudal de cada salida</b> en l/min para ajustar el caudalímetro del colector.</p><p>Si una estancia no llega, te dice por qué.</p>"});
     P.push({info:true,el:"#tablesCard",t:"Resumen de circuitos",x:"<p>Circuitos y metros de tubo por estancia y por colector, con las salidas usadas y libres.</p>"});
     P.push({info:true,el:"#report",top:true,t:"Material e informe",x:"<p>Material con cantidades. Escribe tus precios para ver el coste aproximado, rellena cliente y obra, y descarga el <b>informe en PDF</b>.</p>"});
+    P.push({info:true,el:['[data-qty="ctl_cab"]','[data-qty="ctl_cent"]'],t:"Control por zonas",x:"<p><b>Cabezales electrotérmicos</b>, <b>termostatos</b> y <b>centralita</b>: la cantidad la pones tú según las zonas que quiera el cliente (en la fila de cabezales te dice cuántas salidas hay). Si los dejas a 0, no salen en el informe.</p>"});
     P.push({info:true,el:"#openCompany",t:"Tus datos de empresa",x:"<p>Nombre, logotipo y contacto: salen en la cabecera del informe.</p>"});
     P.push({info:true,el:"#planBtn",t:"Tu plan",x:"<p>Con el plan <b>por proyecto</b> tienes todas las herramientas y avisos, y los resultados se ven al <b>finalizar</b> el proyecto. Con la <b>suscripción de empresa</b> lo ves todo en tiempo real. Pulsa aquí para ver los planes.</p>"});
     P.push({final:true});

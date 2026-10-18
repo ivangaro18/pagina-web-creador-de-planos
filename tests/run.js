@@ -212,6 +212,22 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("deshacer deja la pared recta otra vez", await p.evaluate(() => window.__dbg.S.rooms.every(r => r.bulge.every(b => !b))));
   await p.close();
 
+  // 8. tutorial: se recorre entero en techo y suelo (saltando las misiones) y salen los pasos de lo nuevo
+  out.push("Tutorial");
+  for (const [h, nm] of [["#planificador", "techo"], ["#suelo", "suelo"]]) {
+    p = await open(h); await p.click("#tourBtn"); await p.waitForTimeout(500);
+    const seen = [];
+    for (let i = 0; i < 60; i++) {
+      const st = await p.evaluate(() => { const tp = document.querySelector(".tour-tip"); if (!tp) return null; return { t: (tp.querySelector(".tt-title,h3") || {}).innerText || "", b: [...tp.querySelectorAll("button[data-t]")].map(x => x.getAttribute("data-t")) }; });
+      if (!st) break; seen.push(st.t);
+      const a = st.b.includes("next") ? "next" : st.b.includes("skip") ? "skip" : null; if (!a) break;
+      await p.click('.tour-tip button[data-t="' + a + '"]'); await p.waitForTimeout(300);
+    }
+    const need = ["¿Tienes un plano de la vivienda?", "Deshacer y rehacer", "Paredes curvas", "Control por zonas"], miss = need.filter(t => !seen.includes(t));
+    ok("tutorial de " + nm + ": llega al final (" + seen.length + " pasos) con los pasos nuevos", /Fin/.test(seen[seen.length - 1] || "") && !miss.length, "faltan: " + miss.join(", ") + " · último: " + seen[seen.length - 1]);
+    await p.close();
+  }
+
   ok("sin errores de JavaScript durante las pruebas", errors.length === 0, errors.join(" | "));
   await browser.close(); server.close();
   console.log(out.join("\n"));
