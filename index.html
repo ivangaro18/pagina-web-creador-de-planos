@@ -1206,7 +1206,7 @@
     // a rounded bay window on the living room to show curved walls
     var sal=rooms[0]; sal.bulge[3]={u:0,v:0.9/4.8}; sal.tx=0.9;
     rooms.forEach(function(r,i){ if(i>0) r.tx+=0.9; });
-    return {id:nid(), name:"Planta baja", rooms:rooms, collectors:[{id:nid(),name:"Colector 1",x:3.9,y:5.35,cap:9},{id:nid(),name:"Colector 2",x:11.2,y:5.35,cap:8}]};
+    return {id:nid(), name:"Planta baja", rooms:rooms, collectors:[{id:nid(),name:"Colector 1",x:3.9,y:5.35,cap:10},{id:nid(),name:"Colector 2",x:11.2,y:5.35,cap:8}]};
   }
   function exampleFloorUF(){
     var f=exampleFloor(), R=f.rooms, M=function(i,o){ R[i].marks=o; };
@@ -1530,17 +1530,19 @@
       };
       if(!r1 || r1.w<0.3 || r1.h<0.3){ res.msgs.push({t:"warn",x:"La estancia es demasiado pequeña para respetar la distancia a pared."}); }
       else {
-        var g1=gridLayout(r1.w,r1.h,res.minA,res.maxA,lc,lp,koIn(r1),priOf(r1));
-        if(!g1.fail) push(r1,g1);
-        if(res.covered<res.minA-EPS){
-          var m=Math.round(0.15/R.res);
-          for(var j=r1.r0-m;j<=r1.r1+m;j++) for(var i=r1.c0-m;i<=r1.c1+m;i++){ if(i>=0&&j>=0&&i<R.nx&&j<R.ny) R.g[j*R.nx+i]=0; }
-          var r2=maxRect(R);
-          if(r2 && r2.w>=0.6 && r2.h>=0.6){
-            var g2=gridLayout(r2.w,r2.h,Math.max(0,res.minA-res.covered),res.maxA-res.covered,lc,lp,koIn(r2),priOf(r2));
-            if(!g2.fail && g2.area>0) push(r2,g2);
-          }
-        }
+        // rooms that are not a plain rectangle (L shapes, a corridor leg...): split the free area into rectangles and share the
+        // panels out between them by their size, so every part of the room gets panels and not only the big one
+        var zones=[r1], vs=variants(), mz=Math.round(0.15/R.res);
+        var fits=function(r){ return vs.some(function(v){ return v.w<=r.w+EPS && v.h<=r.h+EPS; }); };
+        var clr=function(r){ for(var j=r.r0-mz;j<=r.r1+mz;j++) for(var i=r.c0-mz;i<=r.c1+mz;i++){ if(i>=0&&j>=0&&i<R.nx&&j<R.ny) R.g[j*R.nx+i]=0; } };
+        clr(r1);
+        for(var zi=0;zi<3;zi++){ var rz=maxRect(R); if(!rz || rz.w*rz.h<0.4 || !fits(rz)) break; zones.push(rz); clr(rz); }
+        var remMin=res.minA, remMax=res.maxA, remW=zones.reduce(function(t,z){ return t+z.w*z.h; },0), gz={};
+        // smallest zones first; whatever they cannot take goes to the bigger ones
+        zones.map(function(z,i){ return i; }).sort(function(a,b){ return zones[a].w*zones[a].h-zones[b].w*zones[b].h; }).forEach(function(i){
+          var z=zones[i], w=z.w*z.h, f=remW>0?Math.min(1,w/remW):1, gl=gridLayout(z.w,z.h,Math.max(0,remMin*f),Math.max(0,remMax*f),lc,lp,koIn(z),priOf(z));
+          remW-=w; if(!gl.fail && gl.area>0){ gz[i]=gl; remMin-=gl.area; remMax-=gl.area; } });
+        zones.forEach(function(z,i){ if(gz[i]) push(z,gz[i]); });
         if(!res.panels.length) res.msgs.push({t:"warn",x:"Ningún panel del catálogo cabe dentro del máximo indicado ("+fmt(maxPct)+"%) respetando la distancia a pared. Sube el % máximo o añade un modelo más pequeño."});
       }
       if(CL) (room.lights||[]).forEach(function(l,i){ res.lights.push(V(l.x,l.y)); res.keep.push(KO[i]); if(!pointIn(V(l.x,l.y),out)) res.msgs.push({t:"warn",x:"El punto de luz "+(i+1)+" queda fuera de la estancia: revisa sus distancias."}); });
