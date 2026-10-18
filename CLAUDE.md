@@ -52,3 +52,14 @@ Dentro de `index.html`:
 ## Probar
 
 No hay build ni tests. Sirve la carpeta (`python3 -m http.server`) y abre `http://localhost:8000/#planificador` o `#suelo`. En `localhost` y `127.0.0.1` se pide inicio de sesión (están en `AUTH_HOSTS`); para probar sin cuenta abre la página con otro nombre de host (p. ej. la IP de la máquina) o define `window.__SUPA_MOCK`. Chromium/Playwright sirven para comprobar visualmente y capturar pantallas.
+
+## Publicar (por defecto, sin preguntar)
+
+El dueño quiere que los cambios se publiquen al momento. Al terminar cada cambio:
+1. Comprueba que funciona: abre la página en Chromium/Playwright, prueba la función tocada (techo y suelo si afecta a ambos), mira que no haya errores de JavaScript en consola y haz capturas antes/después si es visual.
+2. Haz commit en la rama de trabajo y súbela.
+3. Trae `origin/main` y fusiona la rama en `main`. Si hay conflictos, resuélvelos solo cuando no se pierda nada; si no está claro, pregunta antes de publicar.
+4. Si todo está bien, sube `main` (`git push origin main`): GitHub Pages publica la web en uno o dos minutos. Comprueba que el despliegue «pages build and deployment» termina bien.
+5. Si algo falla o no se ha podido comprobar, no publiques: explica qué pasa.
+
+No hace falta abrir pull requests.
