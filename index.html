@@ -297,16 +297,19 @@
   .p-via{stroke:#7A4F00;stroke-width:.09;stroke-linecap:round;pointer-events:none;}
   .p-via-a{fill:#7A4F00;pointer-events:none;}
   .p-reg{fill:rgba(11,127,171,.07);stroke:var(--accent);stroke-width:.014;stroke-dasharray:.06 .04;}
-  .p-tcase{fill:none;stroke:#fff;stroke-width:.06;stroke-linejoin:round;stroke-linecap:round;pointer-events:none;}
-  .p-tcase.w{stroke-width:.085;}
-  .p-tube{fill:none;stroke-width:.028;stroke-linejoin:round;stroke-linecap:round;pointer-events:none;}
-  .p-tube.w{stroke-width:.05;}
-  .p-tube.ret{stroke-dasharray:.1 .055;stroke-linecap:butt;}
-  .p-tbr{fill:none;stroke-width:.016;stroke-linecap:round;pointer-events:none;}
-  .p-tbr.ret{stroke-dasharray:.05 .035;}
-  .p-tee{fill:#fff;stroke:#0F2A3D;stroke-width:.016;pointer-events:none;}
-  .p-teet{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:.075px;font-weight:700;fill:#0F2A3D;pointer-events:none;}
-  .p-onum{stroke:#fff;stroke-width:.012;pointer-events:none;}
+  /* ceiling piping: widths in screen pixels times --pu (set by pipeScale: one pixel, grown with the square root of the zoom),
+     so the plan stays light at full view and the tubes gain weight when zooming in. The fallback is for the PDF image. */
+  .p-tcase{fill:none;stroke:#fff;stroke-width:calc(var(--pu,.01px)*3);stroke-linejoin:round;stroke-linecap:round;pointer-events:none;}
+  .p-tcase.w{stroke-width:calc(var(--pu,.01px)*3.8);}
+  .p-tcase.br{stroke-width:calc(var(--pu,.01px)*2.2);}
+  .p-tube{fill:none;stroke-width:calc(var(--pu,.01px)*1.2);stroke-linejoin:round;stroke-linecap:round;pointer-events:none;}
+  .p-tube.w{stroke-width:calc(var(--pu,.01px)*2);}
+  .p-tube.ret{stroke-dasharray:calc(var(--pu,.01px)*5) calc(var(--pu,.01px)*3);stroke-linecap:butt;}
+  .p-tbr{fill:none;stroke-width:calc(var(--pu,.01px)*.9);stroke-linecap:round;pointer-events:none;}
+  .p-tbr.ret{stroke-dasharray:calc(var(--pu,.01px)*3) calc(var(--pu,.01px)*2);}
+  .p-tee{fill:#fff;stroke:#0F2A3D;stroke-width:calc(var(--pu,.01px)*.8);pointer-events:none;}
+  .p-teet{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:.055px;font-weight:700;fill:#0F2A3D;pointer-events:none;}
+  .p-onum{stroke:#fff;stroke-width:calc(var(--pu,.01px)*.8);pointer-events:none;}
   .p-onumt{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.085px;font-weight:700;fill:#fff;pointer-events:none;}
   .p-end.ida{fill:var(--ida);} .p-end.ret{fill:var(--ret);}
   .p-trunk{fill:none;stroke-width:.03;stroke-linejoin:round;pointer-events:none;}
@@ -316,8 +319,8 @@
   .p-fan.ida{stroke:var(--ida);} .p-fan.ret{stroke:var(--ret);}
   .p-pill{fill:var(--surface);stroke:var(--muted);stroke-width:.015;pointer-events:none;}
   .p-pilltext{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.14px;font-weight:600;fill:var(--ink);pointer-events:none;}
-  .p-bridge{stroke:var(--bridge);stroke-width:.05;stroke-linecap:round;pointer-events:none;}
-  .p-node{fill:var(--room-fill);stroke:var(--bridge);stroke-width:.028;pointer-events:none;}
+  .p-bridge{stroke:var(--bridge);stroke-width:calc(var(--pu,.01px)*1.6);stroke-linecap:round;pointer-events:none;}
+  .p-node{fill:var(--room-fill);stroke:var(--bridge);stroke-width:calc(var(--pu,.01px)*1.1);pointer-events:none;}
   .lg-line{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:3px;margin-right:5px;border-radius:2px;}
   .lg-bridge{display:inline-flex;align-items:center;margin-right:5px;vertical-align:-1px;}
   .lg-bridge i{width:8px;height:8px;border-radius:50%;border:2px solid var(--bridge);background:var(--room-fill);box-sizing:border-box;}
@@ -1882,12 +1885,12 @@
   function pipesSvg(fl){
     var L=pipeLayout(fl), o="", col=function(O){ return CC[((O.n||1)-1)%CC.length]; };
     L.tubes.forEach(function(t){ o+='<polyline class="p-tcase'+(t.d===20?' w':'')+'" points="'+ptsStr(t.pts)+'"/>'; });
-    L.branches.forEach(function(b){ o+='<polyline class="p-tcase" style="stroke-width:.04" points="'+ptsStr(b.pts)+'"/>'; });
+    L.branches.forEach(function(b){ o+='<polyline class="p-tcase br" points="'+ptsStr(b.pts)+'"/>'; });
     L.tubes.forEach(function(t){ o+='<polyline class="p-tube '+t.cls+(t.d===20?' w':'')+'" style="stroke:'+t.color+'" points="'+ptsStr(t.pts)+'"><title>Salida '+t.O.n+' · '+(t.cls==="ida"?"ida":"retorno")+(t.d===20?' · tubo 20':'')+' · '+esc(t.room.name)+'</title></polyline>'; });
     L.branches.forEach(function(b){ o+='<polyline class="p-tbr '+b.cls+'" style="stroke:'+col(b.O)+'" points="'+ptsStr(b.pts)+'"/>'; });
-    L.bridges.forEach(function(b){ o+='<line class="p-bridge" x1="'+f3(b[0].x)+'" y1="'+f3(b[0].y)+'" x2="'+f3(b[1].x)+'" y2="'+f3(b[1].y)+'"/><circle class="p-node" cx="'+f3(b[0].x)+'" cy="'+f3(b[0].y)+'" r="0.07"/><circle class="p-node" cx="'+f3(b[1].x)+'" cy="'+f3(b[1].y)+'" r="0.07"/>'; });
-    L.ends.forEach(function(e){ o+='<circle class="p-node" style="stroke:'+col(e.O)+'" cx="'+f3(e.p.x)+'" cy="'+f3(e.p.y)+'" r="0.05"/>'; });
-    L.tees.forEach(function(t){ o+='<rect class="p-tee" x="'+f3(t.p.x-0.06)+'" y="'+f3(t.p.y-0.06)+'" width="0.12" height="0.12" rx="0.02"/><text class="p-teet" x="'+f3(t.p.x)+'" y="'+f3(t.p.y+0.027)+'" text-anchor="middle">T</text>'; });
+    L.bridges.forEach(function(b){ o+='<line class="p-bridge" x1="'+f3(b[0].x)+'" y1="'+f3(b[0].y)+'" x2="'+f3(b[1].x)+'" y2="'+f3(b[1].y)+'"/><circle class="p-node" cx="'+f3(b[0].x)+'" cy="'+f3(b[0].y)+'" r="0.04"/><circle class="p-node" cx="'+f3(b[1].x)+'" cy="'+f3(b[1].y)+'" r="0.04"/>'; });
+    L.ends.forEach(function(e){ o+='<circle class="p-node" style="stroke:'+col(e.O)+'" cx="'+f3(e.p.x)+'" cy="'+f3(e.p.y)+'" r="0.03"/>'; });
+    L.tees.forEach(function(t){ o+='<rect class="p-tee" x="'+f3(t.p.x-0.045)+'" y="'+f3(t.p.y-0.045)+'" width="0.09" height="0.09" rx="0.015"/><text class="p-teet" x="'+f3(t.p.x)+'" y="'+f3(t.p.y+0.02)+'" text-anchor="middle">T</text>'; });
     // outlet numbers at the collector: one row on the side the tubes do not take, spread so they do not overlap
     var grp={}; L.nums.forEach(function(nm){ if(nm.at!=="port") return; var k=nm.cid+"_"+nm.sg; (grp[k]=grp[k]||[]).push(nm); });
     Object.keys(grp).forEach(function(k){ var gl=grp[k].sort(function(a,b){ return a.p.x-b.p.x; }), sp=0.15, w=(gl.length-1)*sp, cx=gl.reduce(function(t,n){ return t+n.p.x; },0)/gl.length;
@@ -2941,7 +2944,11 @@
       return;
     }
     wrap.innerHTML=planSvg(false).svg;
+    pipeScale(wrap.querySelector("svg"),S.zoom?S.zoom.k:1);
   }
+  // line weight of the ceiling piping: --pu is one screen pixel in plan units, times √zoom (thin at full view, firmer when zoomed)
+  function pipeScale(svg,k){ var m=svg&&svg.getScreenCTM&&svg.getScreenCTM(); if(m&&m.a>0) svg.style.setProperty("--pu",(Math.sqrt(k||1)/m.a)+"px"); }
+  window.addEventListener("resize",function(){ pipeScale(document.querySelector("#planWrap svg"),S.zoom?S.zoom.k:1); pipeScale(document.querySelector("#heroPlan svg"),1); });
 
   // ---------------- room detail ----------------
   function sideLabelsSvg(r,fs){
@@ -4491,7 +4498,7 @@
     var keep={floors:S.floors,fi:S.fi,sel:S.sel,pipes:S.showPipes,str:S.showStruct};
     S.floors=[exampleFloor()]; S.fi=0; S.sel=null; S.showPipes=true; S.showStruct=false;
     computeAll(); renderTables();
-    $("heroPlan").innerHTML=planSvg(false).svg;
+    $("heroPlan").innerHTML=planSvg(false).svg; pipeScale($("heroPlan").querySelector("svg"),1);
     var t={n:0,c:0,pex:0,area:0}; S.rooms.forEach(function(r){ var x=results[r.id]; t.n+=x.panels.length; t.c+=x.circuits; t.pex+=x.pex; t.area+=x.area; });
     $("heroTags").innerHTML='<span><b>'+fmt(t.area,0)+'</b> m²</span><span><b>'+t.n+'</b> paneles</span><span><b>'+t.c+'</b> circuitos</span><span><b>'+fmt(Math.ceil(t.pex))+'</b> m de PEX</span>';
     var pick=["Panel 80×150","Colector de 16 salidas","Tubo PEX","Bicono para PEX","Perfil TC secundario","Placa de pladur","Tira LED"], h='<div class="grp">Ejemplo: vivienda de '+fmt(t.area,0)+' m²</div>';
