@@ -1743,7 +1743,9 @@
   // the room on the other side of a passage (a hole in the wall, no direction: any tube crossing that wall goes through it)
   function viaOther(r){ var g=viaGeom(r); if(!g) return null; var Q=add(g.P,mul(g.nin,-0.12)), o=null; S.rooms.forEach(function(x){ if(!o && x!==r && pointIn(Q,results[x.id]?results[x.id].wout:worldOutline(x))) o=x; }); return o; }
   // drawn the same from both sides: the hole along the wall and its two jambs across it
-  function viaSvg(r){ var g=viaGeom(r); if(!g) return ""; var a=add(g.P,mul(g.u,-0.22)), b=add(g.P,mul(g.u,0.22)), o=viaOther(r), ln=function(p,q,c){ return '<line class="'+c+'" x1="'+f3(p.x)+'" y1="'+f3(p.y)+'" x2="'+f3(q.x)+'" y2="'+f3(q.y)+'"/>'; };
+  // the hole: a standard width, wider when more tubes pass than fit (HOLE_W, worked out by pipeLayout), the same margin both sides
+  var HOLE_MIN=0.44, HOLE_MARGIN=0.1, HOLE_W={};
+  function viaSvg(r){ var g=viaGeom(r); if(!g) return ""; var hw=(HOLE_W[r.id]||HOLE_MIN)/2, a=add(g.P,mul(g.u,-hw)), b=add(g.P,mul(g.u,hw)), o=viaOther(r), ln=function(p,q,c){ return '<line class="'+c+'" x1="'+f3(p.x)+'" y1="'+f3(p.y)+'" x2="'+f3(q.x)+'" y2="'+f3(q.y)+'"/>'; };
     return '<g><title>Paso de tubos entre '+esc(r.name)+(o?' y '+esc(o.name):'')+'</title>'+ln(a,b,"p-via")+ln(add(a,mul(g.nin,-0.16)),add(a,mul(g.nin,0.16)),"p-via-j")+ln(add(b,mul(g.nin,-0.16)),add(b,mul(g.nin,0.16)),"p-via-j")+'</g>'; }
   function circsOf(r,res){ var g=[]; res.panels.forEach(function(p){ (g[p.circuit]=g[p.circuit]||[]).push(p); });
     var o=[], segs=[]; g.forEach(function(ps,i){ if(!ps) return; var pts=ps.map(function(p){ return toW(r,V(p.x+p.w/2,p.y+p.h/2)); }), j=joinOf(ps[0],ps[ps.length-1],segs);
@@ -1958,6 +1960,20 @@
         tb.pts=q2; L.tubes.push(tb); });
       tubes.forEach(function(tb){ if(tb.cls==="ida") L.nums.push({p:tb.P0,O:tb.O,at:"port",sg:(tb.path[1]||tb.p).y<col.y?1:-1,cid:col.id}); });
     });
+    // the tubes through each hole: packed lane by lane and centred on it (same order, so they do not cross), and the hole as wide as they need
+    fl.rooms.forEach(function(r){ var g0=viaGeom(r); if(!g0) return; var lane=Math.min(0.05,1.0/Math.max(1,L.tubes.length)), hits=[];
+      // one way along the wall whichever room it was marked from, so both give exactly the same layout
+      var fw=g0.u.x>1e-9 || (Math.abs(g0.u.x)<=1e-9 && g0.u.y>0), g={P:g0.P,u:fw?g0.u:mul(g0.u,-1),nin:fw?g0.nin:mul(g0.nin,-1)};
+      L.tubes.forEach(function(tb){ var P=tb.pts; for(var k=0;k+1<P.length;k++){ var sa=dot(sub(P[k],g.P),g.nin), sb=dot(sub(P[k+1],g.P),g.nin); if(sa*sb>=0) continue;
+        var x=add(P[k],mul(sub(P[k+1],P[k]),sa/(sa-sb))), t=dot(sub(x,g.P),g.u); if(Math.abs(t)<0.8) hits.push({tb:tb,k:k,t:t}); } });
+      hits.sort(function(p,q){ return p.t-q.t; });
+      var pc=dot(g.P,g.u), ax=Math.abs(g.u.x)>0.999?"x":Math.abs(g.u.y)>0.999?"y":null;
+      hits.forEach(function(h,i){ var tg=Math.round((pc+(i-(hits.length-1)/2)*lane)*1e5)/1e5, P=h.tb.pts, k=h.k;
+        if(k+1===P.length-1) P.splice(k+1,0,V(P[k+1].x,P[k+1].y));          // never move the end at the panel
+        if(k===0) { P.splice(1,0,V(P[0].x,P[0].y)); k=1; }
+        // the crossing run is square to the wall: put it exactly at its place along the wall
+        [k,k+1].forEach(function(j){ if(ax) P[j]=ax==="x"?V(tg*g.u.x,P[j].y):V(P[j].x,tg*g.u.y); else P[j]=add(P[j],mul(g.u,tg-dot(P[j],g.u))); }); });
+      HOLE_W[r.id]=Math.max(HOLE_MIN,(hits.length-1)*lane+2*HOLE_MARGIN); });
     L.tubes.forEach(function(tb){ tb.color=CC[((tb.O.n||1)-1)%CC.length]; });
     L.tubes.forEach(function(tb){ if(tb.cls==="ida") L.nums.push({p:tb.p,O:tb.O,at:"end"}); });
     return L;
@@ -2977,7 +2993,7 @@
       o+='<text class="p-sub" x="'+f3(c.x)+'" y="'+f3(c.y+0.14)+'" text-anchor="middle">'+sub+'</text>';
     });
     var pills="";
-    if(S.mode!=="suelo"){ rooms.forEach(function(r){ o+=ufObstSvg(r,function(p){ return toW(r,p); },forExport?"obHx":"obHp")+ufMarksSvg(r,function(p){ return toW(r,p); })+viaSvg(r); });
+    if(S.mode!=="suelo"){ rooms.forEach(function(r){ o+=ufObstSvg(r,function(p){ return toW(r,p); },forExport?"obHx":"obHp")+ufMarksSvg(r,function(p){ return toW(r,p); }); });
       if(S.obstDraft && !forExport){ var od0=S.obstDraft; o+='<rect class="p-obst draft" x="'+f3(Math.min(od0.a.x,od0.b.x))+'" y="'+f3(Math.min(od0.a.y,od0.b.y))+'" width="'+f3(Math.abs(od0.b.x-od0.a.x))+'" height="'+f3(Math.abs(od0.b.y-od0.a.y))+'"/>';
         o+='<text class="p-obst-t" x="'+f3((od0.a.x+od0.b.x)/2)+'" y="'+f3((od0.a.y+od0.b.y)/2+0.05)+'" text-anchor="middle">'+fmt(Math.abs(od0.b.x-od0.a.x)*100)+' × '+fmt(Math.abs(od0.b.y-od0.a.y)*100)+' cm</text>'; }
       if(S.markHover && !forExport){ var hr0=S.markHover.room, he0=S.markHover.edge, hn0=hr0.pts.length;
@@ -2993,6 +3009,7 @@
       rooms.forEach(function(r){ results[r.id].circ.forEach(function(c){ o+=ufCircSvg(c,function(p){ return p; }); }); });
     }
     else if(S.showPipes){ o+=pipesSvg(fl); }
+    if(S.mode!=="suelo" && rooms.some(function(r){ return r.via; })){ if(!S.showPipes) pipeLayout(fl); rooms.forEach(function(r){ o+=viaSvg(r); }); }
     allUnassigned.forEach(function(u){ if(u.floor!==fl) return; o+='<path class="p-unas" d="'+pathD(results[u.room.id].wout)+'"/>'; });
     if(S.mode==="suelo") rooms.forEach(function(r){ var rr=results[r.id]; if(rr.routeFail && rr.col) o+='<path class="p-unas" d="'+pathD(rr.wout)+'"><title>'+esc(r.name)+': faltan circuitos por falta de paso</title></path>'; });
     fl.collectors.forEach(function(c){

@@ -147,6 +147,21 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   });
   ok("agujero en un muro que da a varias estancias: todo tubo que lo cruza pasa por el agujero (marcado desde un lado)", !via3.e7.length, via3.e7.join(", "));
   ok("  y marcado desde el otro lado", !via3.e10.length, via3.e10.join(", "));
+  // through the hole the tubes go centred, side by side, and the hole is as wide as they need (minimum 0,44 m), same margin both sides
+  const via4 = await p.evaluate(() => {
+    const D = window.__dbg, S = D.S, R = D.rectRoom, out = {};
+    for (const [name, cap] of [["muchos", 12], ["pocos", 2]]) {
+      const E7 = R("Estancia 7", 0, 0, 8.5, 4.2), E10 = R("Estancia 10", 1.9, 4.2, 4.7, 3), Sm = R("Cuarto", 6.6, 4.2, 1.6, 2.5, { lc: "ninguna" }); E7.via = { edge: 2, t: 3.2 };
+      if (name === "pocos") { E7.pts = [D.V(0, 0), D.V(3, 0), D.V(3, 2), D.V(0, 2)].map(q => D.V(q.x + 4.6, q.y + 2.2)); E7.pts = [D.V(0, 0), D.V(1.6, 0), D.V(1.6, 2), D.V(0, 2)]; E7.tx = 4.5; E7.ty = 2.2; E7.via = { edge: 2, t: 0.8 }; }
+      S.floors = [{ id: D.nid(), name: "P", rooms: [E7, E10, Sm], collectors: [{ id: D.nid(), name: "C", x: 7.6, y: 5.0, cap }] }]; S.fi = 0; S.showPipes = true; D.update(true);
+      const P = 5.3, xs = []; D.pipeLayout(D.curFloor()).tubes.forEach(t => { for (let i = 1; i < t.pts.length; i++) { const a = t.pts[i - 1], c = t.pts[i]; if ((a.y - 4.2) * (c.y - 4.2) < 0 && Math.abs(a.x - P) < 0.8) xs.push(a.x); } });
+      xs.sort((a, b) => a - b); const j = [...document.querySelectorAll("#planWrap .p-via-j")].map(l => +l.getAttribute("x1")).sort((a, b) => a - b);
+      out[name] = { n: xs.length, mid: (xs[0] + xs[xs.length - 1]) / 2, w: j[1] - j[0], mL: xs[0] - j[0], mR: j[1] - xs[xs.length - 1] }; }
+    return out; });
+  const vm = via4.muchos, vp = via4.pocos;
+  ok("los tubos cruzan el agujero centrados (" + vm.n + " tubos)", vm.n > 2 && Math.abs(vm.mid - 5.3) < 0.02, JSON.stringify(vm));
+  ok("el hueco se ensancha con muchos tubos y deja el mismo margen a cada lado", vm.w > 0.44 + 1e-6 && Math.abs(vm.mL - vm.mR) < 0.01, JSON.stringify(vm));
+  ok("con pocos tubos el hueco tiene el tamaño mínimo (0,44 m) y van centrados", vp.n > 0 && Math.abs(vp.w - 0.44) < 0.005 && Math.abs(vp.mL - vp.mR) < 0.01, JSON.stringify(vp));
   await p.close();
 
   // 5. deshacer / rehacer y material de control
