@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // Comprobaciones automáticas del planificador (techo y suelo) en un navegador real.
+// (La importación de PDF usa pdf.js desde un CDN; aquí se prueba con una imagen, que sigue el mismo camino después.)
 //
 //   node tests/run.js              todas las pruebas
 //   node tests/run.js --update     acepta las cifras actuales del ejemplo como nuevas de referencia (tests/baseline.json)
@@ -139,6 +140,38 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   await p.close();
   p = await open("#suelo"); await p.click("#loadExample"); await p.waitForTimeout(1500);
   ok("y también en el material de suelo", await p.evaluate(() => !!document.querySelector('[data-qty="ctl_cab"]')));
+  await p.close();
+
+  // 6. plano de fondo: importar una imagen, calibrar con una medida y calcar dos estancias que se pegan solas
+  out.push("Plano de fondo");
+  p = await open("#planificador");
+  const png = await p.evaluate(() => { const c = document.createElement("canvas"); c.width = 1000; c.height = 800; const x = c.getContext("2d");
+    x.fillStyle = "#fff"; x.fillRect(0, 0, 1000, 800); x.strokeStyle = "#000"; x.lineWidth = 12; x.strokeRect(100, 100, 800, 500); x.beginPath(); x.moveTo(500, 100); x.lineTo(500, 600); x.stroke();
+    x.font = "40px sans-serif"; x.fillStyle = "#c00"; x.fillText("Salón 20 m2", 160, 300); return c.toDataURL("image/png").split(",")[1]; });
+  await p.setInputFiles("#bgFile", { name: "plano.png", mimeType: "image/png", buffer: Buffer.from(png, "base64") }); await p.waitForTimeout(800);
+  const scr = (px, py) => p.evaluate(([px, py]) => { const g = window.__dbg.curFloor().bg, svg = document.querySelector("#planWrap svg"), q = new DOMPoint(g.x + px * g.s, g.y + py * g.s).matrixTransform(svg.getScreenCTM()); return [q.x, q.y]; }, [px, py]);
+  const clk = async (px, py) => { const [x, y] = await scr(px, py); await p.mouse.move(x, y); await p.waitForTimeout(40); await p.mouse.click(x, y); await p.waitForTimeout(100); };
+  const g0 = await p.evaluate(() => { const g = window.__dbg.curFloor().bg; return g && { tool: window.__dbg.S.bgTool, cal: g.cal, img: !!document.querySelector("#planWrap image") }; });
+  ok("la imagen se importa como fondo y se abre «Calibrar escala»", !!g0 && g0.img && g0.tool === "cal" && !g0.cal, JSON.stringify(g0));
+  await clk(100, 100); await clk(500, 104); await p.fill("#bgCalLen", "4,00"); await p.press("#bgCalLen", "Enter"); await p.waitForTimeout(400);
+  const g1 = await p.evaluate(() => { const g = window.__dbg.curFloor().bg; return { s: g.s, cal: g.cal, tool: window.__dbg.S.bgTool }; });
+  ok("calibrar: 400 px = 4,00 m (con coma) deja 1 cm por píxel (±1 %) y pasa a «Calcar»", g1.cal && Math.abs(g1.s - 0.01) < 1e-4 && g1.tool === "trace", JSON.stringify(g1));
+  for (const c of [[100, 100], [500, 100], [500, 600], [100, 600], [100, 100]]) await clk(c[0], c[1]);
+  await p.waitForTimeout(300);
+  // the second room: clicks a few pixels off the first room's corners, they snap onto them
+  for (const c of [[504, 97], [900, 100], [900, 600], [497, 603], [504, 97]]) await clk(c[0], c[1]);
+  await p.waitForTimeout(400);
+  const rs = await p.evaluate(() => { const D = window.__dbg; return D.S.rooms.map(r => { const w = r.pts.map(q => D.toW(r, q)), xs = w.map(q => q.x), ys = w.map(q => q.y); return { n: r.pts.length, x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys), area: D.results[r.id].area, paneles: D.results[r.id].panels.length }; }); });
+  const near = (a, b) => Math.abs(a - b) < 1e-6;
+  ok("dos estancias rectangulares de 4,00 × 5,00 m", rs.length === 2 && rs.every(r => r.n === 4 && Math.abs(r.x1 - r.x0 - 4) < 0.011 && Math.abs(r.y1 - r.y0 - 5) < 0.011), JSON.stringify(rs));
+  ok("la segunda se engancha a las esquinas de la primera (pared compartida exacta)", rs.length === 2 && near(rs[1].x0, rs[0].x1) && near(rs[1].y0, rs[0].y0) && near(rs[1].y1, rs[0].y1), JSON.stringify(rs));
+  ok("las estancias calcadas llevan paneles", rs.length === 2 && rs.every(r => r.paneles > 0));
+  await p.keyboard.press("Escape"); await p.waitForTimeout(500);
+  await p.click("#undoBtn"); await p.waitForTimeout(400);
+  const u1 = await p.evaluate(() => ({ n: window.__dbg.S.rooms.length, img: !!document.querySelector("#planWrap image") }));
+  ok("deshacer quita la última estancia y deja el plano de fondo", u1.n === 1 && u1.img, JSON.stringify(u1));
+  await p.click("#bgShow"); await p.waitForTimeout(300);
+  ok("«Ocultar» quita el fondo del plano", await p.evaluate(() => !document.querySelector("#planWrap image")));
   await p.close();
 
   ok("sin errores de JavaScript durante las pruebas", errors.length === 0, errors.join(" | "));

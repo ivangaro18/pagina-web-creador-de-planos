@@ -34,6 +34,7 @@ Dentro de `index.html`:
    - **company profile** (datos de empresa y logo), **PDF** (`buildPdf`, `planPng`).
    - **shape editor**: modal para dibujar una estancia nueva (forma → curvas → medidas → pegar).
    - **floors**, **catalog & collectors**, **plan interactions** (arrastrar, marcar ventana/muro exterior/escalera/acceso, puertas, paso de tubos, obstáculos, zoom).
+   - **background plan** (`fl.bg`, `BGC`, `bgTool`, `traceSnap`): por planta, un PDF (pdf.js desde cdnjs, se carga al usarlo) o una imagen de fondo; se calibra con una medida real y se calcan las estancias por el centro de las paredes (se ajustan a 90° y a esquinas/paredes existentes). Solo se usan las estancias calcadas: lo demás del plano (muebles, textos, m²) se queda en la imagen. La imagen va en el proyecto como JPEG (~350 KB) y no se copia en cada paso de deshacer (`projSnapshot(true)`). No sale en el PDF.
    - **thermal calculation**: pérdidas por estancia (zonas climáticas CTE, U de cerramientos, ventilación), impulsión de diseño, emisión UNE-EN 1264, caudales.
    - **recommended collector position** (suelo): búsqueda asíncrona de la mejor pared (`REC`, `recRun`).
    - **plans**: `TEST_PHASE=true` (todo gratis). Plan "proyecto" oculta las cifras hasta finalizar y luego queda en solo lectura; planes de empresa mensual/trimestral/anual. La simulación de plan va en `localStorage["pr_plan_sim"]`. La ocultación es solo en el cliente.

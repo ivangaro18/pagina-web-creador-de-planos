@@ -354,6 +354,26 @@
   .logo-box img{max-height:56px;max-width:180px;background:#fff;border-radius:4px;padding:3px;}
   .logo-empty{font-size:.8rem;color:var(--muted);}
   .file-btn{position:relative;overflow:hidden;}
+  /* ---------- background plan (import, calibrate, trace) ---------- */
+  .bg-bar{border-top:1px dashed var(--line);padding-top:8px;}
+  .bg-bar .bg-t{font-weight:600;color:var(--ink);}
+  .bg-bar .bg-st{font-size:.76rem;}
+  .bg-bar .bg-st.ok{color:#2F7D5B;} .bg-bar .bg-st.no{color:var(--warn);}
+  .bg-bar label.bg-op{display:inline-flex;align-items:center;gap:6px;}
+  .bg-bar input[type=range]{width:90px;}
+  .p-bgimg{pointer-events:none;}
+  svg.has-bg .p-room{fill-opacity:.45;}
+  svg.has-bg .p-room.off{fill-opacity:.55;}
+  .p-trace{fill:rgba(11,127,171,.12);stroke:var(--accent);stroke-width:calc(var(--pu,.01px)*2);stroke-linejoin:round;pointer-events:none;}
+  .p-trace-rb{stroke:var(--accent);stroke-width:calc(var(--pu,.01px)*1.5);stroke-dasharray:calc(var(--pu,.01px)*6) calc(var(--pu,.01px)*4);pointer-events:none;}
+  .p-trace-pt{fill:#fff;stroke:var(--accent);stroke-width:calc(var(--pu,.01px)*1.5);pointer-events:none;}
+  .p-trace-pt.first{fill:var(--accent);}
+  .p-trace-snap{fill:none;stroke:var(--warm);stroke-width:calc(var(--pu,.01px)*2);pointer-events:none;}
+  .p-trace-len{font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600;fill:var(--accent);paint-order:stroke;stroke:#fff;stroke-width:calc(var(--pu,.01px)*3);pointer-events:none;}
+  .p-cal{stroke:var(--warm);stroke-width:calc(var(--pu,.01px)*2.5);stroke-linecap:round;pointer-events:none;}
+  .p-cal-pt{fill:var(--warm);stroke:#fff;stroke-width:calc(var(--pu,.01px)*1.5);pointer-events:none;}
+  .plan-wrap.bgmove svg{cursor:move;}
+  .mode-hint input.bg-cal-in{width:90px !important;display:inline-block;margin:0 4px;padding:3px 6px !important;vertical-align:middle;}
   .file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;}
   .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center;}
   .company-mini{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);}
@@ -853,6 +873,17 @@
       <button class="mk-btn only-techo" type="button" id="viaBtn"><i style="border:none;width:14px;height:4px;background:repeating-linear-gradient(90deg,#C0392B 0 4px,#1F6FB2 4px 8px);border-radius:2px"></i>Marcar paso de tubos</button>
       <button class="mk-btn" type="button" id="obstBtn"><i style="border:none;width:14px;height:10px;background:repeating-linear-gradient(45deg,#8C9BA7 0 2px,#E6ECF0 2px 4px);border:1px solid #6B7B88"></i>Añadir obstáculo</button>
       <span>Pulsa un botón y luego la pared en el plano. Otra pulsación en la pared la desmarca.<span class="only-techo"> Se usan para el cálculo térmico.</span></span>
+    </div>
+    <div class="mark-bar bg-bar" id="bgBar">
+      <span class="bg-t">Plano de fondo</span>
+      <span class="mk-btn file-btn" id="bgImport"><span id="bgImportT">Importar plano (PDF o imagen)</span><input type="file" id="bgFile" accept="application/pdf,image/png,image/jpeg,image/webp" aria-label="Importar plano de fondo"></span>
+      <button class="mk-btn" type="button" data-bg="cal" hidden>1 · Calibrar escala</button>
+      <button class="mk-btn" type="button" data-bg="trace" hidden>2 · Calcar estancias</button>
+      <button class="mk-btn" type="button" data-bg="move" hidden>Mover plano</button>
+      <label class="bg-op" id="bgOpL" hidden>Opacidad <input type="range" id="bgOp" min="10" max="100" step="5" aria-label="Opacidad del plano de fondo"></label>
+      <button class="mk-btn" type="button" id="bgShow" hidden>Ocultar</button>
+      <button class="mk-btn" type="button" id="bgDel" hidden>Quitar</button>
+      <span class="bg-st" id="bgSt" hidden></span>
     </div>
     <div class="mode-hint" id="modeHint" hidden></div>
     <div class="plan-stage">
@@ -2917,6 +2948,9 @@
     if(!rooms.length){ mnx=0;mny=0;mxx=4;mxy=4; }
     var bx0=mnx,by0=mny,bx1=mxx,by1=mxy;
     fl.collectors.forEach(function(c){ bx0=Math.min(bx0,c.x-0.4); by0=Math.min(by0,c.y-0.2); bx1=Math.max(bx1,c.x+0.4); by1=Math.max(by1,c.y+0.45); });
+    var BG=!forExport && bgShown(fl) ? fl.bg : null;
+    if(BG){ var gw=BG.pw*BG.s, gh=BG.ph*BG.s; if(!rooms.length){ mnx=BG.x; mny=BG.y; mxx=BG.x+gw; mxy=BG.y+gh; bx0=mnx; by0=mny; bx1=mxx; by1=mxy; }
+      else { bx0=Math.min(bx0,BG.x); by0=Math.min(by0,BG.y); bx1=Math.max(bx1,BG.x+gw); by1=Math.max(by1,BG.y+gh); } }
     var pad=0.9, vb=[Math.min(mnx-pad,bx0-0.2),Math.min(mny-pad,by0-0.2),0,0];
     vb[2]=Math.max(mxx,bx1)+0.5-vb[0]; vb[3]=Math.max(mxy,by1)+0.5-vb[1];
     if(!forExport){
@@ -2924,9 +2958,10 @@
       if(S.zoom){ var zw=vb[2]/S.zoom.k, zh=vb[3]/S.zoom.k; vb=[S.zoom.cx-zw/2, S.zoom.cy-zh/2, zw, zh]; }
       if(S.frozenVB) vb=S.frozenVB; else S.lastVB=vb;
     }
-    var o='<svg viewBox="'+vb.map(f3).join(" ")+'" xmlns="http://www.w3.org/2000/svg"'+(S.showStruct?' class="struct"':'')+(forExport?' width="'+Math.round(vb[2]*160)+'" height="'+Math.round(vb[3]*160)+'"':'')+' role="img" aria-label="Plano general de la planta con paneles">';
+    var o='<svg viewBox="'+vb.map(f3).join(" ")+'" xmlns="http://www.w3.org/2000/svg"'+((S.showStruct||BG)?' class="'+(S.showStruct?'struct':'')+(BG?' has-bg':'')+'"':'')+(forExport?' width="'+Math.round(vb[2]*160)+'" height="'+Math.round(vb[3]*160)+'"':'')+' role="img" aria-label="Plano general de la planta con paneles">';
     if(forExport) o+='<rect x="'+f3(vb[0])+'" y="'+f3(vb[1])+'" width="'+f3(vb[2])+'" height="'+f3(vb[3])+'" fill="#ffffff"/>';
     o+=obstDefs(forExport?"obHx":"obHp");
+    if(BG) o+='<image class="p-bgimg" href="'+bgSrc(BG)+'" x="'+f3(BG.x)+'" y="'+f3(BG.y)+'" width="'+f3(BG.pw*BG.s)+'" height="'+f3(BG.ph*BG.s)+'" preserveAspectRatio="none" opacity="'+(BG.op!=null?BG.op:0.6)+'"/>';
     rooms.forEach(function(r){ o+='<g class="room-g'+(r.id===S.moveId&&!forExport?' movable':'')+'" data-room="'+r.id+'">'+roomBody(r,results[r.id],S.colorByCircuit)+'</g>'; });
     rooms.forEach(function(r){
       var res=results[r.id], c=res.ctr;
@@ -2967,6 +3002,7 @@
     var mv=rooms.filter(function(r){ return r.id===S.moveId; })[0];
     if(mv && !forExport) o+='<path class="p-move" d="'+pathD(results[mv.id].wout)+'"/>';
     o+=pills;
+    if(!forExport) o+=bgOverlaySvg();
     if(!forExport && S.snapHint){ var sh=S.snapHint; o+='<line class="p-snap" x1="'+f3(sh.a.x)+'" y1="'+f3(sh.a.y)+'" x2="'+f3(sh.b.x)+'" y2="'+f3(sh.b.y)+'"/>'; }
     if(rooms.length){
       var dy=mny-0.45, dx=mnx-0.45;
@@ -2980,13 +3016,14 @@
   }
   function renderPlan(){
     var wrap=$("planWrap");
-    $("zoomCtl").hidden=!S.rooms.length;
+    $("zoomCtl").hidden=!planHas();
     wrap.classList.toggle("picking", !!(S.placing && S.placing.step==="target"));
-    wrap.classList.toggle("marking", !!(S.markTool||S.doorTool||S.obstTool||S.viaTool));
-    if(!S.rooms.length){
+    wrap.classList.toggle("marking", !!(S.markTool||S.doorTool||S.obstTool||S.viaTool||S.bgTool==="cal"||S.bgTool==="trace"));
+    wrap.classList.toggle("bgmove", S.bgTool==="move"); bgBar();
+    if(!planHas()){
       var anyRooms=allRooms().length>0;
       wrap.innerHTML='<div class="empty-cta">'+(anyRooms||S.floors.length>1
-        ? '<h3>'+esc(curFloor().name)+' está vacía</h3><p>Crea la primera estancia de esta planta dibujando su forma. Las siguientes se pegarán a ella.</p><button class="btn" data-cta="room">+ Estancia</button>'
+        ? '<h3>'+esc(curFloor().name)+' está vacía</h3><p>Crea la primera estancia de esta planta dibujando su forma. Las siguientes se pegarán a ella.</p><button class="btn" data-cta="room">+ Estancia</button> <button class="btn ghost" data-cta="bg">Importar plano</button>'
         : '<h3>Empieza un proyecto</h3><p>Dibuja la primera estancia sobre una cuadrícula de puntos, dale forma (también con paredes curvas) y escribe sus medidas. Las demás estancias se van pegando a las que ya tengas.</p><div class="btn-row" style="justify-content:center"><button class="btn" data-cta="new">Nuevo proyecto</button><button class="btn ghost" data-cta="example">Ver un ejemplo</button></div>')+'</div>';
       return;
     }
@@ -3726,7 +3763,7 @@
     var del=$("delFloor");
     if(del) del.addEventListener("click",function(){ if(del.getAttribute("data-confirm")!=="1"){ del.setAttribute("data-confirm","1"); del.textContent="¿Seguro? Pulsa otra vez"; return; } S.floors.splice(S.fi,1); switchFloor(Math.max(0,S.fi-1)); });
   }
-  function switchFloor(k){ if(S.placing) cancelPlacing(); S.zoom=null; S.moveId=null; S.fi=k; var r=S.rooms[0]; S.sel=r?r.id:null; renderFloorBar(); renderCollectors(); update(true); }
+  function switchFloor(k){ if(S.placing) cancelPlacing(); if(S.bgTool) bgTool(null,true); S.zoom=null; S.moveId=null; S.fi=k; var r=S.rooms[0]; S.sel=r?r.id:null; renderFloorBar(); renderCollectors(); update(true); }
 
   // ---------------- catalog & collectors ----------------
   function renderCatalog(){
@@ -3769,6 +3806,8 @@
     if(e.button!==undefined && e.button!==0) return;
     suppressClick=false;
     if(S.placing || RO()) return;
+    if(S.bgTool==="move" && curFloor().bg){ var bsv=$("planWrap").querySelector("svg"); if(!bsv || !S.lastVB) return; e.preventDefault(); e.stopImmediatePropagation();
+      S.bgDrag={sx:e.clientX,sy:e.clientY,x0:curFloor().bg.x,y0:curFloor().bg.y,scale:S.lastVB[2]/bsv.getBoundingClientRect().width}; S.frozenVB=S.lastVB; return; }
     if(S.obstTool){
       var oq=svgPointRaw(e.clientX,e.clientY); if(!oq) return; oq=snapPt(V(oq.x,oq.y));
       e.preventDefault(); e.stopImmediatePropagation(); suppressClick=true;
@@ -3962,7 +4001,7 @@
   }
   $("planWrap").addEventListener("click",function(e){
     var cta=e.target.closest && e.target.closest("[data-cta]");
-    if(cta){ var a=cta.getAttribute("data-cta"); if(a==="new") newProject(); else if(a==="example") loadExample(); else openShape(); return; }
+    if(cta){ var a=cta.getAttribute("data-cta"); if(a==="new") newProject(); else if(a==="example") loadExample(); else if(a==="bg") $("bgFile").click(); else openShape(); return; }
     if(suppressClick){ suppressClick=false; return; }
     if(S.markTool||S.doorTool||S.obstTool) return;
     if(e.target.closest && e.target.closest("[data-coll]")) return;
@@ -4032,7 +4071,7 @@
     if(a==="fit") zoomTo(1,0,0); else zoomTo(a==="in"?k*1.4:k/1.4,c.x,c.y);
   });
   $("planWrap").addEventListener("wheel",function(e){
-    if(!S.rooms.length) return;
+    if(!planHas()) return;
     var q=svgPointRaw(e.clientX,e.clientY); if(!q) return;
     e.preventDefault();
     var k=S.zoom?S.zoom.k:1, nk=Math.max(1,Math.min(10,k*(e.deltaY<0?1.2:1/1.2))), c=zoomCenter();
@@ -4042,7 +4081,7 @@
   // pan by dragging anywhere on the plan (rooms too); only the room selected with a double click and collectors are dragged instead
   $("planWrap").addEventListener("pointerdown",function(e){
     if(e.button!==undefined && e.button!==0) return;
-    if(S.drag || !S.rooms.length) return;
+    if(S.drag || S.bgDrag || !planHas()) return;
     if(e.target.closest && e.target.closest("[data-coll]")) return;
     var svg=$("planWrap").querySelector("svg"); if(!svg || !S.lastVB) return;
     if(!S.zoom){ var c=zoomCenter(); S.zoom={k:1,cx:c.x,cy:c.y}; }
@@ -4055,6 +4094,155 @@
     if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); });
   });
   window.addEventListener("pointerup",function(){ if(S.pan){ if(S.pan.moved) suppressClick=true; else if(S.zoom&&S.zoom.k<=1.001&&Math.abs(S.zoom.cx-zoomCenter().x)<1e-9) S.zoom=null; S.pan=null; $("planWrap").classList.remove("panning"); } });
+
+  // ---------------- background plan: import a PDF or a picture, set its scale, trace the rooms over it ----------------
+  // fl.bg={id,src,pw,ph,x,y,s,op,show,cal}: the image (JPEG data URL) of pw×ph pixels, its top left corner at x,y (m), s metres per pixel.
+  // Only the rooms traced over it go into the project's plan: whatever else the picture shows (furniture, texts, m²…) stays in the picture.
+  var BGC={};   // background images by id, so the undo steps need not carry them
+  var PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+  function bgSrc(b){ return b.src||BGC[b.id]; }
+  function bgShown(fl){ var b=(fl||curFloor()).bg; return !!(b && b.show!==false && bgSrc(b)); }
+  function planHas(){ return S.rooms.length>0 || bgShown(); }
+  function bgBar(){ var b=curFloor().bg, on=!!b;
+    ["bgOpL","bgShow","bgDel","bgSt"].forEach(function(id){ $(id).hidden=!on; });
+    document.querySelectorAll("#bgBar [data-bg]").forEach(function(x){ x.hidden=!on; x.classList.toggle("on",S.bgTool===x.getAttribute("data-bg")); });
+    $("bgImportT").textContent=on?"Cambiar plano":"Importar plano (PDF o imagen)";
+    if(on){ $("bgOp").value=Math.round((b.op!=null?b.op:0.6)*100); $("bgShow").textContent=b.show===false?"Mostrar":"Ocultar";
+      var st=$("bgSt"); st.textContent=b.cal?"Escala calibrada":"Sin calibrar: empieza por «Calibrar escala»"; st.className="bg-st "+(b.cal?"ok":"no"); } }
+  function bgSetImage(cv,name){
+    var M=2400, k=Math.min(1,M/Math.max(cv.width,cv.height)), c2=cv;
+    if(k<1){ c2=document.createElement("canvas"); c2.width=Math.round(cv.width*k); c2.height=Math.round(cv.height*k); var x2=c2.getContext("2d"); x2.fillStyle="#fff"; x2.fillRect(0,0,c2.width,c2.height); x2.drawImage(cv,0,0,c2.width,c2.height); }
+    var src=c2.toDataURL("image/jpeg",0.8), fl=curFloor(), id="bg"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); BGC[id]=src;
+    // a first guess of 15 m across, until it is calibrated; over the rooms already drawn, if any
+    var s=15/c2.width, x=0, y=0; if(S.rooms.length){ var mn=V(Infinity,Infinity); S.rooms.forEach(function(r){ results[r.id].wout.forEach(function(p){ mn=V(Math.min(mn.x,p.x),Math.min(mn.y,p.y)); }); }); x=mn.x; y=mn.y; }
+    fl.bg={id:id,src:src,pw:c2.width,ph:c2.height,x:x,y:y,s:s,op:0.6,show:true,cal:false,name:name||""};
+    S.zoom=null; bgTool("cal"); update(false);
+  }
+  function bgLoadScript(u){ return new Promise(function(res,rej){ var sc=document.createElement("script"); sc.src=u; sc.onload=res; sc.onerror=rej; document.head.appendChild(sc); }); }
+  function bgPdf(file){
+    hint("Abriendo el PDF…");
+    var lib=window.pdfjsLib ? Promise.resolve() : bgLoadScript(PDFJS+"pdf.min.js");
+    Promise.all([lib,file.arrayBuffer()]).then(function(a){ var L=window.pdfjsLib; L.GlobalWorkerOptions.workerSrc=PDFJS+"pdf.worker.min.js"; return L.getDocument({data:new Uint8Array(a[1])}).promise; }).then(function(pdf){
+      if(pdf.numPages===1) return bgPdfPage(pdf,1,file.name);
+      var h='El PDF tiene '+pdf.numPages+' páginas. ¿Cuál es el plano de esta planta? ';
+      for(var i=1;i<=Math.min(pdf.numPages,20);i++) h+='<button class="btn ghost small" type="button" data-bgpage="'+i+'">'+i+'</button> ';
+      hint(h); document.querySelectorAll("[data-bgpage]").forEach(function(b){ b.addEventListener("click",function(){ bgPdfPage(pdf,+b.getAttribute("data-bgpage"),file.name); }); });
+    }).catch(function(){ hint("No se ha podido abrir el PDF. Prueba a exportarlo como imagen (JPG o PNG) o a hacerle una foto, e impórtala.",true); });
+  }
+  function bgPdfPage(pdf,n,name){ hint("Preparando la página "+n+"…");
+    pdf.getPage(n).then(function(pg){ var v0=pg.getViewport({scale:1}), v=pg.getViewport({scale:2400/Math.max(v0.width,v0.height)}), cv=document.createElement("canvas"); cv.width=Math.round(v.width); cv.height=Math.round(v.height);
+      var cx=cv.getContext("2d"); cx.fillStyle="#fff"; cx.fillRect(0,0,cv.width,cv.height);
+      return pg.render({canvasContext:cx,viewport:v}).promise.then(function(){ bgSetImage(cv,name+" · pág. "+n); }); })
+    .catch(function(){ hint("No se ha podido leer esa página del PDF.",true); }); }
+  function bgImage(file){ var rd=new FileReader();
+    rd.onload=function(){ var im=new Image(); im.onload=function(){ var cv=document.createElement("canvas"); cv.width=im.naturalWidth; cv.height=im.naturalHeight; var cx=cv.getContext("2d"); cx.fillStyle="#fff"; cx.fillRect(0,0,cv.width,cv.height); cx.drawImage(im,0,0); bgSetImage(cv,file.name); };
+      im.onerror=function(){ hint("No se ha podido abrir la imagen.",true); }; im.src=rd.result; };
+    rd.readAsDataURL(file); }
+  $("bgFile").addEventListener("change",function(){ var f=this.files&&this.files[0]; this.value=""; if(!f || RO()) return;
+    if(/pdf$/i.test(f.type)||/\.pdf$/i.test(f.name)) bgPdf(f); else if(/^image\//.test(f.type)) bgImage(f); else hint("Ese archivo no es un PDF ni una imagen.",true); });
+  // tools: "cal" two points and their real distance, "trace" the corners of a room, "move" drag the picture
+  function bgTool(t,quiet){
+    if(t && RO()) return;
+    if(t){ if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); if(S.viaTool) viaTool(false); }
+    S.bgTool=t||null; S.bgCal=null; S.trace={pts:[],hover:null}; S.bgDrag=null;
+    var b=curFloor().bg; if(t && b && b.show===false) b.show=true;
+    if(!quiet){
+      if(t==="cal") hint('<b>Calibrar escala.</b> Pincha los dos extremos de una pared o cota cuya medida real conozcas (cuanto más larga, mejor) y escribe esa medida. Arrastra para moverte por el plano y usa la rueda para acercarte.');
+      else if(t==="trace") hint('<b>Calcar estancias.</b> Pincha las esquinas de una estancia <b>por el centro de las paredes</b>, en orden, y ciérrala pinchando de nuevo en la primera (o pulsa Intro). Se ajusta sola a ángulos rectos y a las esquinas y paredes de las estancias ya calcadas. Retroceso quita el último punto; Esc termina.'+(b&&!b.cal?' <b>Aún no has calibrado la escala.</b>':''));
+      else if(t==="move") hint('<b>Mover plano.</b> Arrastra el plano para colocarlo debajo de las estancias. Pulsa otra vez «Mover plano» para terminar.');
+      else hint("");
+    }
+    renderPlan();
+  }
+  document.querySelectorAll("#bgBar [data-bg]").forEach(function(x){ x.addEventListener("click",function(){ var t=x.getAttribute("data-bg"); bgTool(S.bgTool===t?null:t); }); });
+  ["obstBtn","viaBtn","doorBtn"].forEach(function(id){ $(id).addEventListener("click",function(){ if(S.bgTool) bgTool(null,true); },true); });
+  document.querySelectorAll("[data-mark]").forEach(function(x){ x.addEventListener("click",function(){ if(S.bgTool) bgTool(null,true); },true); });
+  $("bgOp").addEventListener("input",function(){ var b=curFloor().bg; if(!b) return; b.op=Math.max(0.1,Math.min(1,(+this.value||60)/100)); renderPlan(); histNote(); });
+  $("bgShow").addEventListener("click",function(){ var b=curFloor().bg; if(!b) return; b.show=b.show===false; if(b.show===false && S.bgTool) bgTool(null); update(false); });
+  $("bgDel").addEventListener("click",function(){ var b=curFloor().bg; if(!b || RO()) return; if(S.bgTool) bgTool(null,true); curFloor().bg=null; S.zoom=null; hint("Plano de fondo quitado. Las estancias calcadas se quedan. (Puedes deshacerlo.)"); update(false); });
+  // the point under the pointer: on a corner or wall of the rooms already there, and square to the last point
+  function bgPx(){ var svg=$("planWrap").querySelector("svg"), m=svg&&svg.getScreenCTM(); return m&&m.a>0?m.a:50; }
+  function traceSnap(q){
+    var P=S.trace.pts, tol=12/bgPx(), best=null, bd=tol, tn=Math.tan(8*Math.PI/180);
+    if(P.length>=3 && len(sub(q,P[0]))<tol) return {p:P[0],close:true,kind:"v"};
+    S.rooms.forEach(function(r){ r.pts.forEach(function(p){ var w=toW(r,p), d=len(sub(q,w)); if(d<bd){ bd=d; best={p:w,kind:"v"}; } }); });
+    if(best) return best;
+    var e=null; bd=tol*0.8;
+    S.rooms.forEach(function(r){ var n=r.pts.length; for(var i=0;i<n;i++){ if(r.bulge[i]) continue; var A=toW(r,r.pts[i]), B=toW(r,r.pts[(i+1)%n]), ab=sub(B,A), t=Math.max(0,Math.min(1,dot(sub(q,A),ab)/(dot(ab,ab)||1))), w=add(A,mul(ab,t)), d=len(sub(q,w)); if(d<bd){ bd=d; e={p:w,A:A,B:B}; } } });
+    var p=e?e.p:V(Math.round(q.x*100)/100,Math.round(q.y*100)/100);
+    if(P.length){ var L=P[P.length-1], dx=p.x-L.x, dy=p.y-L.y, vert=Math.abs(dx)<=Math.abs(dy)*tn, hor=Math.abs(dy)<=Math.abs(dx)*tn;
+      if(e){ // slide along the wall it sits on so that the new side stays square
+        var ev=Math.abs(e.B.x-e.A.x)<1e-6, eh=Math.abs(e.B.y-e.A.y)<1e-6;
+        if(ev && hor) p=V(e.A.x,L.y); else if(eh && vert) p=V(L.x,e.A.y); }
+      else { if(vert) p=V(L.x,p.y); else if(hor) p=V(p.x,L.y);
+        // and line up with the first corner, so the last two sides close square
+        if(P.length>=2){ var F=P[0]; if(Math.abs(p.x-F.x)<tol) p=V(F.x,p.y); if(Math.abs(p.y-F.y)<tol) p=V(p.x,F.y); } } }
+    return {p:p,kind:e?"e":null};
+  }
+  function calSnap(q){ var A=S.bgCal&&S.bgCal.a; if(!A) return q; var dx=q.x-A.x, dy=q.y-A.y, tn=Math.tan(6*Math.PI/180);
+    return Math.abs(dx)<=Math.abs(dy)*tn ? V(A.x,q.y) : Math.abs(dy)<=Math.abs(dx)*tn ? V(q.x,A.y) : q; }
+  function bgOverlaySvg(){ var o="", k=1/bgPx(), fs=f3(11*k);
+    if(S.bgTool==="cal" && S.bgCal){ var C=S.bgCal, B=C.b||C.hover; o+='<circle class="p-cal-pt" cx="'+f3(C.a.x)+'" cy="'+f3(C.a.y)+'" r="'+f3(5*k)+'"/>';
+      if(B){ o+='<line class="p-cal" x1="'+f3(C.a.x)+'" y1="'+f3(C.a.y)+'" x2="'+f3(B.x)+'" y2="'+f3(B.y)+'"/><circle class="p-cal-pt" cx="'+f3(B.x)+'" cy="'+f3(B.y)+'" r="'+f3(5*k)+'"/>'; } }
+    if(S.bgTool==="trace"){ var P=S.trace.pts, h=S.trace.hover, Q=P.concat(h&&!h.close?[h.p]:[]);
+      if(Q.length>1) o+='<polygon class="p-trace" points="'+ptsStr(Q)+'"/>';
+      if(P.length && h) o+='<line class="p-trace-rb" x1="'+f3(P[P.length-1].x)+'" y1="'+f3(P[P.length-1].y)+'" x2="'+f3(h.p.x)+'" y2="'+f3(h.p.y)+'"/>';
+      P.forEach(function(p,i){ o+='<circle class="p-trace-pt'+(i?'':' first')+'" cx="'+f3(p.x)+'" cy="'+f3(p.y)+'" r="'+f3(4*k)+'"/>'; });
+      for(var i=1;i<Q.length;i++){ var a=Q[i-1], b=Q[i], m=mul(add(a,b),0.5), l=len(sub(b,a)); if(l<0.2) continue;
+        o+='<text class="p-trace-len" style="font-size:'+fs+'px" x="'+f3(m.x)+'" y="'+f3(m.y-4*k)+'" text-anchor="middle">'+fmt(l,2)+' m</text>'; }
+      if(h && h.kind) o+=h.kind==="v"?'<circle class="p-trace-snap" cx="'+f3(h.p.x)+'" cy="'+f3(h.p.y)+'" r="'+f3(8*k)+'"/>':'<rect class="p-trace-snap" x="'+f3(h.p.x-6*k)+'" y="'+f3(h.p.y-6*k)+'" width="'+f3(12*k)+'" height="'+f3(12*k)+'"/>'; }
+    return o; }
+  function bgCalAsk(){
+    hint('Medida real entre los dos puntos: <input class="inp bg-cal-in" id="bgCalLen" type="text" inputmode="decimal" autocomplete="off" placeholder="p. ej. 3,20"> m <button class="btn small" id="bgCalOk" type="button">Aplicar</button> <button class="btn ghost small" id="bgCalNo" type="button">Repetir</button>');
+    var inp=$("bgCalLen"); inp.focus();
+    var go=function(){ var L=parseFloat(String(inp.value).replace(",",".")); if(!(L>0.05)){ inp.focus(); return; } bgCalApply(L); };
+    $("bgCalOk").addEventListener("click",go); inp.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); go(); } });
+    $("bgCalNo").addEventListener("click",function(){ bgTool("cal"); }); }
+  function bgCalApply(L){ var C=S.bgCal, b=curFloor().bg, d=len(sub(C.b,C.a)); if(!b || d<1e-6) return; var f=L/d;
+    b.s*=f; b.x=C.a.x+(b.x-C.a.x)*f; b.y=C.a.y+(b.y-C.a.y)*f; b.cal=true; S.zoom=null;
+    var had=S.rooms.length; bgTool("trace",true);
+    hint('<b>Escala calibrada.</b> '+(had?'Las estancias que ya había no cambian: si no encajan con el plano, usa «Mover plano». ':'')+'Ahora calca las estancias: pincha sus esquinas por el centro de las paredes y ciérralas pinchando de nuevo en la primera.');
+    update(false); }
+  function traceClose(){
+    var P=S.trace.pts, o=[];
+    P.forEach(function(p){ if(!o.length || len(sub(p,o[o.length-1]))>0.02) o.push(p); }); if(o.length>2 && len(sub(o[0],o[o.length-1]))<0.02) o.pop();
+    for(var ch=true;ch && o.length>3;){ ch=false; for(var i=0;i<o.length;i++){ var a=o[(i+o.length-1)%o.length], m=o[i], c=o[(i+1)%o.length]; if(Math.abs((m.x-a.x)*(c.y-m.y)-(m.y-a.y)*(c.x-m.x))<1e-4){ o.splice(i,1); ch=true; break; } } }
+    if(o.length<3 || Math.abs(signedArea(o))<0.3){ hint("Esa estancia es demasiado pequeña: pincha al menos tres esquinas.",true); S.trace.pts=[]; renderPlan(); return; }
+    if(signedArea(o)<0) o.reverse();
+    var mn=V(Math.min.apply(null,o.map(function(p){ return p.x; })),Math.min.apply(null,o.map(function(p){ return p.y; })));
+    var names={}, k=allRooms().length+1; allRooms().forEach(function(r){ names[r.name]=1; }); while(names["Estancia "+k]) k++;
+    var room={id:nid(), name:"Estancia "+k, pts:o.map(function(p){ return V(Math.round((p.x-mn.x)*1000)/1000,Math.round((p.y-mn.y)*1000)/1000); }), bulge:o.map(function(){ return 0; }), tx:mn.x, ty:mn.y, rot:0, attach:null, active:true, override:false, minPct:S.gMin, maxPct:S.gMax, lc:"puntos", lp:"ninguna"};
+    var c=centroid(o), over=S.rooms.filter(function(r){ return pointIn(c,results[r.id].wout); })[0];
+    S.rooms.push(room); S.sel=room.id; S.trace.pts=[]; S.trace.hover=null;
+    update(true);
+    hint('<b>'+esc(room.name)+'</b> creada ('+fmt(Math.abs(signedArea(o)),2)+' m²). Cámbiale el nombre en su panel, debajo del plano. Sigue con la siguiente estancia o pulsa Esc para terminar.'+(over?' <b>Ojo:</b> queda encima de '+esc(over.name)+'; si no querías eso, pulsa Deshacer.':''),!!over); }
+  $("planWrap").addEventListener("pointermove",function(e){
+    if(S.bgDrag){ var b=curFloor().bg; if(!b) return; b.x=S.bgDrag.x0+(e.clientX-S.bgDrag.sx)*S.bgDrag.scale; b.y=S.bgDrag.y0+(e.clientY-S.bgDrag.sy)*S.bgDrag.scale; if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); }); return; }
+    if((S.bgTool!=="cal" && S.bgTool!=="trace") || (S.pan && S.pan.moved)) return;
+    var q=svgPointRaw(e.clientX,e.clientY); if(!q) return; q=V(q.x,q.y);
+    if(S.bgTool==="cal"){ if(S.bgCal && !S.bgCal.b){ S.bgCal.hover=calSnap(q); if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); }); } return; }
+    S.trace.hover=traceSnap(q); if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); });
+  });
+  window.addEventListener("pointerup",function(){ if(S.bgDrag){ S.bgDrag=null; S.frozenVB=null; renderPlan(); histNote(); } });
+  // a click (not a drag, which moves the view) puts down a point
+  $("planWrap").addEventListener("click",function(e){
+    if(S.bgTool!=="cal" && S.bgTool!=="trace") return;
+    if(e.target.closest && e.target.closest("[data-cta],button,a,input")) return;
+    e.stopImmediatePropagation(); e.preventDefault(); if(suppressClick || RO()) return;
+    var q=svgPointRaw(e.clientX,e.clientY); if(!q) return; q=V(q.x,q.y);
+    if(S.bgTool==="cal"){ if(!curFloor().bg) return;
+      if(!S.bgCal || S.bgCal.b){ S.bgCal={a:q,b:null,hover:null}; hint("Ahora pincha el otro extremo."); renderPlan(); return; }
+      var B=calSnap(q); if(len(sub(B,S.bgCal.a))<0.05) return; S.bgCal.b=B; renderPlan(); bgCalAsk(); return; }
+    var sn=traceSnap(q); if(sn.close){ traceClose(); return; }
+    var P=S.trace.pts; if(P.length && len(sub(sn.p,P[P.length-1]))<0.02) return;
+    P.push(sn.p); S.trace.hover=null; renderPlan();
+  },true);
+  document.addEventListener("keydown",function(e){
+    if(!S.bgTool || $("appView").hidden) return; var tg=e.target&&e.target.tagName; if(tg==="INPUT"||tg==="TEXTAREA"||tg==="SELECT") return;
+    if(e.key==="Escape"){ if(S.bgTool==="trace" && S.trace.pts.length){ S.trace.pts=[]; S.trace.hover=null; renderPlan(); hint("Estancia descartada. Pincha la primera esquina de otra o pulsa Esc para terminar."); } else bgTool(null); }
+    else if(S.bgTool==="trace" && e.key==="Enter"){ e.preventDefault(); if(S.trace.pts.length>=3) traceClose(); }
+    else if(S.bgTool==="trace" && e.key==="Backspace"){ e.preventDefault(); S.trace.pts.pop(); renderPlan(); }
+  });
 
   function select(id){ var f=floorOfRoom(id); if(f>=0&&f!==S.fi){ S.fi=f; renderFloorBar(); renderCollectors(); } S.sel=id; update(true); }
 
@@ -4544,18 +4732,18 @@
   // Starts again when the project changes (new, example, opened, other system, finished) and stays off in the tutorial.
   var HIST={on:false,past:[],future:[],cur:null,timer:0,down:false};
   function histOff(){ return !HIST.on || RO() || (typeof TOUR!=="undefined" && !!TOUR); }
-  function histReset(){ if(!HIST || !HIST.on) return; clearTimeout(HIST.timer); HIST.timer=0; HIST.past=[]; HIST.future=[]; HIST.cur=projSnapshot(); histUI(); }
+  function histReset(){ if(!HIST || !HIST.on) return; clearTimeout(HIST.timer); HIST.timer=0; HIST.past=[]; HIST.future=[]; HIST.cur=projSnapshot(true); histUI(); }
   function histNote(){ if(!HIST || !HIST.on) return; clearTimeout(HIST.timer); HIST.timer=setTimeout(histTake,400); }
   function histTake(){ HIST.timer=0; if(histOff()) return; if(HIST.down){ HIST.timer=setTimeout(histTake,300); return; }
-    var s=projSnapshot(); if(s===HIST.cur) return;
+    var s=projSnapshot(true); if(s===HIST.cur) return;
     if(HIST.cur!=null){ HIST.past.push(HIST.cur); if(HIST.past.length>100) HIST.past.shift(); }
     HIST.cur=s; HIST.future=[]; histUI(); }
   function histGo(back){
     if(histOff()) return; if(HIST.timer){ clearTimeout(HIST.timer); histTake(); }
     var from=back?HIST.past:HIST.future, to=back?HIST.future:HIST.past; if(!from.length) return;
-    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); if(S.viaTool) viaTool(false); if(SH) closeShape();
+    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); if(S.viaTool) viaTool(false); if(SH) closeShape(); if(S.bgTool) bgTool(null,true);
     to.push(HIST.cur); HIST.cur=from.pop();
-    projApply(JSON.parse(HIST.cur),true); clearTimeout(HIST.timer); HIST.timer=0; HIST.cur=projSnapshot();
+    projApply(JSON.parse(HIST.cur),true); clearTimeout(HIST.timer); HIST.timer=0; HIST.cur=projSnapshot(true);
     hint(back?"Deshecho el último cambio.":"Rehecho el cambio."); histUI(); }
   function histUI(){ var off=histOff(); $("undoBtn").disabled=off||!HIST.past.length; $("redoBtn").disabled=off||!HIST.future.length; }
   $("undoBtn").addEventListener("click",function(){ histGo(true); });
@@ -4707,13 +4895,15 @@
 
   // ---- projects: what is saved, and putting it back
   var CFG_TECHO=["panels","gMin","gMax","clear","gap","strip","vert","margin","tail","secCm","primCm","bar","hang","board"];
-  function projSnapshot(){
+  // lite: without the background images (the undo history keeps them once, in BGC, instead of in every step)
+  function projSnapshot(lite){
     var cfg={th:S.th}; if(S.mode==="suelo") cfg.uf=S.uf; else CFG_TECHO.forEach(function(k){ cfg[k]=S[k]; });
-    return JSON.stringify({v:1,mode:S.mode,title:S.title,fi:S.fi,floors:S.floors,project:S.project,prices:S.prices,ctrl:S.ctrl,cfg:cfg,final:S.final||null},function(k,val){ return (k && k.charAt(0)==="_") ? undefined : val; });
+    return JSON.stringify({v:1,mode:S.mode,title:S.title,fi:S.fi,floors:S.floors,project:S.project,prices:S.prices,ctrl:S.ctrl,cfg:cfg,final:S.final||null},function(k,val){ return (k && k.charAt(0)==="_") || (lite && k==="src") ? undefined : val; });
   }
   // keep: an undo/redo step (keeps the selected room and the zoom, and the history)
   function projApply(d,keep){
     S.floors=(d.floors&&d.floors.length)?d.floors:[emptyFloor("Planta baja")]; S.fi=Math.min(d.fi||0,S.floors.length-1);
+    S.floors.forEach(function(f){ var b=f.bg; if(!b) return; if(b.src) BGC[b.id]=b.src; else if(BGC[b.id]) b.src=BGC[b.id]; else f.bg=null; });
     S.final=d.final||null; S.title=d.title||"Proyecto"; S.project=Object.assign({client:"",addr:"",ref:S.project.ref},d.project||{}); S.prices=d.prices||S.prices; S.ctrl=d.ctrl||{};
     var c=d.cfg||{};
     if(c.th){ Object.assign(S.th,c.th); syncTh(); }
