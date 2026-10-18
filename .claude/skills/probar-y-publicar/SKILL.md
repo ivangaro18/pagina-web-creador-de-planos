@@ -54,7 +54,7 @@ Las pruebas automáticas no lo cubren todo. Prueba en el navegador lo que has ca
 - Si es visual, saca las capturas de después y míralas tú antes de enseñarlas.
 - Si cambia el material, el PDF o el cálculo, mira las tablas.
 
-El PDF no se puede generar en la nube, porque jsPDF viene de un CDN bloqueado. Si el cambio toca el PDF, díselo al usuario para que lo revise él.
+El entorno tiene acceso completo a internet, así que jsPDF, pdf.js y Supabase cargan desde sus CDN y `tests/run.js` genera el informe PDF. Si el cambio toca el informe, ábrelo y míralo tú (el Read de PDF muestra las páginas). Si alguna vez el CDN no responde (las pruebas avisan «sin acceso a internet»), dile al usuario qué no has podido comprobar.
 
 ## 4. Publicar
 

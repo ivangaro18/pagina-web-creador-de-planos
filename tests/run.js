@@ -142,6 +142,19 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("y también en el material de suelo", await p.evaluate(() => !!document.querySelector('[data-qty="ctl_cab"]')));
   await p.close();
 
+  // 5b. informe PDF (necesita jsPDF desde el CDN: si no hay acceso a internet, se avisa y se salta)
+  p = await browser.newPage({ viewport: { width: 1400, height: 1000 }, acceptDownloads: true }); p.on("pageerror", e => errors.push("informe: " + e.message));
+  await p.goto(URL + "#planificador"); await p.waitForTimeout(1500);
+  if (await p.evaluate(() => !!(window.jspdf && window.jspdf.jsPDF))) {
+    await p.click("#loadExample"); await p.waitForTimeout(900);
+    await p.fill('[data-qty="ctl_cab"]', "6"); await p.fill('[data-key="ctl_cab"]', "25"); await p.waitForTimeout(300);
+    const [dl] = await Promise.all([p.waitForEvent("download", { timeout: 30000 }), p.click("#downloadReport")]);
+    const f = path.join(os.tmpdir(), "informe-prueba.pdf"); await dl.saveAs(f); const kb = Math.round(fs.statSync(f).size / 1024), txt = fs.readFileSync(f, "latin1");
+    ok("el informe PDF se genera y pesa menos de 2 MB (" + kb + " KB)", kb > 20 && kb < 2048, kb + " KB");
+    ok("en el informe sale el cabezal (6 ud.) y no las filas de control a 0", txt.includes("Cabezal electrot") && !txt.includes("Termostato de zona") && !txt.includes("Centralita de zonas"));
+  } else out.push("  · informe PDF sin probar: no se ha podido descargar jsPDF del CDN (sin acceso a internet)");
+  await p.close();
+
   // 6. plano de fondo: importar una imagen, calibrar con una medida y calcar dos estancias que se pegan solas
   out.push("Plano de fondo");
   p = await open("#planificador");

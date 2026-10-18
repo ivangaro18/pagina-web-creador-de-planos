@@ -3484,7 +3484,7 @@
       y=doc.lastAutoTable.finalY+6;
       plans.forEach(function(plan,k){ if(!plan) return; var pw=PW-2*M, ph=pw*plan.ratio; if(ph>120){ ph=120; pw=ph/plan.ratio; } if(y+ph+8>285){ doc.addPage(); y=18; }
         doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor.apply(doc,INK); doc.text("Plano de distribución"+(multi?" · "+S.floors[k].name:""),M,y); y+=3;
-        doc.addImage(plan.data,"PNG",M+(PW-2*M-pw)/2,y,pw,ph); y+=ph+6; });
+        doc.addImage(plan.data,"PNG",M+(PW-2*M-pw)/2,y,pw,ph,undefined,"FAST");   /* compressed (lossless): uncompressed it is ~12 MB per plan */ y+=ph+6; });
       function section(t){ if(y>265){ doc.addPage(); y=18; } doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor.apply(doc,INK); doc.text(t,M,y); y+=2; }
       var tstyle={margin:{left:M,right:M},theme:"striped",styles:{fontSize:8.5,textColor:INK,cellPadding:1.8},headStyles:{fillColor:ACC,textColor:255,fontSize:8},alternateRowStyles:{fillColor:[245,246,244]}};
       function T(o){ var cfg=Object.assign({},tstyle,o); cfg.startY=y; doc.autoTable(cfg); y=doc.lastAutoTable.finalY+7; }
