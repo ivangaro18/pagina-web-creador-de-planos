@@ -867,7 +867,7 @@
       <span class="only-suelo"><span class="sw dot" style="background:var(--ret)"></span>Retorno en el colector</span>
       <span><span class="lg-mk" style="border-top:6px double #5FB8D8"></span>Ventana</span>
       <span><span class="lg-mk"></span>Muro exterior</span>
-      <span class="only-techo"><span class="lg-mk" style="border-top:5px dashed #2F7D5B;width:14px"></span>Puerta de acceso (los paneles se acercan a ella y a las ventanas)</span>
+      <span class="only-techo"><span class="lg-mk" style="border-top:5px dashed #2F7D5B;width:14px"></span>Puerta de acceso (una fila de paneles junto a ella y a las ventanas)</span>
       <span class="only-techo"><span class="lg-mk" style="border-top:5px solid #7A4F00;width:14px"></span>Paso de tubos marcado (los tubos de la estancia entran por ahí)</span>
       <span class="only-suelo"><span class="lg-mk" style="border-top:5px dashed var(--ang)"></span>Escalera (no pasa tubo)</span>
       <span><span class="sw" style="background:repeating-linear-gradient(45deg,#8C9BA7 0 2px,#E6ECF0 2px 4px);border:1px solid #6B7B88"></span><span class="only-suelo">Obstáculo (ducha, bañera, inodoro, mueble fijo…): sin tubo</span><span class="only-techo">Obstáculo (muebles hasta el techo, vigas, conductos…): sin paneles</span></span>
@@ -1348,19 +1348,55 @@
       }
     }); });
     if(!cands.length){ res.fail=true; return res; }
+    var sum=function(a,b){ return a+b; }, hasPri=!!(pri && (pri.l||pri.r||pri.t||pri.b));
+    // bands: cells that stay together (a merged panel never splits); the free space is shared out between bands.
+    // No priority side: equal gaps between bands and half a gap at each wall. A priority side (window, entrance): the first band
+    // goes against it and the rest spread evenly over the room.
+    function spreadAxis(bands,cell,stripAt,total,lo,hi,emin){
+      var n=bands.length, sz=bands.map(function(b){ return b.m*cell+(b.m-1)*g; }), mg=bands.map(function(b,i){ return !i?0:(stripAt!=null&&b.i0===stripAt?s:g); });
+      var spare=Math.max(0,total-sz.reduce(sum,0)-mg.reduce(sum,0)), wl=lo?0:0.5, wh=hi?0:0.5, fl=null, fh=null, el=0, gi=0;
+      for(var it=0;it<3;it++){
+        var wt=(fl==null?wl:0)+(fh==null?wh:0)+(n-1), rest=spare-(fl||0)-(fh||0);
+        if(wt>0){ var E=rest/wt; el=fl!=null?fl:wl*E; gi=n>1?E:0; } else { el=fl!=null?fl:(fh!=null?0:spare/2); gi=0; }
+        var eh=spare-el-gi*(n-1), ch=false;
+        if(emin>0 && !lo && fl==null && el<emin-1e-6){ fl=Math.min(emin,spare/2); ch=true; }
+        if(emin>0 && !hi && fh==null && eh<emin-1e-6){ fh=Math.min(emin,spare/2); ch=true; }
+        if(!ch) break;
+      }
+      var o=[], q=el; for(var i=0;i<n;i++){ if(i) q+=mg[i]+gi; o.push(q); q+=sz[i]; }
+      return o;
+    }
+    function compactStarts(bands,cell,stripAt,off){ var o=[], q=off; bands.forEach(function(b,i){ if(i && stripAt!=null && b.i0===stripAt) q+=s-g; o.push(q); q+=b.m*cell+(b.m-1)*g+g; }); return o; }
+    var bix=function(B){ var o=[]; B.forEach(function(b,i){ for(var j=0;j<b.m;j++) o[b.i0+j]=i; }); return o; };
+    var posX=function(k,X,ci){ var b=k.IX[ci]; return X[b]+(ci-k.BX[b].i0)*(k.v.w+g); }, posY=function(k,Y,ri){ var b=k.IY[ri]; return Y[b]+(ri-k.BY[b].i0)*(k.v.h+g); };
+    cands.forEach(function(k){
+      var mp=k.mp, seg=function(n,split){ var o=[], at=0; runsOf(n,split).forEach(function(ln){ splitRun(ln,mp.opts,k.v).forEach(function(pc){ o.push({i0:at,m:pc.m}); at+=pc.m; }); }); return o; },
+        ones=function(n){ var o=[]; for(var i=0;i<n;i++) o.push({i0:i,m:1}); return o; };
+      k.BX=mp.mode==="row"?ones(k.c):seg(k.c,k.so==="v"); k.BY=mp.mode==="row"?seg(k.r,k.so==="h"):ones(k.r);
+      k.IX=bix(k.BX); k.IY=bix(k.BY); k.sX=k.so==="v"?k.c/2:null; k.sY=k.so==="h"?k.r/2:null;
+      var em=(wantP||(wantC&&k.so==="none"))?0.2:0;
+      k.PX=spreadAxis(k.BX,k.v.w,k.sX,W,!!(pri&&pri.l),!!(pri&&pri.r),em); k.PY=spreadAxis(k.BY,k.v.h,k.sY,L,!!(pri&&pri.t),!!(pri&&pri.b),em);
+      // how evenly the room is covered: free space per band on the worse axis (smaller is better)
+      k.uni=Math.max((W-k.BX.reduce(function(t,b){ return t+b.m*k.v.w; },0))/k.BX.length,(L-k.BY.reduce(function(t,b){ return t+b.m*k.v.h; },0))/k.BY.length);
+    });
     var prefAt=function(k){ var sx=W-k.bw, sy=L-k.bh, m=0, px=sx/2, py=sy/2;
       if(pri && sx>2*m){ if(pri.l&&!pri.r) px=m; else if(pri.r&&!pri.l) px=sx-m; }
       if(pri && sy>2*m){ if(pri.t&&!pri.b) py=m; else if(pri.b&&!pri.t) py=sy-m; }
       return {x:px,y:py}; };
-    if(pri && (pri.l||pri.r||pri.t||pri.b)) cands.forEach(function(k){ var pf=prefAt(k); k.bx=pf.x; k.by=pf.y; });
     if(ko.length){
-      var badAt=function(k,bx,by){ var bad=0; for(var ci=0;ci<k.c;ci++){ var x=bx+ci*(k.v.w+g)+(k.so==="v"&&ci>=k.c/2?s-g:0);
-          for(var ri=0;ri<k.r;ri++){ var y=by+ri*(k.v.h+g)+(k.so==="h"&&ri>=k.r/2?s-g:0); if(koHit(x,y,x+k.v.w,y+k.v.h)) bad++; } } return bad; };
-      cands.forEach(function(k){ var sx=W-k.bw, sy=L-k.bh, best={bad:badAt(k,k.bx,k.by),bx:k.bx,by:k.by,d:0};
-        if(best.bad){ var nx=Math.min(8,Math.floor(sx/0.05)), ny=Math.min(8,Math.floor(sy/0.05));
-          var pf0=prefAt(k); for(var a=0;a<=nx;a++) for(var b2=0;b2<=ny;b2++){ var bx=nx?sx*a/nx:sx/2, by=ny?sy*b2/ny:sy/2, bad=badAt(k,bx,by), d=Math.abs(bx-pf0.x)+Math.abs(by-pf0.y);
-            if(bad<best.bad || (bad===best.bad && d<best.d)) best={bad:bad,bx:bx,by:by,d:d}; } }
-        k.bx=best.bx; k.by=best.by; k.bad=best.bad; k.a=(k.n-best.bad)*k.v.a; });
+      var badXY=function(k,X,Y){ var bad=0; for(var ci=0;ci<k.c;ci++){ var x=posX(k,X,ci);
+          for(var ri=0;ri<k.r;ri++){ var y=posY(k,Y,ri); if(koHit(x,y,x+k.v.w,y+k.v.h)) bad++; } } return bad; };
+      cands.forEach(function(k){ var best={bad:badXY(k,k.PX,k.PY),X:k.PX,Y:k.PY};
+        if(best.bad){
+          // the spread layout hits a light, an obstacle or the registro: look for the best compact position and try layouts between both
+          var sx=W-k.bw, sy=L-k.bh, nx=Math.min(8,Math.floor(sx/0.05)), ny=Math.min(8,Math.floor(sy/0.05)), pf0=prefAt(k), cb=null;
+          for(var a=0;a<=nx;a++) for(var b2=0;b2<=ny;b2++){ var bx=nx?sx*a/nx:sx/2, by=ny?sy*b2/ny:sy/2, CX=compactStarts(k.BX,k.v.w,k.sX,bx), CY=compactStarts(k.BY,k.v.h,k.sY,by), bad=badXY(k,CX,CY), d=Math.abs(bx-pf0.x)+Math.abs(by-pf0.y);
+            if(!cb || bad<cb.bad || (bad===cb.bad && d<cb.d)) cb={bad:bad,X:CX,Y:CY,d:d}; }
+          [0.8,0.6,0.4,0.2,0].forEach(function(f){ if(!best.bad) return;
+            var X=k.PX.map(function(v,i){ return cb.X[i]+f*(v-cb.X[i]); }), Y=k.PY.map(function(v,i){ return cb.Y[i]+f*(v-cb.Y[i]); }), bad=badXY(k,X,Y);
+            if(bad<best.bad) best={bad:bad,X:X,Y:Y}; });
+        }
+        k.PX=best.X; k.PY=best.Y; k.bad=best.bad; k.a=(k.n-best.bad)*k.v.a; });
     }
     var wl=cands.filter(function(k){return k.lightOk;}), pool0=wl.length?wl:cands;
     var fe=pool0.filter(function(k){return k.a>=minA-EPS;}), pool=fe.length?fe:pool0;
@@ -1373,10 +1409,12 @@
       if(Math.abs(p.a-q.a)>EPS) return q.a-p.a;
       if((p.bad||0)!==(q.bad||0)) return (p.bad||0)-(q.bad||0);
       if(p.mp.n!==q.mp.n) return p.mp.n-q.mp.n;
+      if(Math.abs(p.uni-q.uni)>0.02) return p.uni-q.uni;
       return p.aspect-q.aspect;
     });
     var k=near[0]; res.choice=k; res.area=k.a;
-    var cellX=function(ci){ return k.bx+ci*(k.v.w+g)+(k.so==="v"&&ci>=k.c/2?s-g:0); }, cellY=function(ri){ return k.by+ri*(k.v.h+g)+(k.so==="h"&&ri>=k.r/2?s-g:0); };
+    var cellX=function(ci){ return posX(k,k.PX,ci); }, cellY=function(ri){ return posY(k,k.PY,ri); };
+    k.bx=cellX(0); k.by=cellY(0); k.bw=cellX(k.c-1)+k.v.w-k.bx; k.bh=cellY(k.r-1)+k.v.h-k.by; k.pri=hasPri;
     var mp=k.mp, byCol=mp.mode==="row", outer=byCol?k.c:k.r, runs=byCol?runsOf(k.r,k.so==="h"):runsOf(k.c,k.so==="v");
     for(var oi=0;oi<outer;oi++){
       var line=[], at=0;
@@ -1397,9 +1435,9 @@
     res.area=res.panels.reduce(function(t,p){ return t+p.w*p.h; },0);
     function band(type){ var bx1=W-k.bw-k.bx, by1=L-k.bh-k.by; if(type==="tira") res.lines=res.lines.concat(bandLines(W,L,k.bx,k.by,bx1,by1)); else res.lights=res.lights.concat(lightsInBands(W,L,k.bx,k.by,bx1,by1)); }
     if(wantC){
-      if(k.so==="v"){ var le=k.bx+(k.c/2)*k.v.w+(k.c/2-1)*g, n1=Math.max(1,Math.round(k.bh/1.2)); res.strip={x:le,y:k.by,w:s,h:k.bh};
+      if(k.so==="v"){ var le0=cellX(k.c/2-1)+k.v.w, le=(le0+cellX(k.c/2))/2-s/2, n1=Math.max(1,Math.round(k.bh/1.2)); res.strip={x:le,y:k.by,w:s,h:k.bh};
         if(lc==="tira") res.lines.push([V(le+s/2,k.by+0.05),V(le+s/2,k.by+k.bh-0.05)]); else for(var j=0;j<n1;j++) res.lights.push(V(le+s/2,k.by+k.bh*(j+.5)/n1)); }
-      else if(k.so==="h"){ var te=k.by+(k.r/2)*k.v.h+(k.r/2-1)*g, n2=Math.max(1,Math.round(k.bw/1.2)); res.strip={x:k.bx,y:te,w:k.bw,h:s};
+      else if(k.so==="h"){ var te0=cellY(k.r/2-1)+k.v.h, te=(te0+cellY(k.r/2))/2-s/2, n2=Math.max(1,Math.round(k.bw/1.2)); res.strip={x:k.bx,y:te,w:k.bw,h:s};
         if(lc==="tira") res.lines.push([V(k.bx+0.05,te+s/2),V(k.bx+k.bw-0.05,te+s/2)]); else for(var j2=0;j2<n2;j2++) res.lights.push(V(k.bx+k.bw*(j2+.5)/n2,te+s/2)); }
       else if(!wantP){ band(lc); if(res.lights.length||res.lines.length) res.msgs.push({t:"warn",x:"No cabe una franja de luz central: la luz del centro pasa a la banda libre junto a las paredes. Cambia la iluminación o ajusta el % de paneles."}); }
       else res.msgs.push({t:"warn",x:"No cabe una franja de luz central: solo queda la luz perimetral. Ajusta el % de paneles si quieres también luz en el centro."});
@@ -2962,7 +3000,7 @@
       '<div class="stat"><div class="k">Circuitos</div><div class="v">'+res.circuits+'</div><div class="s">máx. 2 paneles</div></div></div>';
     res.groups.forEach(function(g,i){ var k=g.choice; if(!k) return;
       var lt=k.so==="v"?"franja entre columnas":k.so==="h"?"franja entre filas":"sin franja central";
-      h+='<p class="layout-line">'+(res.groups.length>1?'Zona '+(i+1)+': ':'Distribución: ')+(k.mp && k.mp.n!==k.c*k.r ? '<b>'+Object.keys(k.mp.tc).map(function(t){ return k.mp.tc[t]+' paneles de '+t.replace('x','×'); }).join(' + ')+'</b>' : '<b>'+k.c+' × '+k.r+' '+esc(k.v.name)+'</b>'+(k.v.rot?' (girados)':''))+', bloque de '+fmt(k.bw*100)+' × '+fmt(k.bh*100)+' cm centrado en la zona libre; '+lt+'.</p>'; });
+      h+='<p class="layout-line">'+(res.groups.length>1?'Zona '+(i+1)+': ':'Distribución: ')+(k.mp && k.mp.n!==k.c*k.r ? '<b>'+Object.keys(k.mp.tc).map(function(t){ return k.mp.tc[t]+' paneles de '+t.replace('x','×'); }).join(' + ')+'</b>' : '<b>'+k.c+' × '+k.r+' '+esc(k.v.name)+'</b>'+(k.v.rot?' (girados)':''))+', repartidos por igual en toda la zona libre'+(k.pri?' (la primera fila, junto a la ventana o la puerta de acceso)':'')+'; '+lt+'.</p>'; });
     var il=[], nm={puntos:"puntos de luz",tira:"tira LED"};
     if(room.lc&&room.lc!=="ninguna") il.push("centro con "+nm[room.lc]); if(room.lp&&room.lp!=="ninguna") il.push("perímetro con "+nm[room.lp]);
     if(room.obst&&room.obst.length) h+='<p class="layout-line">Obstáculos: <b>'+obstGroups(room).length+'</b> ('+fmt(obstArea(room),2)+' m² sin paneles) · <button class="btn ghost small" id="obstClear2" type="button">Quitar todos</button></p>';
@@ -3789,7 +3827,7 @@
     if(S.viaTool && S.markTool!==t) viaTool(false);
     S.markTool = S.markTool===t ? null : t; S.markHover=null;
     document.querySelectorAll("#markBar [data-mark]").forEach(function(b){ b.classList.toggle("on",b.getAttribute("data-mark")===S.markTool); });
-    if(S.markTool) hint('Marcando <b>'+MARKS[S.markTool].toLowerCase()+'</b>: pulsa una pared del plano. '+(S.mode!=="suelo"?(S.markTool==="acceso"?'Es la puerta de la calle: los paneles de esa estancia se colocan pegados a esta pared, igual que junto a las ventanas. Las puertas entre estancias no cuentan. ':S.markTool==="ventana"?'Los paneles se colocan pegados a las ventanas y la pared cuenta en el cálculo térmico. ':'Se usa en el cálculo térmico de la estancia. '):S.markTool==="escalera"?'Por esa pared no pasará ningún tubo; lo que quede al otro lado necesita su propio colector. ':S.markTool==="ventana"?'Junto a ella el tubo irá a '+clampSep(S.uf.sepWin)+' cm en una franja de '+fmt(S.uf.winW,1)+' m. ':'Junto a él el tubo irá a '+clampSep(S.uf.sepExt)+' cm en una franja de '+fmt(S.uf.extW,1)+' m. ')+'<button class="btn ghost small" id="markDone">Terminar</button>');
+    if(S.markTool) hint('Marcando <b>'+MARKS[S.markTool].toLowerCase()+'</b>: pulsa una pared del plano. '+(S.mode!=="suelo"?(S.markTool==="acceso"?'Es la puerta de la calle: la primera fila de paneles va pegada a esta pared, igual que junto a las ventanas, y el resto se reparte por la estancia. Las puertas entre estancias no cuentan. ':S.markTool==="ventana"?'La primera fila de paneles va pegada a la ventana y el resto se reparte por la estancia. La pared cuenta en el cálculo térmico. ':'Se usa en el cálculo térmico de la estancia. '):S.markTool==="escalera"?'Por esa pared no pasará ningún tubo; lo que quede al otro lado necesita su propio colector. ':S.markTool==="ventana"?'Junto a ella el tubo irá a '+clampSep(S.uf.sepWin)+' cm en una franja de '+fmt(S.uf.winW,1)+' m. ':'Junto a él el tubo irá a '+clampSep(S.uf.sepExt)+' cm en una franja de '+fmt(S.uf.extW,1)+' m. ')+'<button class="btn ghost small" id="markDone">Terminar</button>');
     else hint("");
     var md=$("markDone"); if(md) md.addEventListener("click",function(){ setMarkTool(S.markTool); });
     renderPlan();
@@ -4733,7 +4771,7 @@
           {when:function(){ return !!S.obstTool; },el:function(T){ return roomSel(T.dorm); },x:"<p>Pincha en una esquina dentro del <b>Dormitorio</b> y arrastra hasta la contraria, como si fuera un armario hasta el techo. Ahí no se pondrán paneles.</p><p>Si dibujas otro pegado o encima, se unen en una sola figura (una L, por ejemplo).</p>"},
           {when:function(){ return true; },el:"#obstBtn",x:"<p>Los muebles que llegan al techo, las vigas o los conductos ocupan sitio donde no puede ir ningún panel. Pulsa <b>Añadir obstáculo</b>.</p>"}
         ]});
-      P.push({info:true,el:'#markBar [data-mark="acceso"]',t:"Puerta de acceso",x:"<p>Marca la pared de la <b>puerta de la calle</b>. Igual que con las ventanas, los paneles de esa estancia se colocan pegados a ella, que es por donde más frío entra. Las puertas entre estancias no cuentan.</p>"});
+      P.push({info:true,el:'#markBar [data-mark="acceso"]',t:"Puerta de acceso",x:"<p>Marca la pared de la <b>puerta de la calle</b>. Igual que con las ventanas, la primera fila de paneles de esa estancia va pegada a ella, que es por donde más frío entra, y el resto se reparte por igual por la estancia para que se note lo mismo en toda ella. Las puertas entre estancias no cuentan.</p>"});
       P.push({info:true,el:"#viaBtn",t:"Paso de tubos",x:"<p>Si por el camino más corto hay una viga o algo que no se puede atravesar, pulsa <b>Marcar paso de tubos</b> y luego la pared por donde tienen que entrar los tubos a esa estancia. Los metros de tubo se calculan por ahí. Si no marcas nada, se toma el camino más corto.</p>"});
       P.push({mission:true,t:"Muestra la tubería",badge:"Tubería a la vista",
         done:function(){ return !!S.showPipes; },
