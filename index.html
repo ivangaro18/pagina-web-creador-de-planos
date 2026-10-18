@@ -1552,10 +1552,10 @@
       res.reg=(room._cko||[]).slice();
       if(res.removed) res.msgs.push({t:"ok",x:"Se han quitado "+res.removed+" panel"+(res.removed>1?"es":"")+" que caían encima de "+[CL&&(room.lights||[]).length?"los puntos de luz":"",res.reg.length?"el registro del colector":"",(room.obst||[]).length?"los obstáculos":""].filter(Boolean).join(", ").replace(/, ([^,]*)$/," o $1")+"."});
       // pair neighbouring panels. The layout order snakes through the room, so each panel touches the next one: pair consecutive
-      // panels, choosing where the lone one goes (odd count) for the shortest joints; a different model in a pair counts 1.5 m more,
-      // so same models are preferred. Then swaps between pairs while they shorten it further.
+      // panels, choosing where the lone one goes (odd count) for the shortest joints. Any two panels can be joined: the model only
+      // changes the area covered. Then swaps between pairs while they shorten it further.
       var pc=res.panels.map(function(p){ return V(p.x+p.w/2,p.y+p.h/2); }), np=pc.length, pairs=[], single=-1;
-      var cost=function(i,j){ var p=res.panels[i], q=res.panels[j]; return manh(pc[i],pc[j])+(p.tw===q.tw&&p.th===q.th?0:1.5); };
+      var cost=function(i,j){ return manh(pc[i],pc[j]); };
       var DP=[[0,Infinity]], how=[[null,null]];
       for(var di=1;di<=np;di++){ DP.push([Infinity,Infinity]); how.push([null,null]);
         for(var sg=0;sg<2;sg++){
