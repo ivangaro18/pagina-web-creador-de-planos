@@ -831,6 +831,8 @@
         <label class="check only-techo" style="margin:0;"><input type="checkbox" id="colorByCircuit"> Colorear por circuito</label>
         <label class="check only-techo" style="margin:0;"><input type="checkbox" id="showPipes"> Mostrar tubería</label>
         <label class="check only-techo" style="margin:0;"><input type="checkbox" id="showStruct"> Estructura de pladur</label>
+        <button class="btn ghost small" id="undoBtn" type="button" title="Deshacer (Ctrl+Z)" disabled>↶ Deshacer</button>
+        <button class="btn ghost small" id="redoBtn" type="button" title="Rehacer (Ctrl+Y)" disabled>↷ Rehacer</button>
         <button class="btn small" id="addRoom">+ Estancia</button>
         <button class="btn ghost small" id="loadExample">Ver ejemplo</button>
       </div>
@@ -1222,7 +1224,7 @@
   var S={
     panels:[{id:nid(),name:"Panel 80×150",w:80,h:150},{id:nid(),name:"Panel 40×150",w:40,h:150},{id:nid(),name:"Panel 80×100",w:80,h:100},{id:nid(),name:"Panel 40×100",w:40,h:100}],
     t20:true,gMin:30,gMax:60,clear:10,gap:2,strip:30,vert:1.5,margin:10,tail:1,secCm:40,primCm:90,bar:3,hang:1.2,board:"1.2x2.5",showStruct:false,
-    colorByCircuit:false, showPipes:false, prices:{},
+    colorByCircuit:false, showPipes:false, prices:{}, ctrl:{},
     floors:[emptyFloor("Planta baja")], fi:0, sel:null, drag:null, frozenVB:null,
     title:"Nuevo proyecto", placing:null,
     mode:"techo", store:{}, markTool:null, markHover:null,
@@ -3236,9 +3238,7 @@
     if(allColls().length) reportRows.push({key:"uf_caja",label:"Caja o armario de colector",note:"Uno por colector",qty:allColls().length,unit:"ud."});
     if(tot.c){ reportRows.push({key:"uf_euro",label:"Racor eurocono 16×2",note:"2 por circuito (ida y retorno)",qty:tot.c*2,unit:"ud."});
       reportRows.push({key:"uf_curva",label:"Curva guía de 90° para tubo",note:"2 por circuito, en la subida al colector",qty:tot.c*2,unit:"ud."}); }
-    $("reportBody").innerHTML=reportRows.map(function(row){ var pv=S.prices[row.key];
-      return '<tr><td>'+esc(row.label)+'<span class="kit-note">'+esc(row.note)+'</span></td><td class="num">'+fmt(row.qty,row.qty%1?1:0)+' '+row.unit+'</td><td class="num"><input class="price" type="number" min="0" step="0.01" data-key="'+row.key+'" aria-label="Precio '+esc(row.label)+'" value="'+(pv!=null&&pv!==""?pv:"")+'" placeholder="0,00"></td><td class="num" id="imp_'+row.key+'">—</td></tr>'; }).join("");
-    refreshCosts();
+    ctrlRows(tot.c); renderReport();
   }
   function renderTables(){
     if(HEAD_T.rooms==null){ HEAD_T.rooms=$("roomsHead").innerHTML; HEAD_T.coll=$("collHead").innerHTML; }
@@ -3307,8 +3307,17 @@
     reportRows.push({key:"rpanel",label:"Racor tubo de panel a rosca 1/2\"",note:tot.g20?"2 por circuito de 16 (ida y retorno) y 2 en los extremos de cada te":"2 por circuito (ida y retorno)",qty:tot.uni+4*tot.g20,unit:"ud."});
     if(tot.uni){ reportRows.push({key:"rpex",label:"Racor PEX con rosca 1/2\"",note:"2 por circuito de tubo de 16 (ida y retorno)",qty:tot.uni,unit:"ud."});
       reportRows.push({key:"casq",label:"Casquillo PEX",note:"2 por circuito de tubo de 16 (ida y retorno)",qty:tot.uni,unit:"ud."}); }
+    ctrlRows(allRooms().reduce(function(t,r){ return t+((results[r.id]||{}).outs||[]).length; },0)); renderReport();
+  }
+  // zone control: the client decides how many zones, so the quantities are typed in (never worked out); left at 0 they stay out of the report
+  var CTRL=[{key:"ctl_cab",label:"Cabezal electrotérmico",note:function(n){ return "Uno por salida de colector que se controle"+(n?" (hay "+n+" salida"+(n>1?"s":"")+")":""); }},
+    {key:"ctl_term",label:"Termostato de zona",note:function(){ return "Uno por zona que decida el cliente"; }},
+    {key:"ctl_cent",label:"Centralita de zonas",note:function(){ return "Conecta termostatos y cabezales; según el número de zonas"; }}];
+  function ctrlRows(nOut){ CTRL.forEach(function(c){ var q=Math.max(0,Math.round(+S.ctrl[c.key]||0)); reportRows.push({key:c.key,label:c.label,note:c.note(nOut),qty:q,unit:"ud.",manual:true}); }); }
+  function renderReport(){
     $("reportBody").innerHTML=reportRows.map(function(row){ var pv=S.prices[row.key];
-      return '<tr><td>'+esc(row.label)+'<span class="kit-note">'+esc(row.note)+'</span></td><td class="num">'+fmt(row.qty,row.qty%1?1:0)+' '+row.unit+'</td><td class="num"><input class="price" type="number" min="0" step="0.01" data-key="'+row.key+'" aria-label="Precio '+esc(row.label)+'" value="'+(pv!=null&&pv!==""?pv:"")+'" placeholder="0,00"></td><td class="num" id="imp_'+row.key+'">—</td></tr>'; }).join("");
+      var qc=row.manual ? '<input class="price qty" type="number" min="0" step="1" data-qty="'+row.key+'" aria-label="Cantidad '+esc(row.label)+'" value="'+(row.qty||"")+'" placeholder="0">' : fmt(row.qty,row.qty%1?1:0)+' '+row.unit;
+      return '<tr><td>'+esc(row.label)+'<span class="kit-note">'+esc(row.note)+'</span></td><td class="num">'+qc+'</td><td class="num"><input class="price" type="number" min="0" step="0.01" data-key="'+row.key+'" aria-label="Precio '+esc(row.label)+'" value="'+(pv!=null&&pv!==""?pv:"")+'" placeholder="0,00"></td><td class="num" id="imp_'+row.key+'">—</td></tr>'; }).join("");
     refreshCosts();
   }
   function eur(n){ return n.toLocaleString("es-ES",{style:"currency",currency:"EUR"}); }
@@ -3319,7 +3328,9 @@
     $("reportFoot").innerHTML='<tr class="report-total"><td>Total material</td><td></td><td></td><td class="num">'+(any?eur(total):'—')+'</td></tr>';
     return any?total:null;
   }
-  $("reportBody").addEventListener("input",function(e){ var k=e.target.getAttribute("data-key"); if(!k) return; S.prices[k]=e.target.value; refreshCosts(); });
+  $("reportBody").addEventListener("input",function(e){ var q=e.target.getAttribute("data-qty");
+    if(q){ var v=Math.max(0,Math.round(+e.target.value||0)); S.ctrl[q]=v; reportRows.forEach(function(r){ if(r.key===q) r.qty=v; }); refreshCosts(); histNote(); return; }
+    var k=e.target.getAttribute("data-key"); if(!k) return; S.prices[k]=e.target.value; refreshCosts(); histNote(); });
 
   // ---------------- company profile ----------------
   var CO_KEY="planificador-radiante.empresa";
@@ -3458,7 +3469,7 @@
       }
       section("Material");
       var anyPrice=false,total=0;
-      var mb=reportRows.map(function(row){ var pr=parseFloat(S.prices[row.key]), has=isFinite(pr)&&pr>0; if(has){ anyPrice=true; total+=pr*row.qty; } return [row.label+"\n"+row.note, fmt(row.qty,row.qty%1?1:0)+" "+row.unit, has?eurPdf(pr):"", has?eurPdf(pr*row.qty):""]; });
+      var mb=reportRows.filter(function(row){ return !row.manual || row.qty>0; }).map(function(row){ var pr=parseFloat(S.prices[row.key]), has=isFinite(pr)&&pr>0; if(has){ anyPrice=true; total+=pr*row.qty; } return [row.label+"\n"+row.note, fmt(row.qty,row.qty%1?1:0)+" "+row.unit, has?eurPdf(pr):"", has?eurPdf(pr*row.qty):""]; });
       var foot=anyPrice?[[{content:"Total material (sin IVA)",colSpan:3,styles:{halign:"right",fontStyle:"bold"}},{content:eurPdf(total),styles:{halign:"right",fontStyle:"bold"}}]]:undefined;
       T({head:[["Concepto","Cantidad","Precio ud.","Importe"]],body:mb,foot:foot,footStyles:{fillColor:[229,241,235],textColor:INK,fontSize:9.5},columnStyles:{1:{halign:"right",cellWidth:26},2:{halign:"right",cellWidth:26},3:{halign:"right",cellWidth:28}}});
       if(y>255){ doc.addPage(); y=18; }
@@ -4041,13 +4052,13 @@
     var btn=$("newProject");
     if(allRooms().length && btn.getAttribute("data-confirm")!=="1"){ btn.setAttribute("data-confirm","1"); btn.textContent="¿Borrar el actual? Pulsa otra vez"; setTimeout(function(){ btn.removeAttribute("data-confirm"); btn.textContent="Nuevo proyecto"; },4000); return; }
     btn.removeAttribute("data-confirm"); btn.textContent="Nuevo proyecto";
-    S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.placing=null; S.zoom=null; S.title="Nuevo proyecto"; S.project.client=""; S.project.addr=""; S.final=null;
+    S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.placing=null; S.zoom=null; S.title="Nuevo proyecto"; S.project.client=""; S.project.addr=""; S.final=null; S.ctrl={};
     syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true); cloudFresh(); openShape();
     setTimeout(function(){ hint('<span>Proyecto nuevo: ponle nombre arriba, donde pone «Nuevo proyecto» (✎), para encontrarlo luego en «Mis proyectos».</span>'); },50);
   }
   function loadExample(){
     if(planKind()==="proyecto" && !S.final && allRooms().length){ hint("Con el plan por proyecto el ejemplo solo se puede abrir en un proyecto vacío.",true); return; }
-    var uf=S.mode==="suelo"; S.final=null;
+    var uf=S.mode==="suelo"; S.final=null; S.ctrl={};
     S.floors=[uf?exampleFloorUF():exampleFloor()]; S.fi=0; S.sel=S.rooms[0].id; S.moveId=null; S.placing=null; S.zoom=null; S.title="Vivienda de ejemplo";
     syncProjectInputs(); renderFloorBar(); renderCollectors();
     hint(uf?"Ejemplo de suelo radiante: ventanas y muros exteriores ya marcados, colectores en la pared del pasillo. Prueba «Marcar escalera» en una pared o arrastra un colector a otra pared.":"Ejemplo cargado: el salón tiene una pared curva (lado D). Pulsa cualquier estancia para ver sus lados y medidas."); update(true);
@@ -4056,13 +4067,13 @@
   function setMode(m){
     if(m===S.mode) return;
     if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); if(S.viaTool) viaTool(false); S.moveId=null;
-    S.store[S.mode]={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title,final:S.final||null};
+    S.store[S.mode]={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title,final:S.final||null,ctrl:S.ctrl};
     var d=S.store[m]||{floors:[emptyFloor("Planta baja")],fi:0,sel:null,title:"Nuevo proyecto"};
-    S.floors=d.floors; S.fi=d.fi; S.sel=d.sel; S.title=d.title; S.final=d.final||null; S.zoom=null; S.mode=m;
+    S.floors=d.floors; S.fi=d.fi; S.sel=d.sel; S.title=d.title; S.final=d.final||null; S.ctrl=d.ctrl||{}; S.zoom=null; S.mode=m;
     document.body.classList.toggle("mode-suelo",m==="suelo");
     var nm=m==="suelo"?"Suelo radiante":"Techo radiante";
     $("appSys").textContent="Planificador Radiante · "+nm; $("appEyebrow").textContent=nm+" · Planificador";
-    hint(""); syncProjectInputs(); renderFloorBar(); renderCollectors(); update(true);
+    hint(""); syncProjectInputs(); renderFloorBar(); renderCollectors(); update(true); histReset();
   }
   $("newProject").addEventListener("click",newProject);
   $("loadExample").addEventListener("click",loadExample);
@@ -4495,7 +4506,7 @@
   function finClose(){ $("finModal").hidden=true; }
   function finDo(){ finClose(); S.final={at:new Date().toISOString(),pago:TEST_PHASE?"prueba":"pendiente"};
     if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); S.moveId=null;
-    update(true); cloudSave(); hint("<span><b>Proyecto finalizado.</b> Ya ves todos los datos. Descarga el informe desde el aviso de arriba o desde «Informe final».</span>"); }
+    update(true); cloudSave(); histReset(); hint("<span><b>Proyecto finalizado.</b> Ya ves todos los datos. Descarga el informe desde el aviso de arriba o desde «Informe final».</span>"); }
   $("finYes").addEventListener("click",finDo); $("finNo").addEventListener("click",finClose);
   $("finModal").addEventListener("click",function(e){ if(e.target===this) finClose(); });
   document.addEventListener("keydown",function(e){ if(e.key==="Escape" && !$("finModal").hidden) finClose(); });
@@ -4513,7 +4524,42 @@
   var _userUi=userUi; userUi=function(){ _userUi.apply(this,arguments); planRead(); };
   planRead();
 
-  function update(rebuild){ computeAll(); renderPlan(); if(rebuild) buildEditor(); renderDetailOutput(); renderTables(); renderThermal(); recSchedule(); planApply(); }
+  function update(rebuild){ computeAll(); renderPlan(); if(rebuild) buildEditor(); renderDetailOutput(); renderTables(); renderThermal(); recSchedule(); planApply(); histNote(); }
+
+  // ---------------- undo / redo ----------------
+  // The whole project (as saved) after each change: a change is taken once things settle (not while a button is held down,
+  // so a drag is one step). Undo puts back the previous one; a new change after an undo drops the steps ahead.
+  // Starts again when the project changes (new, example, opened, other system, finished) and stays off in the tutorial.
+  var HIST={on:false,past:[],future:[],cur:null,timer:0,down:false};
+  function histOff(){ return !HIST.on || RO() || (typeof TOUR!=="undefined" && !!TOUR); }
+  function histReset(){ if(!HIST || !HIST.on) return; clearTimeout(HIST.timer); HIST.timer=0; HIST.past=[]; HIST.future=[]; HIST.cur=projSnapshot(); histUI(); }
+  function histNote(){ if(!HIST || !HIST.on) return; clearTimeout(HIST.timer); HIST.timer=setTimeout(histTake,400); }
+  function histTake(){ HIST.timer=0; if(histOff()) return; if(HIST.down){ HIST.timer=setTimeout(histTake,300); return; }
+    var s=projSnapshot(); if(s===HIST.cur) return;
+    if(HIST.cur!=null){ HIST.past.push(HIST.cur); if(HIST.past.length>100) HIST.past.shift(); }
+    HIST.cur=s; HIST.future=[]; histUI(); }
+  function histGo(back){
+    if(histOff()) return; if(HIST.timer){ clearTimeout(HIST.timer); histTake(); }
+    var from=back?HIST.past:HIST.future, to=back?HIST.future:HIST.past; if(!from.length) return;
+    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); if(S.viaTool) viaTool(false); if(SH) closeShape();
+    to.push(HIST.cur); HIST.cur=from.pop();
+    projApply(JSON.parse(HIST.cur),true); clearTimeout(HIST.timer); HIST.timer=0; HIST.cur=projSnapshot();
+    hint(back?"Deshecho el último cambio.":"Rehecho el cambio."); histUI(); }
+  function histUI(){ var off=histOff(); $("undoBtn").disabled=off||!HIST.past.length; $("redoBtn").disabled=off||!HIST.future.length; }
+  $("undoBtn").addEventListener("click",function(){ histGo(true); });
+  $("redoBtn").addEventListener("click",function(){ histGo(false); });
+  window.addEventListener("pointerdown",function(){ HIST.down=true; },true);
+  window.addEventListener("pointerup",function(){ HIST.down=false; },true);
+  window.addEventListener("pointercancel",function(){ HIST.down=false; },true);
+  $("appView").addEventListener("change",function(){ histNote(); });
+  document.addEventListener("keydown",function(e){
+    if(!(e.ctrlKey||e.metaKey) || e.altKey || $("appView").hidden) return;
+    var k=(e.key||"").toLowerCase(), t=e.target, tag=t&&t.tagName;
+    if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||(t&&t.isContentEditable)) return;   // the field's own undo
+    if(document.querySelector(".modal:not([hidden])")) return;
+    if(k==="z" && !e.shiftKey){ e.preventDefault(); histGo(true); }
+    else if(k==="y" || (k==="z" && e.shiftKey)){ e.preventDefault(); histGo(false); }
+  });
 
   renderCatalog(); renderCollectors(); renderFloorBar(); syncProjectInputs(); update(true);
 
@@ -4651,11 +4697,12 @@
   var CFG_TECHO=["panels","gMin","gMax","clear","gap","strip","vert","margin","tail","secCm","primCm","bar","hang","board"];
   function projSnapshot(){
     var cfg={th:S.th}; if(S.mode==="suelo") cfg.uf=S.uf; else CFG_TECHO.forEach(function(k){ cfg[k]=S[k]; });
-    return JSON.stringify({v:1,mode:S.mode,title:S.title,fi:S.fi,floors:S.floors,project:S.project,prices:S.prices,cfg:cfg,final:S.final||null},function(k,val){ return (k && k.charAt(0)==="_") ? undefined : val; });
+    return JSON.stringify({v:1,mode:S.mode,title:S.title,fi:S.fi,floors:S.floors,project:S.project,prices:S.prices,ctrl:S.ctrl,cfg:cfg,final:S.final||null},function(k,val){ return (k && k.charAt(0)==="_") ? undefined : val; });
   }
-  function projApply(d){
+  // keep: an undo/redo step (keeps the selected room and the zoom, and the history)
+  function projApply(d,keep){
     S.floors=(d.floors&&d.floors.length)?d.floors:[emptyFloor("Planta baja")]; S.fi=Math.min(d.fi||0,S.floors.length-1);
-    S.final=d.final||null; S.title=d.title||"Proyecto"; S.project=Object.assign({client:"",addr:"",ref:S.project.ref},d.project||{}); S.prices=d.prices||S.prices;
+    S.final=d.final||null; S.title=d.title||"Proyecto"; S.project=Object.assign({client:"",addr:"",ref:S.project.ref},d.project||{}); S.prices=d.prices||S.prices; S.ctrl=d.ctrl||{};
     var c=d.cfg||{};
     if(c.th){ Object.assign(S.th,c.th); syncTh(); }
     if(S.mode==="suelo" && c.uf){ Object.assign(S.uf,c.uf);
@@ -4663,11 +4710,12 @@
     if(S.mode==="techo"){ CFG_TECHO.forEach(function(k){ if(c[k]!=null) S[k]=c[k]; });
       [["gMin","gMin"],["gMax","gMax"],["sClear","clear"],["sGap","gap"],["sStrip","strip"],["sVert","vert"],["sMargin","margin"],["sTail","tail"],["sSec","secCm"],["sPrim","primCm"],["sBar","bar"],["sHang","hang"],["sBoard","board"]].forEach(function(p){ var el=$(p[0]); if(el) el.value=S[p[1]]; });
       renderCatalog(); }
-    var r0=S.rooms[0]; S.sel=r0?r0.id:null; S.moveId=null; S.placing=null; S.zoom=null;
+    var r0=S.rooms[0]; if(!keep || !S.rooms.some(function(r){ return r.id===S.sel; })) S.sel=r0?r0.id:null; S.moveId=null; S.placing=null; if(!keep) S.zoom=null;
     syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true);
+    if(!keep) histReset();
   }
   // the project on screen starts "clean": only a change by the user saves it
-  function cloudFresh(){ CLOUD.id[S.mode]=null; CLOUD.last[S.mode]=projSnapshot(); saveState(""); }
+  function cloudFresh(){ CLOUD.id[S.mode]=null; CLOUD.last[S.mode]=projSnapshot(); saveState(""); histReset(); }
   function saveState(t,cls){ document.querySelectorAll(".save-state").forEach(function(el){ el.textContent=t; el.className="save-state"+(cls?" "+cls:""); }); }
   function cloudSave(){
     if(!AUTH.user || CLOUD.busy) return Promise.resolve();
@@ -4718,7 +4766,7 @@
   $("projClose").addEventListener("click",closeProjects);
   $("projModal").addEventListener("click",function(e){ if(e.target===this) closeProjects(); });
   $("projNew").addEventListener("click",function(){ if(!canNew() || $("projNew").getAttribute("data-block")){ $("projListTitle").textContent="Solo puedes tener un proyecto en curso: finalízalo o elimínalo para empezar otro"; return; } closeProjects(); flushSave().then(function(){
-    S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.placing=null; S.zoom=null; S.title="Nuevo proyecto"; S.project.client=""; S.project.addr=""; S.final=null;
+    S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.placing=null; S.zoom=null; S.title="Nuevo proyecto"; S.project.client=""; S.project.addr=""; S.final=null; S.ctrl={};
     syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true); cloudFresh(); openShape(); }); });
   $("projList").addEventListener("click",function(e){ var b=e.target.closest("[data-pa]"); if(!b) return; var row=b.closest("[data-id]"), id=row.getAttribute("data-id"), a=b.getAttribute("data-pa");
     if(a==="open"){ b.disabled=true; flushSave().then(function(){ return AUTH.sb.from("proyectos").select("id,datos").eq("id",id).single(); }).then(function(r){
@@ -4875,7 +4923,7 @@
     $("tourAsk").hidden=true;
     if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool||$("doorBtn").classList.contains("on")) doorCancel(true); if(S.obstTool) obstTool(false); if(SH) closeShape();
     var hadOwn=allRooms().length>0; cloudSave();
-    var snap={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title,final:S.final||null,project:JSON.parse(JSON.stringify(S.project||{}))}; S.final=null;
+    var snap={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title,final:S.final||null,ctrl:S.ctrl,project:JSON.parse(JSON.stringify(S.project||{}))}; S.final=null; S.ctrl={};
     S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.zoom=null; S.title="Práctica del tutorial";
     syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true);
     var bl=document.createElement("div"), sp=document.createElement("div"), tp=document.createElement("div"), toast=document.createElement("div");
@@ -4886,7 +4934,7 @@
     tp.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b||!TOUR) return; tourAct(b.getAttribute("data-t")); });
     bl.addEventListener("wheel",function(e){ e.preventDefault(); },{passive:false});
     window.addEventListener("resize",tourPlace); window.addEventListener("scroll",tourPlace,true); document.addEventListener("keydown",tourKey,true);
-    TOUR.timer=setInterval(tourTick,200);
+    TOUR.timer=setInterval(tourTick,200); histUI();
     tourGo(0);
   }
   function tourAct(a){ var T=TOUR; if(!T) return;
@@ -4992,12 +5040,13 @@
     [T.bl,T.sp,T.tp,T.toast].forEach(function(n){ if(n.parentNode) n.parentNode.removeChild(n); });
     window.removeEventListener("resize",tourPlace); window.removeEventListener("scroll",tourPlace,true); document.removeEventListener("keydown",tourKey,true);
     if(S.placing) cancelPlacing(); if(SH) closeShape(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool||$("doorBtn").classList.contains("on")) doorCancel(true); if(S.obstTool) obstTool(false);
-    if(how==="back"){ var s=T.snap; S.floors=s.floors; S.fi=s.fi; S.sel=s.sel; S.title=s.title; S.project=s.project; S.final=s.final||null; }
-    else if(how==="fresh"){ S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.title="Nuevo proyecto"; }
+    if(how==="back"){ var s=T.snap; S.floors=s.floors; S.fi=s.fi; S.sel=s.sel; S.title=s.title; S.project=s.project; S.final=s.final||null; S.ctrl=s.ctrl||{}; }
+    else if(how==="fresh"){ S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.title="Nuevo proyecto"; S.ctrl={}; }
     if(how!=="back") cloudFresh();
     if(how==="back"||how==="fresh"){ S.moveId=null; S.zoom=null; syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(how==="fresh"?"Pulsa «+ Estancia» para dibujar la primera estancia de tu proyecto.":""); update(true); }
-    tourMark(S.mode); if(!quiet) window.scrollTo({top:0,behavior:"smooth"});
+    histReset(); tourMark(S.mode); if(!quiet) window.scrollTo({top:0,behavior:"smooth"});
   }
+  HIST.on=true; histReset();
   try{ if(location.hash==="#planificador") showView("app-techo"); else if(location.hash==="#suelo") showView("app-suelo"); }catch(err){}
 })();
 </script>
