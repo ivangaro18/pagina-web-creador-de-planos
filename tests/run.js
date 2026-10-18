@@ -96,12 +96,12 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("uniones que no se montan unas encima de otras", geo.solape === 0, "en " + geo.ej.solape);
   ok("tubos siempre en ángulo recto", geo.tuboDiagonal === 0, "en " + geo.ej.tuboDiagonal);
 
-  // 4. paso de tubos: solo lo usa su estancia, y se cruza en recto
+  // 4. paso de tubos: un agujero en una pared, sin dirección. Un tubo que no cruza esa pared no pasa por él
   out.push("Paso de tubos");
   const via = await p.evaluate(() => {
     const D = window.__dbg, S = D.S, R = D.rectRoom;
-    const rooms = [R("Salon", 0, 0, 4, 4), R("D", 4, 0, 4, 3), R("Pasillo", 4, 3, 4, 1.2, { lc: "ninguna" }), R("Estancia 3", 0, 4, 4, 2.5), R("C", 4, 4.2, 4, 2.3)];
-    S.floors = [{ id: D.nid(), name: "P", rooms, collectors: [{ id: D.nid(), name: "Colector 1", x: 7, y: 3.6, cap: 16 }] }]; S.fi = 0; D.update(true);
+    const rooms = [R("Salon", 0, 0, 4, 4), R("D", 4, 0, 4, 3), R("Pasillo", 4, 3, 4, 1, { lc: "ninguna" }), R("Estancia 3", 0, 4, 4, 2.5), R("C", 4, 4, 4, 2.5)];
+    S.floors = [{ id: D.nid(), name: "P", rooms, collectors: [{ id: D.nid(), name: "Colector 1", x: 7, y: 3.5, cap: 16 }] }]; S.fi = 0; D.update(true);
     // metres per tube of each room, without and with the passage: the rooms that do not use it should hardly change
     const perTube = () => { const o = {}; D.pipeLayout(D.curFloor()).tubes.forEach(t => { let l = 0; for (let i = 1; i < t.pts.length; i++) l += Math.hypot(t.pts[i].x - t.pts[i - 1].x, t.pts[i].y - t.pts[i - 1].y); const k = t.room.name; o[k] = o[k] || { l: 0, n: 0 }; o[k].l += l; o[k].n++; }); return o; };
     const sin = perTube(); rooms[0].via = { edge: 2, t: 3.5 }; D.update(true); const con = perTube(), largos = [];
@@ -110,12 +110,29 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
     D.pipeLayout(D.curFloor()).tubes.forEach(t => { let m = 1e9;
       for (let i = 1; i < t.pts.length; i++) { const a = t.pts[i - 1], c = t.pts[i], dx = c.x - a.x, dy = c.y - a.y, l2 = dx * dx + dy * dy || 1; let u = ((g.P.x - a.x) * dx + (g.P.y - a.y) * dy) / l2; u = Math.max(0, Math.min(1, u)); m = Math.min(m, Math.hypot(a.x + u * dx - g.P.x, a.y + u * dy - g.P.y));
         if (Math.abs(dx) > 1e-3 && Math.abs(dy) > 1e-3) diag.push(t.room.name); }
-      if (t.room !== rooms[0] && m < 0.5) ajenos.push(t.room.name); });
+      // crossing the wall between Salon and Estancia 3 (y = 4, 0 < x < 4) anywhere but at the hole (x = 0,5)
+      for (let i = 1; i < t.pts.length; i++) { const a = t.pts[i - 1], c = t.pts[i]; if ((a.y - 4) * (c.y - 4) < 0 && a.x > 0 && a.x < 4 && Math.abs(a.x - 0.5) > 0.35) ajenos.push(t.room.name); } });
     return { ajenos: [...new Set(ajenos)], diag: [...new Set(diag)], largos };
   });
-  ok("ningún tubo de otra estancia pasa por el paso", via.ajenos.length === 0, "pasan: " + via.ajenos.join(", "));
+  ok("ningún tubo cruza la pared del paso fuera del agujero", via.ajenos.length === 0, "cruzan fuera: " + [...new Set(via.ajenos)].join(", "));
   ok("sin diagonales al cruzar el paso", via.diag.length === 0, "en " + via.diag.join(", "));
   ok("los tubos de las demás estancias no se desvían (≤ 1 m más por tubo)", via.largos.length === 0, via.largos.join("; "));
+  // the tubes that do cross that wall go through the hole, whichever side it was marked from; the others are not touched
+  const via2 = await p.evaluate(() => {
+    const D = window.__dbg, S = D.S, R = D.rectRoom, run = (owner) => {
+      const A = R("A", 0, 0, 4, 3), B = R("B", 4, 0, 4, 3), Pa = R("Pasillo", 0, 3, 4, 1, { lc: "ninguna" });
+      if (owner === "A") A.via = { edge: 1, t: 0.4 }; else B.via = { edge: 3, t: 2.6 };
+      S.floors = [{ id: D.nid(), name: "P", rooms: [A, B, Pa], collectors: [{ id: D.nid(), name: "C1", x: 1, y: 3.5, cap: 16 }] }]; S.fi = 0; D.update(true);
+      const hole = { x: 4, y: 0.4 }, d = t => { let m = 1e9; for (let i = 1; i < t.pts.length; i++) { const a = t.pts[i - 1], c = t.pts[i], dx = c.x - a.x, dy = c.y - a.y, l2 = dx * dx + dy * dy || 1; let u = ((hole.x - a.x) * dx + (hole.y - a.y) * dy) / l2; u = Math.max(0, Math.min(1, u)); m = Math.min(m, Math.hypot(a.x + u * dx - hole.x, a.y + u * dy - hole.y)); } return m; };
+      const T = D.pipeLayout(D.curFloor()).tubes;
+      // where each tube of B crosses x = 4 (the wall between A and B)
+      const cross = T.filter(t => t.room.name === "B").map(t => { for (let i = 1; i < t.pts.length; i++) { const a = t.pts[i - 1], c = t.pts[i]; if ((a.x - 4) * (c.x - 4) < 0 || (Math.abs(a.x - 4) < 1e-6 && Math.abs(c.x - 4) > 1e-6)) return +(a.y).toFixed(2); } return null; });
+      return { cross, aNear: T.filter(t => t.room.name === "A").some(t => d(t) < 0.3), sig: JSON.stringify(T.map(t => t.pts.map(q => [+q.x.toFixed(2), +q.y.toFixed(2)]))) }; };
+    const a = run("A"), b = run("B"); return { a, b, same: a.sig === b.sig };
+  });
+  ok("los tubos que cruzan esa pared lo hacen por el agujero", via2.a.cross.length > 0 && via2.a.cross.every(y => y != null && Math.abs(y - 0.4) < 0.35), JSON.stringify(via2.a.cross));
+  ok("a los tubos que no cruzan esa pared no les afecta (la estancia del paso no se ve obligada a entrar por él)", !via2.a.aNear && !via2.b.aNear);
+  ok("da igual desde qué estancia se marque el paso: mismo trazado", via2.same);
   await p.close();
 
   // 5. deshacer / rehacer y material de control

@@ -26,7 +26,7 @@ Dentro de `index.html`:
    - **placement**: estancias pegadas por un lado a otra.
    - **panel layout engine** (techo): `gridLayout`, `calcRoom`: reparto de paneles por estancia, franjas de luz, obstáculos, puntos de luz a medida.
    - **pladur ceiling structure**: perfiles TC primarios/secundarios, cuelgues, angular, placas.
-   - **computation over all floors**: `computeAll()` → `results[roomId]`; salidas del colector (agrupación con tubo de 20), paso de tubos (`r.via`), `computeFloor`.
+   - **computation over all floors**: `computeAll()` → `results[roomId]`; salidas del colector (agrupación con tubo de 20), paso de tubos (`r.via`: un agujero en la pared entre dos estancias, sin dirección; en `pipeField` cruzar esa pared por otro sitio cuesta 80, así que todo tubo que la cruce, en cualquier sentido, pasa por el agujero, y a los demás no les afecta; da igual desde qué estancia se marque), `computeFloor`.
    - **piping sketch**: trazado de tubos de techo (rejilla dentro de la casa, carriles, ida continua / retorno discontinuo).
    - **suelo radiante** (`uf*`): ráster de la planta, zonas (interior / franja de ventana / muro exterior), puertas, escaleras, `ufPlan` (árbol desde colectores, asignación de estancias a colectores, cintas de circuitos), `computeFloorUF`, dibujo.
    - **obstacles**: rectángulos que se tocan forman una figura (`obstGroups`, `obstUnion`).

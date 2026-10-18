@@ -295,7 +295,7 @@
   .p-coll{fill:var(--accent);stroke:var(--wall);stroke-width:.02;}
   .p-colltext{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.17px;font-weight:600;fill:var(--accent);paint-order:stroke;stroke:var(--room-fill);stroke-width:.07px;stroke-linejoin:round;pointer-events:none;}
   .p-via{stroke:#7A4F00;stroke-width:.09;stroke-linecap:round;pointer-events:none;}
-  .p-via-a{fill:#7A4F00;pointer-events:none;}
+  .p-via-j{stroke:#7A4F00;stroke-width:.04;stroke-linecap:round;pointer-events:none;}
   .p-reg{fill:rgba(11,127,171,.07);stroke:var(--accent);stroke-width:.014;stroke-dasharray:.06 .04;}
   /* ceiling piping: widths in screen pixels times --pu (set by pipeScale: one pixel, grown with the square root of the zoom),
      so the plan stays light at full view and the tubes gain weight when zooming in. The fallback is for the PDF image. */
@@ -1740,12 +1740,11 @@
   function viaGeom(r){ var v=r.via; if(!v) return null; var n=r.pts.length; if(!r.pts[v.edge] || r.bulge[v.edge]) return null;
     var A=toW(r,r.pts[v.edge]), B=toW(r,r.pts[(v.edge+1)%n]), L=len(sub(B,A)), u=unit(sub(B,A)), t=Math.max(0.1,Math.min(L-0.1,v.t)), nin=mul(outN(A,B),-1);
     return {A:A,B:B,L:L,u:u,t:t,P:add(A,mul(u,t)),nin:nin}; }
-  function viaFor(r,col){ var g=viaGeom(r); if(!g || !col) return null; if(pointIn(V(col.x,col.y),worldOutline(r))) return null; 
-    // the route to a room's own passage reaches it from the other side (it may not go through the room itself)
-    var k=col.id+"_"+r.id; if(PF[k]===undefined){ var fl=floorOfColl(col)||curFloor(); PF[k]=pipeField(fl,col,r)||null; }
-    return {F:PF[k],in:add(g.P,mul(g.nin,0.15)),out:add(g.P,mul(g.nin,-0.15))}; }
-  function viaSvg(r){ var g=viaGeom(r); if(!g) return ""; var a=add(g.P,mul(g.u,-0.22)), b=add(g.P,mul(g.u,0.22)), t1=add(g.P,mul(g.nin,0.28)), w1=add(add(g.P,mul(g.nin,0.1)),mul(g.u,-0.09)), w2=add(add(g.P,mul(g.nin,0.1)),mul(g.u,0.09));
-    return '<line class="p-via" x1="'+f3(a.x)+'" y1="'+f3(a.y)+'" x2="'+f3(b.x)+'" y2="'+f3(b.y)+'"><title>Paso de tubos de '+esc(r.name)+'</title></line><polygon class="p-via-a" points="'+ptsStr([t1,w1,w2])+'"/>'; }
+  // the room on the other side of a passage (a hole in the wall, no direction: any tube crossing that wall goes through it)
+  function viaOther(r){ var g=viaGeom(r); if(!g) return null; var Q=add(g.P,mul(g.nin,-0.12)), o=null; S.rooms.forEach(function(x){ if(!o && x!==r && pointIn(Q,results[x.id]?results[x.id].wout:worldOutline(x))) o=x; }); return o; }
+  // drawn the same from both sides: the hole along the wall and its two jambs across it
+  function viaSvg(r){ var g=viaGeom(r); if(!g) return ""; var a=add(g.P,mul(g.u,-0.22)), b=add(g.P,mul(g.u,0.22)), o=viaOther(r), ln=function(p,q,c){ return '<line class="'+c+'" x1="'+f3(p.x)+'" y1="'+f3(p.y)+'" x2="'+f3(q.x)+'" y2="'+f3(q.y)+'"/>'; };
+    return '<g><title>Paso de tubos entre '+esc(r.name)+(o?' y '+esc(o.name):'')+'</title>'+ln(a,b,"p-via")+ln(add(a,mul(g.nin,-0.16)),add(a,mul(g.nin,0.16)),"p-via-j")+ln(add(b,mul(g.nin,-0.16)),add(b,mul(g.nin,0.16)),"p-via-j")+'</g>'; }
   function circsOf(r,res){ var g=[]; res.panels.forEach(function(p){ (g[p.circuit]=g[p.circuit]||[]).push(p); });
     var o=[], segs=[]; g.forEach(function(ps,i){ if(!ps) return; var pts=ps.map(function(p){ return toW(r,V(p.x+p.w/2,p.y+p.h/2)); }), j=joinOf(ps[0],ps[ps.length-1],segs);
       o.push({i:i,a:pts[0],b:pts[pts.length-1],n:ps.length,na:toW(r,j.na),nb:toW(r,j.nb),join:j.path.map(function(q){ return toW(r,q); })}); }); return o; }
@@ -1807,7 +1806,7 @@
     var items=[];
     fl.rooms.forEach(function(r){
       var res=results[r.id]; if(!res.circuits) return;
-      var d=C.map(function(c){ return manh(c,res.ctr); }), ns=C.map(function(c){ return outletsFor(res.cs,c,viaFor(r,c)).length; });
+      var d=C.map(function(c){ return manh(c,res.ctr); }), ns=C.map(function(c){ return outletsFor(res.cs,c,null).length; });
       var order=C.map(function(c,ci){return ci;}).sort(function(a,b){return d[a]-d[b];});
       items.push({r:r,n:res.circuits,ns:ns,d:d,order:order,dmin:d.length?Math.min.apply(null,d):0});
     });
@@ -1833,7 +1832,7 @@
       var res=results[r.id], col=res.col, mg=1+S.margin/100;
       // each run (ida and retorno) starts with the tube that comes fitted on the panel: that part is not PEX
       res.cs.forEach(function(c){ res.circ[c.i]={a:c.a,b:c.b,col:col,len:0,n:c.n,d:16}; if(c.n===2) res.mang++; });
-      res.outs=outletsFor(res.cs,col,viaFor(r,col)); res.outlets=res.outs.length;
+      res.outs=outletsFor(res.cs,col,null); res.outlets=res.outs.length;
       res.outs.forEach(function(o){ var l=col?o.raw*mg:0; o.len=l; res.pex+=l;
         o.ci.forEach(function(i){ var c=res.circ[i]; c.len=l/o.ci.length; c.d=o.d; c.out=o; });
         if(o.d===20){ res.g20++; res.pex20+=l; } else { res.pex16+=l; res.unions+=2; } });
@@ -1875,7 +1874,7 @@
     // the tubes cross only there. It is the way in of its own room only: it costs the same as any other wall, so no other
     // tube goes out of its way to use it, and the other walls cost the same with or without passages.
     var pas=[]; rs.forEach(function(r,ri){ var g=viaGeom(r); if(!g) return; var Q=add(g.P,mul(g.nin,-0.12)), other=-1; W.forEach(function(w,wi){ if(wi!==ri && other<0 && pointIn(Q,w)) other=wi; }); pas.push({P:g.P,a:ri,b:other}); });
-    var cross=function(m,ra,rb){ for(var i=0;i<pas.length;i++) if(len(sub(m,pas[i].P))<0.35) return 0.6;
+    var cross=function(m,ra,rb){ for(var i=0;i<pas.length;i++) if(len(sub(m,pas[i].P))<0.2) return 0.6;
       for(var j=0;j<pas.length;j++){ var g2=pas[j]; if((g2.a===ra&&g2.b===rb)||(g2.a===rb&&g2.b===ra)) return 80; }
       return 0.6; };
     var cellOf=function(p){ var i=Math.floor((p.x-x0)/res), j=Math.floor((p.y-y0)/res); if(i<0||j<0||i>=nx||j>=ny) return -1; return j*nx+i; };
@@ -1924,17 +1923,7 @@
       var corners=function(pts){ var o=[pts[0]]; for(var i=1;i<pts.length-1;i++){ var a=o[o.length-1], m=pts[i], n=pts[i+1]; if(Math.abs((m.x-a.x)*(n.y-m.y)-(m.y-a.y)*(n.x-m.x))>1e-9) o.push(m); } if(pts.length>1) o.push(pts[pts.length-1]); return o; };
       var byRoom={}; tubes.forEach(function(tb){ (byRoom[tb.room.id]=byRoom[tb.room.id]||[]).push(tb); });
       Object.keys(byRoom).forEach(function(id){ var grp=byRoom[id], r=grp[0].room, ri=fl.rooms.indexOf(r), W=results[r.id].wout, trunk=null;
-        var vr=viaFor(r,col);
-        // through its passage: straight across the wall, deep enough on both sides for all the lanes to turn without folding
-        if(vr && vr.F){ var vg=viaGeom(r), M0=tubes.length, dep=Math.min(0.6,Math.max(0.3,Math.min(0.05,1/Math.max(1,M0))*(M0-1)/2+0.12)),
-            oF=add(vg.P,mul(vg.nin,-dep)), iN=add(vg.P,mul(vg.nin,dep)), cv=vr.F.cellsTo(oF);
-          if(cv && cv.length){ var vt=corners(cv.map(vr.F.ctrOf)), ax=Math.abs(vg.nin.y)>Math.abs(vg.nin.x), nb=vt.length, b=vt[nb-1], a=nb>1?vt[nb-2]:null;
-            // line the end of the route up with the passage, keeping it square: a last run that already goes across the wall moves sideways
-            // onto the passage, a last run along the wall stops in front of it
-            if(a && (ax ? Math.abs(a.x-b.x)<1e-6 : Math.abs(a.y-b.y)<1e-6)){ if(ax){ a.x=vg.P.x; b.x=vg.P.x; } else { a.y=vg.P.y; b.y=vg.P.y; } }
-            else vt[nb-1]=ax?V(vg.P.x,b.y):V(b.x,vg.P.y);
-            trunk=corners(vt.concat([iN])); } }
-        else if(F){ var an=grp.slice().sort(function(a,b){ return (F.lenTo(a.p)||1e9)-(F.lenTo(b.p)||1e9); })[0], cells=F.cellsTo(an.p);
+        if(F){ var an=grp.slice().sort(function(a,b){ return (F.lenTo(a.p)||1e9)-(F.lenTo(b.p)||1e9); })[0], cells=F.cellsTo(an.p);
           if(cells && cells.length){ var ei=cells.length-1; for(var i=0;i<cells.length;i++){ if(F.ridOf(cells[i])===ri){ ei=i; break; } }
             trunk=corners(cells.slice(0,Math.min(cells.length,ei+2)).map(F.ctrOf)); } }
         if(!trunk) trunk=[CP];
@@ -3104,7 +3093,7 @@
     var il=[], nm={puntos:"puntos de luz",tira:"tira LED"};
     if(room.lc&&room.lc!=="ninguna") il.push("centro con "+nm[room.lc]); if(room.lp&&room.lp!=="ninguna") il.push("perímetro con "+nm[room.lp]);
     if(room.obst&&room.obst.length) h+='<p class="layout-line">Obstáculos: <b>'+obstGroups(room).length+'</b> ('+fmt(obstArea(room),2)+' m² sin paneles) · <button class="btn ghost small" id="obstClear2" type="button">Quitar todos</button></p>';
-    if(room.via) h+='<p class="layout-line">Paso de tubos marcado en la pared <b>'+LETTER(room.via.edge)+'</b>: los tubos de esta estancia entran por ahí. <button class="btn ghost small" id="viaClear" type="button">Quitar paso</button></p>';
+    if(room.via){ var vo=viaOther(room); h+='<p class="layout-line">Paso de tubos en la pared <b>'+LETTER(room.via.edge)+'</b>'+(vo?' (hacia '+esc(vo.name)+')':'')+': los tubos que tengan que cruzar esa pared, en un sentido o en otro, la cruzan por ahí. <button class="btn ghost small" id="viaClear" type="button">Quitar paso</button></p>'; }
     if(room.customL) il=["personalizada"];
     if(il.length) h+='<p class="layout-line">Iluminación: '+il.join(" y ")+' · <b>'+res.lights.length+' puntos</b>'+(res.leds.length?' · <b>'+fmt(res.ledLen,2)+' m de tira LED</b>':'')+'.</p>';
     if(res.st){ var sb=barsFor(res.st.secLens,S.bar), pb=barsFor(res.st.primLens,S.bar), ab=barsFor(res.st.ang,S.bar);
@@ -3920,7 +3909,7 @@
   function viaTool(on){
     if(on){ if(S.markTool) setMarkTool(S.markTool); if(S.obstTool) obstTool(false); }
     S.viaTool=!!on; S.markHover=null; $("viaBtn").classList.toggle("on",!!on);
-    if(on){ hint('<span><b>Paso de tubos:</b> pulsa la pared por donde tienen que entrar los tubos a una estancia (pulsa un poco dentro de esa estancia), por ejemplo para evitar una viga. Si no marcas nada, se toma el camino más corto. Pulsa un paso ya marcado para quitarlo.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>');
+    if(on){ hint('<span><b>Paso de tubos:</b> pulsa en la pared donde está el agujero (desde cualquiera de las dos estancias, da igual). No tiene dirección: los tubos que tengan que cruzar esa pared, vayan hacia donde vayan, la cruzan por ahí y por ningún otro sitio; a los que no la cruzan no les afecta. Si no marcas nada, cruzan por donde el camino es más corto. Pulsa un paso ya marcado para quitarlo.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>');
       $("viaDone").addEventListener("click",function(){ viaTool(false); }); }
     else hint("");
     renderPlan();
@@ -3932,8 +3921,10 @@
     var hit=ufHitEdge(q); if(!hit) return false; var r=hit.room, e=hit.edge, n=r.pts.length;
     if(r.bulge[e]){ hint('<span>El paso de tubos tiene que ir en una pared recta.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>',true); $("viaDone").addEventListener("click",function(){ viaTool(false); }); return true; }
     var A=toW(r,r.pts[e]), B=toW(r,r.pts[(e+1)%n]), L=len(sub(B,A)), t=Math.round(Math.max(0.1,Math.min(L-0.1,dot(sub(q,A),unit(sub(B,A)))))*20)/20;
-    r.via={edge:e,t:t}; update(r.id===S.sel);
-    hint('<span>Paso de tubos de <b>'+esc(r.name)+'</b> marcado en su pared '+LETTER(e)+'. Sigue marcando otras estancias o pulsa Terminar.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>'); $("viaDone").addEventListener("click",function(){ viaTool(false); });
+    var old=r.via; r.via={edge:e,t:t}; var o=viaOther(r);
+    if(!o){ if(old) r.via=old; else delete r.via; hint('<span>Esa pared no da a otra estancia: el paso de tubos va en una pared entre dos estancias.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>',true); $("viaDone").addEventListener("click",function(){ viaTool(false); }); return true; }
+    update(r.id===S.sel);
+    hint('<span>Paso de tubos entre <b>'+esc(r.name)+'</b> y <b>'+esc(o.name)+'</b>: los tubos que crucen esa pared lo harán por ahí. Sigue marcando o pulsa Terminar.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>'); $("viaDone").addEventListener("click",function(){ viaTool(false); });
     return true;
   }
   function setMarkTool(t){
@@ -5118,7 +5109,7 @@
           {when:function(){ return true; },el:"#obstBtn",x:"<p>Los muebles que llegan al techo, las vigas o los conductos ocupan sitio donde no puede ir ningún panel. Pulsa <b>Añadir obstáculo</b>.</p>"}
         ]});
       P.push({info:true,el:'#markBar [data-mark="acceso"]',t:"Puerta de acceso",x:"<p>Marca la pared de la <b>puerta de la calle</b>. Igual que con las ventanas, la primera fila de paneles de esa estancia va pegada a ella, que es por donde más frío entra, y el resto se reparte por igual por la estancia para que se note lo mismo en toda ella. Las puertas entre estancias no cuentan.</p>"});
-      P.push({info:true,el:"#viaBtn",t:"Paso de tubos",x:"<p>Si por el camino más corto hay una viga o algo que no se puede atravesar, pulsa <b>Marcar paso de tubos</b> y luego la pared por donde tienen que entrar los tubos a esa estancia. Solo los tubos de esa estancia entran por ahí (los demás siguen su camino) y sus metros se calculan por ese recorrido. Si no marcas nada, se toma el camino más corto.</p>"});
+      P.push({info:true,el:"#viaBtn",t:"Paso de tubos",x:"<p>Si por el camino más corto hay una viga o algo que no se puede atravesar, pulsa <b>Marcar paso de tubos</b> y luego la pared donde está el agujero, desde cualquiera de las dos estancias. Es un agujero en la pared, sin dirección: los tubos que tengan que cruzar esa pared la cruzan por ahí, vayan hacia donde vayan, y a los demás no les afecta. Los metros de tubo se calculan por ese recorrido. Si no marcas nada, se toma el camino más corto.</p>"});
       P.push({mission:true,t:"Muestra la tubería",badge:"Tubería a la vista",
         done:function(){ return !!S.showPipes; },
         skip:function(){ var c=$("showPipes"); if(c && !c.checked){ c.checked=true; c.dispatchEvent(new Event("change")); } },
