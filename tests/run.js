@@ -278,6 +278,27 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
     await p.close();
   }
 
+  // 7c. cálculo térmico en beta: aviso con su nota al pasar el ratón y casilla para activarlo o no (se recuerda en el navegador)
+  out.push("Cálculo térmico en beta");
+  p = await browser.newPage({ viewport: { width: 1400, height: 1000 }, acceptDownloads: true }); p.on("pageerror", e => errors.push("beta: " + e.message));
+  await p.goto(URL + "#planificador"); await p.waitForTimeout(800); await p.click("#loadExample"); await p.waitForTimeout(900);
+  const bico = p.locator("#thermCard .beta").first(); await bico.scrollIntoViewIfNeeded(); await bico.hover(); await p.waitForTimeout(150);
+  ok("aviso amarillo con la nota de beta al pasar el ratón", await p.evaluate(() => { const t = document.querySelector("#thermCard .beta-tip"); return !!t && getComputedStyle(t).display !== "none" && /beta/i.test(t.textContent) && /informativa/.test(t.textContent); }));
+  const vis = () => p.evaluate(() => ({ card: !!document.querySelector("#thGrid,#thZone") && document.querySelector("#thZone").offsetParent !== null, res: document.querySelector("#thBody").offsetParent !== null, ficha: /cálculo térmico/i.test(document.querySelector("#detailCard").innerText) }));
+  const on1 = await vis(); ok("activado (por defecto): ajustes, resultados y ficha de la estancia a la vista", on1.card && on1.res && on1.ficha, JSON.stringify(on1));
+  await p.locator('#thermCard [data-beta="th"]').uncheck(); await p.waitForTimeout(400);
+  const off1 = await vis(); ok("desactivado: se ocultan ajustes, resultados y la parte térmica de la ficha", !off1.card && !off1.res && !off1.ficha, JSON.stringify(off1));
+  ok("  y la casilla sigue a la vista para volver a activarlo", await p.evaluate(() => [...document.querySelectorAll('[data-beta="th"]')].every(c => c.offsetParent !== null && !c.checked)));
+  if (await p.evaluate(() => !!(window.jspdf && window.jspdf.jsPDF))) {
+    const [dl] = await Promise.all([p.waitForEvent("download", { timeout: 30000 }), p.click("#downloadReport")]); const f = path.join(os.tmpdir(), "informe-beta.pdf"); await dl.saveAs(f);
+    ok("  y no sale en el informe PDF", !fs.readFileSync(f, "latin1").includes("lculo t"));
+  }
+  await p.reload(); await p.waitForTimeout(800); await p.click("#loadExample"); await p.waitForTimeout(900);
+  ok("la elección se recuerda al volver a abrir", !(await vis()).res);
+  await p.locator('#thermRes [data-beta="th"]').check(); await p.waitForTimeout(400);
+  ok("se vuelve a activar desde la otra tarjeta", (await vis()).res && (await vis()).card);
+  await p.close();
+
   // 8. tutorial: se recorre entero en techo y suelo (saltando las misiones) y salen los pasos de lo nuevo
   out.push("Tutorial");
   for (const [h, nm] of [["#planificador", "techo"], ["#suelo", "suelo"]]) {

@@ -171,6 +171,15 @@
   .chip b{color:var(--ink);font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:.92rem;font-weight:600;}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
   .stack{display:flex;flex-direction:column;gap:16px;}
+  /* beta features: yellow warning with its note on hover/focus, and a switch to turn the feature off */
+  .beta-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .beta{position:relative;display:inline-flex;align-items:center;cursor:help;outline:none;}
+  .beta-ico{display:block;}
+  .beta-tip{display:none;position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%);z-index:30;width:260px;max-width:70vw;padding:9px 11px;border-radius:8px;background:#2B2200;color:#FFF8D6;font:400 .78rem/1.4 "IBM Plex Sans",system-ui,sans-serif;text-transform:none;letter-spacing:0;box-shadow:0 6px 18px rgba(0,0,0,.18);}
+  .beta-tip::before{content:"";position:absolute;left:50%;top:-6px;margin-left:-6px;border:6px solid transparent;border-top:0;border-bottom-color:#2B2200;}
+  .beta:hover .beta-tip,.beta:focus .beta-tip,.beta:focus-within .beta-tip{display:block;}
+  .beta-sw{display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:500;color:var(--muted);text-transform:none;letter-spacing:0;cursor:pointer;}
+  .beta-off > :not(.beta-keep){display:none !important;}
   .card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
   .card-head h2{font-size:1rem;}
   .section-title{font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:10px;display:block;}
@@ -992,7 +1001,7 @@
         <p class="note only-suelo">Indica las salidas de cada colector. Cada estancia va entera a un colector al que pueda llegar sin cruzar una escalera; si una escalera la separa, necesita su propio colector.</p>
       </div>
       <div class="card" id="thermCard">
-        <span class="section-title">Cálculo térmico</span>
+        <div class="beta-row beta-keep" style="margin-bottom:10px"><span class="section-title" style="margin:0">Cálculo térmico</span><span class="beta" tabindex="0" aria-describedby="betaTip_th"><svg class="beta-ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2.5 23 21.5H1Z" fill="#F5C400" stroke="#8A6D00" stroke-width="1.4" stroke-linejoin="round"/><rect x="11" y="8.5" width="2" height="7" rx="1" fill="#2B2200"/><circle cx="12" cy="18.2" r="1.25" fill="#2B2200"/></svg><span class="beta-tip" role="tooltip" id="betaTip_th"><b>Función en beta.</b> De momento es meramente informativa: no la tengas en cuenta para tomar decisiones sobre el proyecto.</span></span><label class="beta-sw"><input type="checkbox" data-beta="th" checked> Activar</label></div>
         <div class="grid2">
           <div class="field"><label class="lbl" for="thZone">Zona climática</label><select id="thZone"></select></div>
           <div class="field"><label class="lbl" for="thTe">T. exterior (°C)</label><input type="number" id="thTe" step="0.5"></div>
@@ -1047,7 +1056,7 @@
         </div>
       </section>
       <section class="card" id="thermRes">
-        <div class="card-head"><h2>Cálculo térmico</h2></div>
+        <div class="card-head beta-keep"><div class="beta-row"><h2>Cálculo térmico</h2><span class="beta" tabindex="0" aria-describedby="betaTip_th2"><svg class="beta-ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2.5 23 21.5H1Z" fill="#F5C400" stroke="#8A6D00" stroke-width="1.4" stroke-linejoin="round"/><rect x="11" y="8.5" width="2" height="7" rx="1" fill="#2B2200"/><circle cx="12" cy="18.2" r="1.25" fill="#2B2200"/></svg><span class="beta-tip" role="tooltip" id="betaTip_th2"><b>Función en beta.</b> De momento es meramente informativa: no la tengas en cuenta para tomar decisiones sobre el proyecto.</span></span><label class="beta-sw"><input type="checkbox" data-beta="th" checked> Activar</label></div></div>
         <div id="thSummary"></div>
         <div class="table-scroll"><table><thead id="thHead"></thead><tbody id="thBody"></tbody><tfoot id="thFoot"></tfoot></table></div>
         <span class="section-title" style="margin-top:18px;">Caudal por circuito para el equilibrado</span>
@@ -3175,8 +3184,8 @@
         '<label class="check"><input type="checkbox" id="rOver"> Rango de cobertura propio</label>'+
         '<div class="grid2" id="overFields"><div class="field"><label class="lbl" for="rMin">% mínimo</label><input type="number" id="rMin" min="0" max="100"></div><div class="field"><label class="lbl" for="rMax">% máximo</label><input type="number" id="rMax" min="0" max="100"></div></div>'+
         '<span class="section-title" style="margin:6px 0 6px;">Estructura de techo</span><div class="btn-row" style="margin-bottom:10px;"><button class="btn ghost small" id="rRotate">Rotar estructura</button><span class="note" style="margin:0;" id="rRotInfo"></span></div>')+
-        '<span class="section-title" style="margin:6px 0 6px;">Cálculo térmico</span><div class="grid2"><div class="field"><label class="lbl" for="rTi">Temperatura interior (°C)</label><input type="number" id="rTi" step="0.5" min="10" max="30"></div><div class="field"><label class="lbl" for="rWin">Ventanas (m²)</label><input type="number" id="rWin" step="0.1" min="0"></div></div>'+
-        (S.mode==="suelo"?'<div class="field"><label class="lbl" for="rPav">Pavimento</label><select id="rPav"></select></div>':'')+
+        (BETA.th?'':'<div hidden>')+'<span class="section-title" style="margin:6px 0 6px;">Cálculo térmico</span><div class="grid2"><div class="field"><label class="lbl" for="rTi">Temperatura interior (°C)</label><input type="number" id="rTi" step="0.5" min="10" max="30"></div><div class="field"><label class="lbl" for="rWin">Ventanas (m²)</label><input type="number" id="rWin" step="0.1" min="0"></div></div>'+
+        (S.mode==="suelo"?'<div class="field"><label class="lbl" for="rPav">Pavimento</label><select id="rPav"></select></div>':'')+(BETA.th?'':'</div>')+
         '<span class="section-title" style="margin:6px 0 6px;">Lados</span><table class="sides"><tbody>'+rows+'</tbody></table>'+
         '<div id="sideMsg"></div><p class="note">Al cambiar un lado, la forma se recalcula para seguir cerrada y los lados contiguos se ajustan.</p>'+place+
       '</div><div><div class="detail-plan" id="detailSvg"></div><div id="detailOut"></div></div></div>';
@@ -3523,7 +3532,7 @@
       allColls().forEach(function(c){ var st=collStats[c.id]||{n:0,pex:0,rooms:[]}, fl=floorOfColl(c); cb.push([c.name+(multi&&fl?"\n"+fl.name:""),String(c.cap||0),st.rooms.map(function(x){return x.room.name+": "+x.n+(x.n===1?" salida":" salidas");}).join("\n")||"—",String(st.n),String((c.cap||0)-st.n),fmt(st.pex,1)]); });
       allUnassigned.forEach(function(u){ cb.push(["Sin asignar","",u.room.name+": "+u.n+" circ.",String(u.n),"",""]); });
       T({head:[["Colector","Salidas","Estancias y circuitos","Usadas","Libres","PEX (m)"]],body:cb.length?cb:[["—","","","","",""]],columnStyles:{1:{halign:"right"},3:{halign:"right"},4:{halign:"right"},5:{halign:"right"}}});
-      if(TH && TH.rows.length){ var TT=TH, R7={halign:"right"};
+      if(BETA.th && TH && TH.rows.length){ var TT=TH, R7={halign:"right"};
         section("Cálculo térmico");
         doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor.apply(doc,INK);
         var tl=doc.splitTextToSize("Exterior "+fmt(S.th.te)+" °C · Impulsión "+(TT.tv!=null?fmt(TT.tv,1):"–")+" °C · Retorno "+(TT.tr!=null?fmt(TT.tr,1):"–")+" °C · Potencia necesaria "+fmt(TT.totQ/1000,2)+" kW · Caudal total "+fmt(TT.totFlow)+" l/h"+(UFM&&TT.dpMax?" · Circuito más desfavorable "+fmt(TT.dpMax,1)+" kPa (sin colector)":""),PW-2*M);
@@ -3546,7 +3555,7 @@
       if(y>255){ doc.addPage(); y=18; }
       doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor.apply(doc,MUT);
       var note=UFM ? "Notas: separación del tubo en plancha de tetones universal (múltiplos de 5 cm). Junto a ventanas y muros exteriores el tubo va más junto (zona periférica, UNE-EN 1264). Cada circuito tiene como máximo "+fmt(S.uf.maxLen)+" m contando la ida y vuelta al colector con recorrido ortogonal y "+fmt(S.uf.vert,1)+" m de bajada por tramo. Las estancias separadas por una escalera llevan su propio colector. Los metros de tubo incluyen un "+fmt(S.uf.margin)+"% de margen." : "Notas: cada colector incluye ida y retorno. Cada circuito lleva 2 conexiones (ida y retorno): en el colector, 1 bicono completo; en el panel, 1 racor de tubo de panel a rosca 1/2\", 1 racor PEX con rosca 1/2\" y 1 casquillo. Manguito de unión: 1 por circuito de 2 paneles. Los metros de PEX son una estimación con recorrido ortogonal, subida al techo de "+fmt(S.vert,1)+" m por tramo, descontando "+fmt(S.tail,1)+" m de tubo del propio panel por tramo, y "+fmt(S.margin)+"% de margen.";
-      note+=" Cálculo térmico orientativo: pérdidas por transmisión (U · superficie · diferencia de temperatura) por los muros exteriores y ventanas marcados, suelo y techo, más ventilación y un "+fmt(S.th.marg)+"% de margen. "+(UFM?"Emisión del suelo según UNE-EN 1264 con tubo "+(TH_TUBE[S.th.tube]||TH_TUBE["16x2"]).n+" y "+fmt(S.th.su)+" mm de mortero.":"Emisión de los paneles: "+fmt(S.th.kp,1)+" W/m² por cada °C entre el agua y el ambiente.")+" No sustituye al proyecto firmado por un técnico.";
+      if(BETA.th) note+=" Cálculo térmico orientativo: pérdidas por transmisión (U · superficie · diferencia de temperatura) por los muros exteriores y ventanas marcados, suelo y techo, más ventilación y un "+fmt(S.th.marg)+"% de margen. "+(UFM?"Emisión del suelo según UNE-EN 1264 con tubo "+(TH_TUBE[S.th.tube]||TH_TUBE["16x2"]).n+" y "+fmt(S.th.su)+" mm de mortero.":"Emisión de los paneles: "+fmt(S.th.kp,1)+" W/m² por cada °C entre el agua y el ambiente.")+" No sustituye al proyecto firmado por un técnico.";
       if(!UFM && S.t20) note+=" Con tubo de 20 mm, dos circuitos de la misma estancia (3 o 4 paneles) comparten una salida: bicono de 20 en el colector y una te de latón en la ida y otra en el retorno, con racores de tubo de panel en los extremos y racor de multicapa de 20 en el centro. El PEX de 20 no pasa de 20 m sumando ida y retorno.";
       var nl=doc.splitTextToSize(note,PW-2*M); doc.text(nl,M,y); y+=nl.length*3.4+3;
       if(company.foot){ var fl2=doc.splitTextToSize(company.foot,PW-2*M); if(y+fl2.length*3.6>283){ doc.addPage(); y=18; } doc.setTextColor.apply(doc,INK); doc.setFontSize(8); doc.text(fl2,M,y); }
@@ -4472,7 +4481,7 @@
   }
   // ---- rendering ----
   function thDetailHtml(room){
-    var res=results[room.id], o=res&&res.th, rw=$("rWin"), rt=$("rTi"); if(!o || res.pending) return "";
+    var res=results[room.id], o=res&&res.th, rw=$("rWin"), rt=$("rTi"); if(!o || res.pending || !BETA.th) return "";
     if(rw) rw.placeholder=fmt(o.L.AwAuto,1)+" (auto)"; if(rt) rt.placeholder=fmt(thBath(room)?24:S.th.ti)+" (auto)";
     var UF=S.mode==="suelo", p=o.L.parts, h='<span class="section-title" style="margin:14px 0 6px;">Cálculo térmico</span>';
     o.warn.forEach(function(w){ h+='<div class="msg warn">'+esc(w)+'</div>'; });
@@ -4792,7 +4801,15 @@
   var _userUi=userUi; userUi=function(){ _userUi.apply(this,arguments); planRead(); };
   planRead();
 
+  // ---------------- beta features ----------------
+  // thermal calculation (th): on by default; the choice is kept in this browser
+  var BETA={th:true}; try{ var bs=JSON.parse(localStorage.getItem("pr_beta")||"{}"); Object.keys(BETA).forEach(function(k){ if(typeof bs[k]==="boolean") BETA[k]=bs[k]; }); }catch(e){}
+  function betaApply(){ document.querySelectorAll("[data-beta]").forEach(function(c){ c.checked=!!BETA[c.getAttribute("data-beta")]; });
+    $("thermCard").classList.toggle("beta-off",!BETA.th); $("thermRes").classList.toggle("beta-off",!BETA.th); }
+  document.addEventListener("change",function(e){ var k=e.target.getAttribute && e.target.getAttribute("data-beta"); if(!k) return;
+    BETA[k]=!!e.target.checked; try{ localStorage.setItem("pr_beta",JSON.stringify(BETA)); }catch(err){} betaApply(); update(true); });
   function update(rebuild){ computeAll(); renderPlan(); if(rebuild) buildEditor(); renderDetailOutput(); renderTables(); renderThermal(); recSchedule(); planApply(); histNote(); }
+  betaApply();
 
   // ---------------- undo / redo ----------------
   // The whole project (as saved) after each change: a change is taken once things settle (not while a button is held down,
@@ -5182,7 +5199,7 @@
       P.push({info:true,el:"#pladurCard",t:"Techo de pladur",x:"<p>Placa, perfiles y cuelgues para calcular la estructura completa.</p>"});
       P.push({info:true,el:"#collCard",t:"Colectores y tubería",x:"<p>Salidas de cada colector, subida al techo y margen de tubo. Aquí también se explica la regla del tubo de 20.</p>"});
     }
-    P.push({info:true,el:"#thermCard",t:"Cálculo térmico",x:"<p>Zona climática, aislamiento de la vivienda, temperatura y qué hay encima y debajo de cada planta. Con eso y las ventanas y muros exteriores marcados, se calculan las pérdidas de cada estancia.</p>"});
+    P.push({info:true,el:"#thermCard",t:"Cálculo térmico",x:"<p>Zona climática, aislamiento de la vivienda, temperatura y qué hay encima y debajo de cada planta. Con eso y las ventanas y muros exteriores marcados, se calculan las pérdidas de cada estancia.</p><p>Está en <b>beta</b> (triángulo amarillo): de momento es solo informativo. Con la casilla <b>Activar</b> lo muestras u ocultas.</p>"});
     P.push({info:true,el:"#thermRes",top:true,t:"Potencias y caudales",x:"<p>Potencia que necesita cada estancia y la que da "+(suelo?"el suelo":"el techo")+", la <b>temperatura de impulsión</b> de diseño (para elegir la aerotermia) y el <b>caudal de cada salida</b> en l/min para ajustar el caudalímetro del colector.</p><p>Si una estancia no llega, te dice por qué.</p>"});
     P.push({info:true,el:"#tablesCard",t:"Resumen de circuitos",x:"<p>Circuitos y metros de tubo por estancia y por colector, con las salidas usadas y libres.</p>"});
     P.push({info:true,el:"#report",top:true,t:"Material e informe",x:"<p>Material con cantidades. Escribe tus precios para ver el coste aproximado, rellena cliente y obra, y descarga el <b>informe en PDF</b>.</p>"});
