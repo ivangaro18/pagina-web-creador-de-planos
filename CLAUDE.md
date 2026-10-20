@@ -6,6 +6,7 @@ Web y herramienta para planificar instalaciones de **techo radiante** (paneles) 
 
 - `index.html`: **todo el producto en un solo archivo** (unas 5000 líneas), sin build ni dependencias locales. Se publica con GitHub Pages.
 - `tests/run.js` + `tests/baseline.json`: pruebas automáticas en Chromium (ver «Probar»).
+- `tutorial/`: animaciones del tutorial (`techo-<paso>.mp4/.webm`, `suelo-<paso>.mp4/.webm`) grabadas con la herramienta de verdad por `tutorial/grabar.js` (Playwright + ffmpeg). Cada paso del tutorial que pide hacer algo lleva `anim:"<paso>"` en `tourPlan`; los solo informativos, no.
 - `.claude/skills/probar-y-publicar/`: el procedimiento para comprobar y publicar cada cambio.
 - `README.md`: descripción breve.
 
@@ -50,7 +51,7 @@ Dentro de `index.html`:
 - Comentarios de código en inglés; textos visibles para el usuario en español.
 - Las propiedades que empiezan por `_` no se guardan en el proyecto (las filtra `projSnapshot`).
 - Cualquier cambio en el modelo de datos debe seguir cargando proyectos guardados antes (`projApply`).
-- Cuando cambie una función visible, revisa también el tutorial (`tourPlan`) y la web comercial si la mencionan.
+- Cuando cambie una función visible, revisa también el tutorial (`tourPlan`) y la web comercial si la mencionan. Si cambia el aspecto de algo que sale en una animación del tutorial, vuelve a grabarla: `node tutorial/grabar.js <paso>` (sin argumentos, todas). Un paso nuevo que pida una acción necesita su escena en `grabar.js` y su `anim` (la prueba del tutorial falla si falta).
 
 ## Probar
 

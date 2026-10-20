@@ -27,7 +27,10 @@ let html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 if (!html.includes(INIT) || !html.includes(AUTH)) { console.error("index.html ha cambiado: actualiza INIT o AUTH en tests/run.js para poder preparar la copia de prueba."); process.exit(2); }
 html = html.replace(INIT, "  window.__dbg={S:S,get results(){ return results; },update:update,rectRoom:rectRoom,nid:nid,curFloor:curFloor,toW:toW,V:V,pipeLayout:pipeLayout,viaGeom:viaGeom};\n" + INIT)
            .replace(AUTH, "var AUTH_HOSTS = /^$/;");
-const server = http.createServer((q, r) => { if (q.url.split("?")[0].split("#")[0] === "/" ) { r.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); r.end(html); } else { r.writeHead(404); r.end(); } });
+const server = http.createServer((q, r) => { const u = q.url.split("?")[0].split("#")[0], f = path.join(ROOT, u), ext = path.extname(u);
+  if (u === "/") { r.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); r.end(html); }
+  else if (/^\/tutorial\/[a-z-]+\.(mp4|webm)$/.test(u) && fs.existsSync(f)) { r.writeHead(200, { "Content-Type": ext === ".mp4" ? "video/mp4" : "video/webm" }); r.end(fs.readFileSync(f)); } // the tutorial animations
+  else { r.writeHead(404); r.end(); } });
 
 // ---- resultados
 let fails = 0; const out = [];
@@ -303,15 +306,22 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   out.push("Tutorial");
   for (const [h, nm] of [["#planificador", "techo"], ["#suelo", "suelo"]]) {
     p = await open(h); await p.click("#tourBtn"); await p.waitForTimeout(500);
-    const seen = [];
+    const seen = [], anims = []; let played = false;
     for (let i = 0; i < 60; i++) {
-      const st = await p.evaluate(() => { const tp = document.querySelector(".tour-tip"); if (!tp) return null; return { t: (tp.querySelector(".tt-title,h3") || {}).innerText || "", b: [...tp.querySelectorAll("button[data-t]")].map(x => x.getAttribute("data-t")) }; });
-      if (!st) break; seen.push(st.t);
+      const st = await p.evaluate(() => { const tp = document.querySelector(".tour-tip"); if (!tp) return null; const v = tp.querySelector("video.tt-anim");
+        return { t: (tp.querySelector(".tt-title,h3") || {}).innerText || "", b: [...tp.querySelectorAll("button[data-t]")].map(x => x.getAttribute("data-t")), anim: v ? v.getAttribute("data-anim") : null }; });
+      if (!st) break; seen.push(st.t); anims.push(st);
+      if (st.anim && !played) { await p.waitForTimeout(1500); played = await p.evaluate(() => { const v = document.querySelector(".tour-tip video.tt-anim"); return v.readyState >= 2 && !v.error && v.currentTime > 0 && !v.paused; }); }
       const a = st.b.includes("next") ? "next" : st.b.includes("skip") ? "skip" : null; if (!a) break;
       await p.click('.tour-tip button[data-t="' + a + '"]'); await p.waitForTimeout(300);
     }
     const need = ["¿Tienes un plano de la vivienda?", "Deshacer y rehacer", "Paredes curvas", "Control por zonas"], miss = need.filter(t => !seen.includes(t));
     ok("tutorial de " + nm + ": llega al final (" + seen.length + " pasos) con los pasos nuevos", /Fin/.test(seen[seen.length - 1] || "") && !miss.length, "faltan: " + miss.join(", ") + " · último: " + seen[seen.length - 1]);
+    // every step that asks to do something shows its animation (recorded with tutorial/grabar.js); only the purely informative ones do not
+    const INFO = ["Aprende haciéndolo", "Salidas con tubo de 20", "La ficha de la estancia", "Potencias y caudales", "Resumen de circuitos"];
+    const noAnim = anims.slice(0, -1).filter(s => !s.anim && !INFO.includes(s.t)).map(s => s.t), uniq = [...new Set(anims.filter(s => s.anim).map(s => s.anim))];
+    const noFile = uniq.filter(a => !fs.existsSync(path.join(ROOT, a + ".mp4")) || !fs.existsSync(path.join(ROOT, a + ".webm")));
+    ok("tutorial de " + nm + ": " + uniq.length + " animaciones, todas con vídeo, y se reproducen", !noAnim.length && !noFile.length && played, "sin animación: " + noAnim.join(", ") + " · sin vídeo: " + noFile.join(", ") + " · se reproduce: " + played);
     await p.close();
   }
 

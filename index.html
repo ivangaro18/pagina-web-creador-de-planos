@@ -385,7 +385,7 @@
   .p-curve-sel{fill:none;stroke:var(--warm);stroke-width:calc(var(--pu,.01px)*5);stroke-linecap:round;opacity:.7;pointer-events:none;}
   .p-curve-draw{fill:none;stroke:var(--warm);stroke-width:calc(var(--pu,.01px)*2.5);stroke-linecap:round;stroke-linejoin:round;pointer-events:none;}
   .p-curve-end{fill:var(--warm);stroke:#fff;stroke-width:calc(var(--pu,.01px)*1.5);pointer-events:none;}
-  .mode-hint input.bg-cal-in{width:90px !important;display:inline-block;margin:0 4px;padding:3px 6px !important;vertical-align:middle;}
+  .mode-hint input.bg-cal-in, .mode-hint input.door-w{width:90px !important;display:inline-block;margin:0 4px;padding:3px 6px !important;vertical-align:middle;}
   .file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;}
   .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center;}
   .company-mini{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);}
@@ -575,6 +575,11 @@
   .tour-tip.sheet{width:calc(100vw - 32px);}
   .tour-tip.sheet .tt-arrow{display:none;}
   @media (prefers-reduced-motion:reduce){ .tour-spot,.tour-tip{transition:none;} }
+  /* animated example of the step: a short loop recorded from the tool itself (tutorial/grabar.js) */
+  .tour-tip.has-anim{width:min(480px,calc(100vw - 32px));}
+  .tt-anim{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);margin:8px 0 10px;cursor:zoom-in;}
+  .tt-zoom{position:fixed;inset:0;z-index:200;background:rgba(10,14,18,.78);display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out;}
+  .tt-zoom video{max-width:min(1100px,100%);max-height:100%;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.4);}
   .tour-spot.live{box-shadow:0 0 0 9999px rgba(12,24,34,.30);outline:3px solid #F2B53A;animation:tourPulse 1.4s ease-in-out infinite;}
   @keyframes tourPulse{0%,100%{outline-offset:0;outline-color:#F2B53A;}50%{outline-offset:4px;outline-color:rgba(242,181,58,.55);}}
   .tour-tip .tt-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
@@ -5089,9 +5094,9 @@
     P.push({info:true,t:"Aprende haciéndolo",x:"<p>Vamos a dibujar juntos una vivienda pequeña: <b>dos estancias</b>, una <b>ventana</b>"+(suelo?", una <b>puerta</b>":", un <b>mueble alto</b>, un <b>punto de luz a medida</b>")+" y un <b>colector</b>. Tú haces cada paso y yo te voy diciendo dónde pulsar.</p><p>Cada misión superada es un <b>logro</b>. Si alguna se te atasca puedes saltarla y la hago yo.</p>"+
       (TOUR.hadOwn?"<p style='color:var(--muted)'>Practicarás en un proyecto aparte: el tuyo se guarda y podrás volver a él al terminar.</p>":""),btn:"Empezar"});
     // 1. first room
-    P.push({info:true,el:"#projName",t:"El nombre del proyecto",x:"<p>Pulsa el título de arriba (✎) para ponerle nombre al proyecto, por ejemplo <b>Casa García</b>. Con ese nombre se guarda en «Mis proyectos» y sale en el informe.</p>"});
-    P.push({info:true,el:"#bgImport",t:"¿Tienes un plano de la vivienda?",x:"<p>Con <b>Importar plano</b> subes un PDF o una foto del plano (también uno simple, sin cotas) y queda de fondo en la planta. Después:</p><ol><li><b>Calibrar escala</b>: pinchas los dos extremos de una pared y escribes su medida real, la que mides en obra.</li><li><b>Calcar estancias</b>: pinchas las esquinas de cada estancia por el centro de las paredes. Se ajustan solas a ángulos rectos y se pegan a las ya calcadas.</li></ol><p>Del plano solo se usan las estancias: armarios, textos o m² escritos se quedan en la imagen. En este tutorial dibujaremos las estancias a mano.</p>"});
-    P.push({mission:true,t:"Crea tu primera estancia",badge:"Primera estancia",
+    P.push({info:true,anim:"nombre",el:"#projName",t:"El nombre del proyecto",x:"<p>Pulsa el título de arriba (✎) para ponerle nombre al proyecto, por ejemplo <b>Casa García</b>. Con ese nombre se guarda en «Mis proyectos» y sale en el informe.</p>"});
+    P.push({info:true,anim:"plano",el:"#bgImport",t:"¿Tienes un plano de la vivienda?",x:"<p>Con <b>Importar plano</b> subes un PDF o una foto del plano (también uno simple, sin cotas) y queda de fondo en la planta. Después:</p><ol><li><b>Calibrar escala</b>: pinchas los dos extremos de una pared y escribes su medida real, la que mides en obra.</li><li><b>Calcar estancias</b>: pinchas las esquinas de cada estancia por el centro de las paredes. Se ajustan solas a ángulos rectos y se pegan a las ya calcadas.</li></ol><p>Del plano solo se usan las estancias: armarios, textos o m² escritos se quedan en la imagen. En este tutorial dibujaremos las estancias a mano.</p>"});
+    P.push({mission:true,anim:"estancia",t:"Crea tu primera estancia",badge:"Primera estancia",
       start:function(T){ T.base=S.rooms.length; },
       done:function(T){ return S.rooms.length>T.base && !S.placing && $("shapeModal").hidden; },
       after:function(T){ T.salon=S.rooms[S.rooms.length-1].id; },
@@ -5104,7 +5109,7 @@
         {when:function(){ return true; },el:"#addRoom",x:"<p>Todo empieza aquí. Pulsa <b>+ Estancia</b>.</p>"}
       ]});
     // 2. second room glued to the first
-    P.push({mission:true,t:"Pega una segunda estancia",badge:"Vivienda en marcha",
+    P.push({mission:true,anim:"segunda",t:"Pega una segunda estancia",badge:"Vivienda en marcha",
       start:function(T){ T.base=S.rooms.length; },
       after:function(T){ T.dorm=S.rooms[S.rooms.length-1].id; },
       done:function(T){ return S.rooms.length>T.base && !S.placing && $("shapeModal").hidden; },
@@ -5119,10 +5124,10 @@
         {when:function(){ return tModalStep()==="oEdge"; },el:"#shapeCanvas",place:"right",x:"<p><b>Paso 3 de 3.</b> Ahora pulsa el lado del Dormitorio que va pegado: el <b>D</b> (el de la izquierda).</p>"},
         {when:function(){ return true; },el:"#addRoom",x:"<p>Vamos con la segunda. Pulsa <b>+ Estancia</b> otra vez.</p>"}
       ]});
-    P.push({info:true,el:".plan-stage",t:"Muévete por el plano",x:"<ul><li><b>Arrastra</b> el fondo para desplazarte y usa la <b>rueda</b> o <b>+ / −</b> para el zoom.</li><li><b>Doble clic</b> en una estancia la coge para moverla; se pega sola al muro más cercano.</li><li><b>Un clic</b> abre su ficha (lo probaremos al final).</li></ul>"});
-    P.push({info:true,el:["#undoBtn","#redoBtn"],t:"Deshacer y rehacer",x:"<p>Si te equivocas, <b>↶ Deshacer</b> vuelve atrás (también con <b>Ctrl+Z</b>) y <b>↷ Rehacer</b> vuelve adelante (<b>Ctrl+Y</b>): estancias, marcas, colectores, ajustes, precios… En el tutorial están desactivados; en tus proyectos los tienes siempre.</p>"});
-    P.push({info:true,el:'#bgBar [data-bg="curve"]',t:"Paredes curvas",x:"<p>Dibuja o calca siempre las paredes rectas. Si alguna es curva (un mirador, una esquina redondeada), pulsa <b>Marcar borde curvo</b>, pincha esa pared y dibuja su forma a mano alzada de un extremo al otro: se alisa sola y la pared pasa a ser curva. Si la comparte otra estancia, también se curva en ella.</p>"});
-    P.push({mission:true,t:"Marca una ventana",badge:"Ventana marcada",
+    P.push({info:true,anim:"mover",el:".plan-stage",t:"Muévete por el plano",x:"<ul><li><b>Arrastra</b> el fondo para desplazarte y usa la <b>rueda</b> o <b>+ / −</b> para el zoom.</li><li><b>Doble clic</b> en una estancia la coge para moverla; se pega sola al muro más cercano.</li><li><b>Un clic</b> abre su ficha (lo probaremos al final).</li></ul>"});
+    P.push({info:true,anim:"deshacer",el:["#undoBtn","#redoBtn"],t:"Deshacer y rehacer",x:"<p>Si te equivocas, <b>↶ Deshacer</b> vuelve atrás (también con <b>Ctrl+Z</b>) y <b>↷ Rehacer</b> vuelve adelante (<b>Ctrl+Y</b>): estancias, marcas, colectores, ajustes, precios… En el tutorial están desactivados; en tus proyectos los tienes siempre.</p>"});
+    P.push({info:true,anim:"curvo",el:'#bgBar [data-bg="curve"]',t:"Paredes curvas",x:"<p>Dibuja o calca siempre las paredes rectas. Si alguna es curva (un mirador, una esquina redondeada), pulsa <b>Marcar borde curvo</b>, pincha esa pared y dibuja su forma a mano alzada de un extremo al otro: se alisa sola y la pared pasa a ser curva. Si la comparte otra estancia, también se curva en ella.</p>"});
+    P.push({mission:true,anim:"ventana",t:"Marca una ventana",badge:"Ventana marcada",
         done:function(){ return S.rooms.some(function(r){ return Object.keys(r.marks||{}).some(function(k){ return r.marks[k]==="ventana"; }); }); },
         after:function(){ if(S.markTool) setMarkTool(S.markTool); },
         skip:function(T){ if(S.markTool) setMarkTool(S.markTool); var r=roomById(T.salon)||S.rooms[0]; if(r){ r.marks=r.marks||{}; r.marks[0]="ventana"; update(true); } },
@@ -5131,7 +5136,7 @@
           {when:function(){ return true; },el:'#markBar [data-mark="ventana"]',x:suelo?"<p>Las ventanas y muros exteriores hacen que el tubo vaya más junto y cuentan en el cálculo térmico. Pulsa <b>Marcar ventana</b>.</p>":"<p>Las ventanas y los muros exteriores son por donde se pierde el calor: con ellos se hace el <b>cálculo térmico</b> de cada estancia. Pulsa <b>Marcar ventana</b>.</p>"}
         ]});
     if(suelo){
-      P.push({mission:true,t:"Pon una puerta",badge:"Puerta colocada",
+      P.push({mission:true,anim:"puerta",t:"Pon una puerta",badge:"Puerta colocada",
         start:function(T){ T.base=tDoors(); },
         done:function(T){ return tDoors()>T.base && !S.doorTool; },
         skip:function(T){ if(S.doorTool||$("doorBtn").classList.contains("on")) doorCancel(true); var r=roomById(T.salon)||S.rooms[0]; if(r){ (r.doors=r.doors||[]).push({edge:1,t:2,w:0.8}); update(true); } },
@@ -5142,7 +5147,7 @@
           {when:function(){ return true; },el:"#doorBtn",x:"<p>Los tubos solo cruzan los tabiques por las puertas. Pulsa <b>Marcar puerta</b>.</p>"}
         ]});
     } else {
-      P.push({mission:true,t:"Dibuja un mueble alto",badge:"Obstáculo marcado",
+      P.push({mission:true,anim:"obstaculo",t:"Dibuja un mueble alto",badge:"Obstáculo marcado",
         start:function(T){ T.base=allRooms().reduce(function(t,r){ return t+(r.obst||[]).length; },0); },
         done:function(T){ return allRooms().reduce(function(t,r){ return t+(r.obst||[]).length; },0)>T.base && !S.obstDraft; },
         after:function(){ if(S.obstTool) obstTool(false); },
@@ -5151,14 +5156,14 @@
           {when:function(){ return !!S.obstTool; },el:function(T){ return roomSel(T.dorm); },x:"<p>Pincha en una esquina dentro del <b>Dormitorio</b> y arrastra hasta la contraria, como si fuera un armario hasta el techo. Ahí no se pondrán paneles.</p><p>Si dibujas otro pegado o encima, se unen en una sola figura (una L, por ejemplo).</p>"},
           {when:function(){ return true; },el:"#obstBtn",x:"<p>Los muebles que llegan al techo, las vigas o los conductos ocupan sitio donde no puede ir ningún panel. Pulsa <b>Añadir obstáculo</b>.</p>"}
         ]});
-      P.push({info:true,el:'#markBar [data-mark="acceso"]',t:"Puerta de acceso",x:"<p>Marca la pared de la <b>puerta de la calle</b>. Igual que con las ventanas, la primera fila de paneles de esa estancia va pegada a ella, que es por donde más frío entra, y el resto se reparte por igual por la estancia para que se note lo mismo en toda ella. Las puertas entre estancias no cuentan.</p>"});
-      P.push({info:true,el:"#viaBtn",t:"Paso de tubos",x:"<p>Si por el camino más corto hay una viga o algo que no se puede atravesar, pulsa <b>Marcar paso de tubos</b> y luego la pared donde está el agujero, desde cualquiera de las dos estancias. Es un agujero en la pared, sin dirección: los tubos que tengan que cruzar esa pared la cruzan por ahí, vayan hacia donde vayan, y a los demás no les afecta. Los metros de tubo se calculan por ese recorrido. Si no marcas nada, se toma el camino más corto.</p>"});
-      P.push({mission:true,t:"Muestra la tubería",badge:"Tubería a la vista",
+      P.push({info:true,anim:"acceso",el:'#markBar [data-mark="acceso"]',t:"Puerta de acceso",x:"<p>Marca la pared de la <b>puerta de la calle</b>. Igual que con las ventanas, la primera fila de paneles de esa estancia va pegada a ella, que es por donde más frío entra, y el resto se reparte por igual por la estancia para que se note lo mismo en toda ella. Las puertas entre estancias no cuentan.</p>"});
+      P.push({info:true,anim:"paso",el:"#viaBtn",t:"Paso de tubos",x:"<p>Si por el camino más corto hay una viga o algo que no se puede atravesar, pulsa <b>Marcar paso de tubos</b> y luego la pared donde está el agujero, desde cualquiera de las dos estancias. Es un agujero en la pared, sin dirección: los tubos que tengan que cruzar esa pared la cruzan por ahí, vayan hacia donde vayan, y a los demás no les afecta. Los metros de tubo se calculan por ese recorrido. Si no marcas nada, se toma el camino más corto.</p>"});
+      P.push({mission:true,anim:"tuberia",t:"Muestra la tubería",badge:"Tubería a la vista",
         done:function(){ return !!S.showPipes; },
         skip:function(){ var c=$("showPipes"); if(c && !c.checked){ c.checked=true; c.dispatchEvent(new Event("change")); } },
         steps:[{when:function(){ return true; },el:"#planTools",x:"<p>Puedes ver encima del plano la tubería, los circuitos por colores o la estructura de pladur. Marca <b>Mostrar tubería</b>.</p><p>Cada salida del colector tiene su color y su número en los dos extremos; la ida va en línea continua y el retorno en discontinua.</p>"}]});
     }
-    P.push({mission:true,t:"Coloca el colector",badge:"Colector instalado",
+    P.push({mission:true,anim:"colector",t:"Coloca el colector",badge:"Colector instalado",
       start:function(T){ T.base=S.collectors.length; },
       done:function(T){ return suelo ? S.collectors.some(function(c){ return c.room!=null; }) : S.collectors.length>T.base; },
       skip:function(T){ var r=roomById(T.salon)||S.rooms[0];
@@ -5171,15 +5176,15 @@
           ? (suelo?"<p>Pulsa el <b>Colector</b>: se colocará solo en la pared recomendada, donde menos tubo hace falta.</p><p>Luego podrás arrastrarlo por el plano a otra pared.</p>":"<p>Pulsa el <b>Colector</b>: aparecerá en el plano pegado a la pared más cercana.</p><p>Luego podrás arrastrarlo por el plano a otra pared.</p>")
           : (suelo?"<p>Mantén pulsado el <b>Colector</b> y arrástralo hasta una pared del <b>Salón</b>. Suéltalo cerca de la pared y se pegará solo.</p><p>En cuanto lo sueltes, verás aparecer los circuitos. Si solo lo pulsas, se coloca solo en la pared recomendada.</p>"
                   :"<p>Arrastra el <b>Colector</b> dentro del <b>Salón</b> (o simplemente púlsalo). Las estancias se asignan solas al colector más cercano con salidas libres.</p><p>Alrededor del colector se reserva su <b>registro</b>: ahí no se ponen paneles.</p>"); }}]});
-    if(suelo) P.push({info:true,el:".coll-bar",t:"Ubicación recomendada",x:"<p>Al pulsar el colector, se coloca solo en la pared donde menos tubo hace falta. Si después cambias estancias o puertas y hay un sitio mejor, aquí aparece el aviso <b>Ubicación recomendada</b>: lo ves en el plano y decides <b>Colocar aquí</b> o <b>Descartar</b>.</p>"});
+    if(suelo) P.push({info:true,anim:"recomendada",el:".coll-bar",t:"Ubicación recomendada",x:"<p>Al pulsar el colector, se coloca solo en la pared donde menos tubo hace falta. Si después cambias estancias o puertas y hay un sitio mejor, aquí aparece el aviso <b>Ubicación recomendada</b>: lo ves en el plano y decides <b>Colocar aquí</b> o <b>Descartar</b>.</p>"});
     else P.push({info:true,el:"#planWrap",t:"Salidas con tubo de 20",x:"<p>Dos circuitos de la misma estancia (3 o 4 paneles) comparten una salida del colector con <b>tubo de 20</b> hasta una te de latón, siempre que el PEX de 20 no pase de 20 m (ida + retorno). Se hace solo.</p><p>Con «Colorear por circuito» los paneles de una misma salida salen del mismo color; en la ficha llevan el contorno <b>S1 · 20 mm</b>. Lo que no se puede agrupar va con tubo de 16.</p>"});
-    P.push({mission:true,t:"Abre la ficha de una estancia",badge:"Ficha consultada",
+    P.push({mission:true,anim:"ficha",t:"Abre la ficha de una estancia",badge:"Ficha consultada",
       done:function(T){ return S.sel===T.salon && !S.moveId; },
       skip:function(T){ if(T.salon) select(T.salon); },
       steps:[{when:function(){ return true; },el:function(T){ return roomSel(T.salon); },x:"<p>Haz <b>un clic</b> sobre el <b>Salón</b> para abrir su ficha.</p>"}]});
     P.push({info:true,el:"#detailCard",t:"La ficha de la estancia",x:suelo?"<p>Aquí cambias el nombre, la medida y el tipo de cada pared (normal, exterior, ventana), la separación del tubo y el pavimento de esta estancia.</p><p>Si una estancia se queda sin circuito, aquí te explica el motivo y qué cambiar. Más abajo tienes su cálculo térmico.</p>":"<p>Medidas y tipo de cada lado, iluminación, cobertura propia, giro de la estructura y la temperatura de la estancia. Más abajo, sus salidas del colector y su cálculo térmico.</p>"});
     if(!suelo){
-      P.push({mission:true,t:"Añade un punto de luz a medida",badge:"Luz a medida",
+      P.push({mission:true,anim:"luz",t:"Añade un punto de luz a medida",badge:"Luz a medida",
         done:function(T){ var r=roomById(T.salon); return !!(r && r.customL && (r.lights||[]).length); },
         after:function(){ lightAddStop(); },
         skip:function(T){ var r=roomById(T.salon)||S.rooms[0]; if(!r) return; lightAddStop(); r.customL=true; r.lights=r.lights||[]; var o=localOutline(r), c=centroid(o); r.lights.push({x:Math.round(c.x*100)/100,y:Math.round(c.y*100)/100,s:30}); if(S.sel!==r.id) select(r.id); update(true); },
@@ -5188,24 +5193,24 @@
           {when:function(T){ var r=roomById(T.salon); return !!(r && r.customL); },el:"#lightBox",x:"<p>Pulsa <b>+ Añadir punto de luz</b>.</p>"},
           {when:function(){ return true; },el:function(){ return $("rCustL")?"#rCustL":"#detailCard"; },x:"<p>Si el techo ya tiene puntos de luz, o los quieres en un sitio exacto, márcalos tú. Marca la casilla <b>Iluminación personalizada</b>.</p>"}
         ]});
-      P.push({info:true,el:"#lightBox",t:"Cotas y hueco del punto de luz",x:"<p>En la tabla cambias las dos <b>distancias a pared</b> (en cm) y el punto se mueve a la medida exacta.</p><p>Al lado está el <b>hueco sin paneles</b> (30 = 30 × 30 cm): los paneles lo esquivan solos.</p>"});
+      P.push({info:true,anim:"cotas",el:"#lightBox",t:"Cotas y hueco del punto de luz",x:"<p>En la tabla cambias las dos <b>distancias a pared</b> (en cm) y el punto se mueve a la medida exacta.</p><p>Al lado está el <b>hueco sin paneles</b> (30 = 30 × 30 cm): los paneles lo esquivan solos.</p>"});
     }
     if(suelo){
-      P.push({info:true,el:"#ufRulesCard",t:"Reglas del suelo",x:"<p>Separación del tubo, longitud máxima por circuito, franjas junto a ventanas y muros… Cambia cualquier valor y el plano se recalcula al momento.</p>"});
-      P.push({info:true,el:"#collCard",t:"Salidas de los colectores",x:"<p>Indica cuántas salidas tiene cada colector. El programa reparte las estancias sin que ningún circuito se cruce.</p>"});
+      P.push({info:true,anim:"reglas",el:"#ufRulesCard",t:"Reglas del suelo",x:"<p>Separación del tubo, longitud máxima por circuito, franjas junto a ventanas y muros… Cambia cualquier valor y el plano se recalcula al momento.</p>"});
+      P.push({info:true,anim:"salidas",el:"#collCard",t:"Salidas de los colectores",x:"<p>Indica cuántas salidas tiene cada colector. El programa reparte las estancias sin que ningún circuito se cruce.</p>"});
     } else {
-      P.push({info:true,el:"#catalogCard",t:"Tus paneles",x:"<p>Medidas de los paneles que uses, de cualquier fabricante. Se coloca siempre el más grande que quepa, con máximo 2 paneles por circuito (y hasta 4 por salida con tubo de 20).</p>"});
-      P.push({info:true,el:"#coverCard",t:"Cobertura",x:"<p>Qué porcentaje del techo quieres cubrir con paneles.</p>"});
-      P.push({info:true,el:"#pladurCard",t:"Techo de pladur",x:"<p>Placa, perfiles y cuelgues para calcular la estructura completa.</p>"});
-      P.push({info:true,el:"#collCard",t:"Colectores y tubería",x:"<p>Salidas de cada colector, subida al techo y margen de tubo. Aquí también se explica la regla del tubo de 20.</p>"});
+      P.push({info:true,anim:"paneles",el:"#catalogCard",t:"Tus paneles",x:"<p>Medidas de los paneles que uses, de cualquier fabricante. Se coloca siempre el más grande que quepa, con máximo 2 paneles por circuito (y hasta 4 por salida con tubo de 20).</p>"});
+      P.push({info:true,anim:"cobertura",el:"#coverCard",t:"Cobertura",x:"<p>Qué porcentaje del techo quieres cubrir con paneles.</p>"});
+      P.push({info:true,anim:"pladur",el:"#pladurCard",t:"Techo de pladur",x:"<p>Placa, perfiles y cuelgues para calcular la estructura completa.</p>"});
+      P.push({info:true,anim:"salidas",el:"#collCard",t:"Colectores y tubería",x:"<p>Salidas de cada colector, subida al techo y margen de tubo. Aquí también se explica la regla del tubo de 20.</p>"});
     }
-    P.push({info:true,el:"#thermCard",t:"Cálculo térmico",x:"<p>Zona climática, aislamiento de la vivienda, temperatura y qué hay encima y debajo de cada planta. Con eso y las ventanas y muros exteriores marcados, se calculan las pérdidas de cada estancia.</p><p>Está en <b>beta</b> (triángulo amarillo): de momento es solo informativo. Con la casilla <b>Activar</b> lo muestras u ocultas.</p>"});
+    P.push({info:true,anim:"termico",el:"#thermCard",t:"Cálculo térmico",x:"<p>Zona climática, aislamiento de la vivienda, temperatura y qué hay encima y debajo de cada planta. Con eso y las ventanas y muros exteriores marcados, se calculan las pérdidas de cada estancia.</p><p>Está en <b>beta</b> (triángulo amarillo): de momento es solo informativo. Con la casilla <b>Activar</b> lo muestras u ocultas.</p>"});
     P.push({info:true,el:"#thermRes",top:true,t:"Potencias y caudales",x:"<p>Potencia que necesita cada estancia y la que da "+(suelo?"el suelo":"el techo")+", la <b>temperatura de impulsión</b> de diseño (para elegir la aerotermia) y el <b>caudal de cada salida</b> en l/min para ajustar el caudalímetro del colector.</p><p>Si una estancia no llega, te dice por qué.</p>"});
     P.push({info:true,el:"#tablesCard",t:"Resumen de circuitos",x:"<p>Circuitos y metros de tubo por estancia y por colector, con las salidas usadas y libres.</p>"});
-    P.push({info:true,el:"#report",top:true,t:"Material e informe",x:"<p>Material con cantidades. Escribe tus precios para ver el coste aproximado, rellena cliente y obra, y descarga el <b>informe en PDF</b>.</p>"});
-    P.push({info:true,el:['[data-qty="ctl_cab"]','[data-qty="ctl_cent"]'],t:"Control por zonas",x:"<p><b>Cabezales electrotérmicos</b>, <b>termostatos</b> y <b>centralita</b>: la cantidad la pones tú según las zonas que quiera el cliente (en la fila de cabezales te dice cuántas salidas hay). Si los dejas a 0, no salen en el informe.</p>"});
-    P.push({info:true,el:"#openCompany",t:"Tus datos de empresa",x:"<p>Nombre, logotipo y contacto: salen en la cabecera del informe.</p>"});
-    P.push({info:true,el:"#planBtn",t:"Tu plan",x:"<p>Con el plan <b>por proyecto</b> tienes todas las herramientas y avisos, y los resultados se ven al <b>finalizar</b> el proyecto. Con la <b>suscripción de empresa</b> lo ves todo en tiempo real. Pulsa aquí para ver los planes.</p>"});
+    P.push({info:true,anim:"material",el:"#report",top:true,t:"Material e informe",x:"<p>Material con cantidades. Escribe tus precios para ver el coste aproximado, rellena cliente y obra, y descarga el <b>informe en PDF</b>.</p>"});
+    P.push({info:true,anim:"control",el:['[data-qty="ctl_cab"]','[data-qty="ctl_cent"]'],t:"Control por zonas",x:"<p><b>Cabezales electrotérmicos</b>, <b>termostatos</b> y <b>centralita</b>: la cantidad la pones tú según las zonas que quiera el cliente (en la fila de cabezales te dice cuántas salidas hay). Si los dejas a 0, no salen en el informe.</p>"});
+    P.push({info:true,anim:"empresa",el:"#openCompany",t:"Tus datos de empresa",x:"<p>Nombre, logotipo y contacto: salen en la cabecera del informe.</p>"});
+    P.push({info:true,anim:"plan",el:"#planBtn",t:"Tu plan",x:"<p>Con el plan <b>por proyecto</b> tienes todas las herramientas y avisos, y los resultados se ven al <b>finalizar</b> el proyecto. Con la <b>suscripción de empresa</b> lo ves todo en tiempo real. Pulsa aquí para ver los planes.</p>"});
     P.push({final:true});
     return P;
   }
@@ -5222,7 +5227,8 @@
     [bl,sp,tp,toast].forEach(function(n){ document.body.appendChild(n); });
     TOUR={i:-1,snap:snap,hadOwn:hadOwn,bl:bl,sp:sp,tp:tp,toast:toast,got:{},skipped:{},sub:-1};
     TOUR.plan=tourPlan(S.mode); TOUR.missions=TOUR.plan.filter(function(p){ return p.mission; });
-    tp.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b||!TOUR) return; tourAct(b.getAttribute("data-t")); });
+    tp.addEventListener("click",function(e){ var v=e.target.closest(".tt-anim"); if(v){ var z=document.createElement("div"); z.className="tt-zoom"; z.innerHTML='<video autoplay muted loop playsinline>'+animSrc(v.getAttribute("data-anim"))+'</video>'; z.addEventListener("click",function(){ z.remove(); }); document.body.appendChild(z); return; }
+      var b=e.target.closest("button"); if(!b||!TOUR) return; tourAct(b.getAttribute("data-t")); });
     bl.addEventListener("wheel",function(e){ e.preventDefault(); },{passive:false});
     window.addEventListener("resize",tourPlace); window.addEventListener("scroll",tourPlace,true); document.addEventListener("keydown",tourKey,true);
     TOUR.timer=setInterval(tourTick,200); histUI();
@@ -5253,6 +5259,8 @@
     tourRender(true);
   }
   function tourBadges(){ var T=TOUR; return '<span class="tt-badges">'+T.missions.map(function(m){ var g=T.got[m.badge]; return '<i class="'+(g?(T.skipped[m.badge]?'sk':'on'):'')+'" title="'+esc(m.badge)+'"></i>'; }).join("")+'</span>'; }
+  // MP4 (H.264) where it plays, WebM (VP9) otherwise
+  function animSrc(a){ return '<source src="'+a+'.mp4" type=\'video/mp4; codecs="avc1.42E01E"\'><source src="'+a+'.webm" type="video/webm">'; }
   function tourRender(scroll){
     var T=TOUR; if(!T) return; var st=T.plan[T.i], h, el=null;
     if(st.final){
@@ -5273,6 +5281,9 @@
       h='<div class="tt-head"><span class="tt-step">'+(T.i+1)+' de '+nInfo+'</span>'+(T.i>0?tourBadges():'')+'</div><h3>'+st.t+'</h3>'+st.x+
         '<div class="tt-nav" style="margin-top:12px"><button class="tt-skip" type="button" data-t="exit">Salir del tutorial</button>'+(T.i>0&&!T.plan[T.i-1].mission?'<button class="btn ghost small" type="button" data-t="prev">Anterior</button>':'')+'<button class="btn small" type="button" data-t="next">'+(st.btn||'Siguiente')+'</button></div>';
     }
+    var an=!st.final && st.anim ? 'tutorial/'+(S.mode==="suelo"?"suelo":"techo")+'-'+st.anim : null;
+    if(an && !T.min){ var hi=h.indexOf('<h3>'), he=h.indexOf('</h3>',hi), at=he>=0?he+5:h.indexOf('</div>')+6; h=h.slice(0,at)+'<video class="tt-anim" data-anim="'+an+'" autoplay muted loop playsinline preload="auto" aria-label="Ejemplo animado de este paso" title="Pulsa para verlo en grande">'+animSrc(an)+'</video>'+h.slice(at); }
+    T.tp.classList.toggle("has-anim",!!an && !T.min);
     T.tp.innerHTML='<div class="tt-arrow"></div>'+h;
     var els=tourEls(T.cur && T.cur.el); el=els[0];
     // on a narrow screen the plan scrolls sideways: bring the rooms in question to the middle of it

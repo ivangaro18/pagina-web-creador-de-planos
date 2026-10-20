@@ -36,6 +36,7 @@ Abre la web en Chromium con una copia de `index.html` que expone el estado inter
   - se cruza en recto;
   - los tubos de las demás estancias no se desvían.
 - **Deshacer y rehacer:** funcionan con los botones y con Ctrl+Z / Ctrl+Y.
+- **Tutorial:** se recorre entero en techo y suelo; cada paso con acción tiene su animación (vídeo en `tutorial/`) y se reproduce.
 - **Material de control:** cabezales, termostatos y centralita aparecen en techo y suelo con la cantidad a mano, y el importe se calcula bien.
 
 Si falla:
@@ -44,6 +45,8 @@ Si falla:
 - **«index.html ha cambiado: actualiza INIT o AUTH»:** se ha movido la línea de arranque o la de `AUTH_HOSTS`. Ajusta las constantes al principio de `tests/run.js`.
 
 Cuando añadas una función nueva o arregles un fallo, **añade su comprobación a `tests/run.js`** y verifica que falla con la versión anterior (`git show <commit>:index.html > index.html`, ejecuta, y después restaura el archivo).
+
+Si el cambio altera el aspecto de algo que sale en las animaciones del tutorial, vuelve a grabarlas (`node tutorial/grabar.js <paso>`, o sin argumentos todas; tarda unos minutos) y mira algunos fotogramas antes de publicar.
 
 ## 3. Prueba manual de lo que has tocado
 
