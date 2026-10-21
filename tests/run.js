@@ -325,6 +325,20 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
     await p.close();
   }
 
+  // the first mission is done by drawing the room corner by corner on the grid, as the tutorial now asks
+  p = await open("#planificador"); await p.click("#tourBtn"); await p.waitForTimeout(500);
+  const tTitle = () => p.evaluate(() => (document.querySelector(".tour-tip h3") || {}).innerText || "");
+  for (let i = 0; i < 6 && !/primera estancia/.test(await tTitle()); i++) { await p.click('.tour-tip button[data-t="next"]'); await p.waitForTimeout(300); }
+  await p.click("#addRoom"); await p.waitForTimeout(500);
+  const tips = [], gp = (x, y) => p.evaluate(([x, y]) => { const q = new DOMPoint(x, y).matrixTransform(document.getElementById("shapeSvg").getScreenCTM()); return [q.x, q.y]; }, [x, y]);
+  for (const [x, y] of [[4, 4], [14, 4], [14, 12], [4, 12], [4, 4]]) { tips.push(await p.evaluate(() => document.querySelector(".tour-tip").innerText)); const [a, b] = await gp(x, y); await p.mouse.click(a, b); await p.waitForTimeout(350); }
+  await p.click("#shSkip"); await p.fill("#shName", "Salón"); await p.click("#shCreate"); await p.waitForTimeout(2500);
+  const firstRoom = await p.evaluate(() => { const r = window.__dbg.S.rooms[0]; return r ? { n: r.name, a: Math.round(Math.abs(r.pts.reduce((t, q, i, P) => t + q.x * P[(i + 1) % P.length].y - P[(i + 1) % P.length].x * q.y, 0) / 2) * 100) / 100 } : null; });
+  ok("tutorial: la primera estancia se dibuja punto a punto (guía en cada esquina) y se supera la misión",
+    /esquina a esquina/.test(tips[0]) && /Sigue pulsando/.test(tips[1]) && /primer punto/.test(tips[4]) && firstRoom && firstRoom.n === "Salón" && firstRoom.a === 20 && /cualquier forma/.test(await tTitle()),
+    JSON.stringify({ tips: tips.map(t => t.slice(0, 60)), firstRoom, now: await tTitle() }));
+  await p.close();
+
   ok("sin errores de JavaScript durante las pruebas", errors.length === 0, errors.join(" | "));
   await browser.close(); server.close();
   console.log(out.join("\n"));

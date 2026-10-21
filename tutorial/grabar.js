@@ -49,6 +49,9 @@ class Rec {
   async key(k) { await this.p.keyboard.press(k); await this.p.waitForTimeout(150); await this.frame(2); }
   // world point (m) of the plan -> screen
   async w2s(x, y) { return this.p.evaluate(([x, y]) => { const svg = document.querySelector("#planWrap svg"), q = new DOMPoint(x, y).matrixTransform(svg.getScreenCTM()); return [q.x, q.y]; }, [x, y]); }
+  // a dot of the grid in the new-room dialog -> screen
+  async gp(x, y) { return this.p.evaluate(([x, y]) => { const q = new DOMPoint(x, y).matrixTransform(document.getElementById("shapeSvg").getScreenCTM()); return [q.x, q.y]; }, [x, y]); }
+  async dots(pts, s = 0.45) { for (const [x, y] of pts) { const [a, b] = await this.gp(x, y); await this.move(a, b, s); await this.hold(0.1); await this.press(); } }
   async moveW(x, y, s) { const [sx, sy] = await this.w2s(x, y); await this.move(sx, sy, s); }
   // the part of the screen that is recorded: a 16:10 box around these elements, clamped to the window
   // the whole width, from the top of the window (for the dialogs, which open at the top)
@@ -122,10 +125,22 @@ const SCENES = {
   async estancia(r, p, mode) {
     await setFloor(p, mode, []); await view(r, p, "#planTools", ["#planTools"], 1000, 50); r.full(); r.x = 640; r.y = 520; await r.hold(0.5);
     await r.click("#addRoom"); await p.waitForTimeout(300); await r.hold(0.4);
-    await r.click("#shRect"); await r.hold(0.5); await r.click("#shSkip"); await r.hold(0.3);
+    await r.dots([[4, 4], [14, 4], [14, 12], [4, 12], [4, 4]]); await r.hold(0.6); // corner by corner (50 cm squares), closing on the first one
+    await r.click("#shSkip"); await r.hold(0.3);
     await r.click("#shName"); await r.key("Control+a"); await r.type("Salón");
     for (const [i, v] of [[0, "5"], [1, "4"], [2, "5"], [3, "4"]]) { await r.click('[data-len="' + i + '"]'); await r.key("Control+a"); await r.type(v, 3); }
     await r.hold(0.5); await r.click("#shCreate"); await p.waitForTimeout(500); await r.hold(2);
+  },
+  async forma(r, p, mode) {
+    await setFloor(p, mode, []); await view(r, p, "#planTools", ["#planTools"], 1000, 50); r.full(); r.x = 640; r.y = 520; await r.hold(0.5);
+    await r.click("#addRoom"); await p.waitForTimeout(300); await r.hold(0.3);
+    await r.dots([[4, 3], [18, 3], [18, 9], [12, 9], [12, 15], [4, 15], [4, 3]], 0.4); await r.hold(0.6);
+    await r.click('#shapeCanvas [data-edge="1"]'); await r.hold(0.4); await r.click("#shNext"); await p.waitForTimeout(200); await r.hold(0.3);
+    await r.to('#shapeCanvas [data-h="1"]'); const [x, y] = await r.gp(20.2, 6); await r.drag(x, y, 0.9); await r.hold(0.5);
+    await r.click("#shNext"); await p.waitForTimeout(200); await r.hold(0.3);
+    await r.click("#shName"); await r.key("Control+a"); await r.type("Salón-comedor", 1);
+    await r.hold(0.8);
+    await r.click("#shCreate"); await p.waitForTimeout(600); await r.hold(2.2);
   },
   async segunda(r, p, mode) {
     await setFloor(p, mode, [SALON]); await view(r, p, "#planTools", ["#planTools"], 1000, 50); r.full(); r.x = 640; r.y = 520; await r.hold(0.5);

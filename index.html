@@ -5102,12 +5102,15 @@
       after:function(T){ T.salon=S.rooms[S.rooms.length-1].id; },
       skip:function(T){ closeShape(); var r=rectRoom("Salón",0,0,5,4); S.rooms.push(r); S.sel=r.id; update(true); },
       steps:[
-        {when:function(){ return tModalStep()==="draw"; },el:"#shRect",place:"left",x:"<p>Esta es la ventana para dibujar la estancia. Puedes pulsar los puntos de la cuadrícula uno a uno para dibujar cualquier forma, o usar una forma hecha.</p><p>Para este ejemplo pulsa <b>Rectángulo</b>.</p>"},
+        {when:function(){ return tModalStep()==="draw" && SH.pts.length>=4; },el:"#shapeSide",place:"below",noAnim:true,x:"<p>Ya tienes las cuatro esquinas. Para cerrar la estancia, pulsa otra vez el <b>primer punto</b> (el verde).</p>"},
+        {when:function(){ return tModalStep()==="draw" && SH.pts.length>0; },el:"#shapeSide",place:"below",noAnim:true,x:"<p>Bien. Sigue pulsando las esquinas <b>en orden</b>, en el sentido de las agujas del reloj: arriba a la derecha, abajo a la derecha y abajo a la izquierda.</p><p>Si te equivocas, <b>Deshacer punto</b> quita el último.</p>"},
+        {when:function(){ return tModalStep()==="draw"; },el:"#shapeSide",place:"below",noAnim:true,x:"<p>Esta es la ventana para dibujar la estancia. Cada punto de la cuadrícula es una esquina posible (cada cuadro son 50 cm).</p><p>Dibuja el <b>Salón</b> esquina a esquina: pulsa primero la de <b>arriba a la izquierda</b>. No hace falta que la forma sea exacta: las medidas se escriben después.</p><p style='color:var(--muted)'>Para formas habituales también tienes los botones <b>Rectángulo</b> y <b>Forma en L</b>.</p>"},
         {when:function(){ return tModalStep()==="curves"; },el:"#shSkip",x:"<p>Aquí marcarías las paredes curvas pulsando sobre ellas. Las de esta estancia son rectas: pulsa <b>Omitir</b>.</p>"},
         {when:function(){ return tModalStep()==="bend"; },el:"#shapeCanvas",x:"<p>Arrastra el punto verde para darle la curva a la pared y luego pulsa <b>Continuar</b>.</p>"},
         {when:function(){ return tModalStep()==="measures"; },el:"#shapeSide",place:"left",x:"<p>Ahora las medidas reales. Escribe:</p><ul><li>Nombre: <b>Salón</b></li><li>Lados <b>A</b> y <b>C</b>: <b>5</b> m</li><li>Lados <b>B</b> y <b>D</b>: <b>4</b> m</li></ul><p>El aviso verde te dice si la forma cierra. Después pulsa <b>Crear estancia</b>.</p>"},
         {when:function(){ return true; },el:"#addRoom",x:"<p>Todo empieza aquí. Pulsa <b>+ Estancia</b>.</p>"}
       ]});
+    P.push({info:true,anim:"forma",el:"#addRoom",t:"Estancias con cualquier forma",x:"<p>Las estancias no tienen por qué ser rectangulares. Con los puntos de la cuadrícula dibujas cualquier forma: una L, una pared en diagonal, un entrante…</p><ol><li><b>Forma</b>: pulsa las esquinas en orden y cierra en el primer punto.</li><li><b>Lados curvos</b>: pulsa los lados que sean curvos, <b>Continuar</b>, y arrastra su punto verde para darles la curva.</li><li><b>Medidas</b>: escribe el nombre y la medida real de cada lado recto.</li></ol>"});
     // 2. second room glued to the first
     P.push({mission:true,anim:"segunda",t:"Pega una segunda estancia",badge:"Vivienda en marcha",
       start:function(T){ T.base=S.rooms.length; },
@@ -5281,7 +5284,7 @@
       h='<div class="tt-head"><span class="tt-step">'+(T.i+1)+' de '+nInfo+'</span>'+(T.i>0?tourBadges():'')+'</div><h3>'+st.t+'</h3>'+st.x+
         '<div class="tt-nav" style="margin-top:12px"><button class="tt-skip" type="button" data-t="exit">Salir del tutorial</button>'+(T.i>0&&!T.plan[T.i-1].mission?'<button class="btn ghost small" type="button" data-t="prev">Anterior</button>':'')+'<button class="btn small" type="button" data-t="next">'+(st.btn||'Siguiente')+'</button></div>';
     }
-    var an=!st.final && st.anim ? 'tutorial/'+(S.mode==="suelo"?"suelo":"techo")+'-'+st.anim : null;
+    var an=!st.final && st.anim && !(T.cur && T.cur.noAnim) ? 'tutorial/'+(S.mode==="suelo"?"suelo":"techo")+'-'+st.anim : null;
     if(an && !T.min){ var hi=h.indexOf('<h3>'), he=h.indexOf('</h3>',hi), at=he>=0?he+5:h.indexOf('</div>')+6; h=h.slice(0,at)+'<video class="tt-anim" data-anim="'+an+'" autoplay muted loop playsinline preload="auto" aria-label="Ejemplo animado de este paso" title="Pulsa para verlo en grande">'+animSrc(an)+'</video>'+h.slice(at); }
     T.tp.classList.toggle("has-anim",!!an && !T.min);
     T.tp.innerHTML='<div class="tt-arrow"></div>'+h;
