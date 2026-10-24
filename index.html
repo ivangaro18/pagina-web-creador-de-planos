@@ -3037,10 +3037,25 @@
     o+='<circle class="p-port ida" cx="'+f3(s0.x)+'" cy="'+f3(s0.y)+'" r="0.035"/><circle class="p-port ret" cx="'+f3(s1.x)+'" cy="'+f3(s1.y)+'" r="0.035"/>';
     return o;
   }
+  // the entrance door is drawn one door wide where the wall was clicked (r.accPos[edge] = 0..1 along it; the middle if not set):
+  // the whole wall still counts for the panel layout
+  var ACC_W=0.9;
+  function polyCut(P,d0,d1){ var out=[], acc=0;
+    for(var i=1;i<P.length;i++){ var a=P[i-1], b=P[i], L=len(sub(b,a)); if(L<1e-9) continue;
+      var s0=Math.max(d0,acc), s1=Math.min(d1,acc+L); if(s1>=s0){ var p0=add(a,mul(sub(b,a),(s0-acc)/L)), p1=add(a,mul(sub(b,a),(s1-acc)/L)); if(!out.length) out.push(p0); out.push(p1); }
+      acc+=L; }
+    return out.length?out:[P[0],P[P.length-1]]; }
+  function polyLen(P){ var L=0; for(var i=1;i<P.length;i++) L+=len(sub(P[i],P[i-1])); return L; }
+  function accSpan(r,e,P){ var L=polyLen(P); if(L<=ACC_W) return P; var t=r.accPos&&r.accPos[e]!=null?r.accPos[e]:0.5, a=Math.min(Math.max(t*L-ACC_W/2,0),L-ACC_W); return polyCut(P,a,a+ACC_W); }
+  function edgeT(r,e,q){ var n=r.pts.length, P=edgeSamples(r.pts[e],r.pts[(e+1)%n],r.bulge[e]||0,16).map(function(p){ return toW(r,p); }), L=polyLen(P), acc=0, best=null;
+    for(var i=1;i<P.length;i++){ var a=P[i-1], b=P[i], d=sub(b,a), l=len(d); if(l<1e-9) continue; var u=Math.max(0,Math.min(1,((q.x-a.x)*d.x+(q.y-a.y)*d.y)/(l*l))), p=add(a,mul(d,u)), dd=len(sub(q,p));
+      if(!best||dd<best.d) best={d:dd,s:acc+u*l}; acc+=l; }
+    return L>0&&best?Math.round(best.s/L*1000)/1000:0.5; }
   function ufMarksSvg(r,tf){
     var o="", n=r.pts.length, mk=r.marks||{};
     for(var e=0;e<n;e++){ var t=mk[e]; if(!t) continue;
-      var pts=ptsStr(edgeSamples(r.pts[e],r.pts[(e+1)%n],r.bulge[e]||0,16).map(tf));
+      var sp=edgeSamples(r.pts[e],r.pts[(e+1)%n],r.bulge[e]||0,16); if(t==="acceso") sp=accSpan(r,e,sp);
+      var pts=ptsStr(sp.map(tf));
       if(t==="ventana") o+='<polyline class="p-mk win-o" points="'+pts+'"/><polyline class="p-mk win-i" points="'+pts+'"/>';
       else o+='<polyline class="p-mk '+(t==="escalera"?'esc':t==="acceso"?'acc':'ext')+'" points="'+pts+'"><title>'+MARKS[t]+'</title></polyline>';
     }
@@ -3174,7 +3189,8 @@
       if(S.obstDraft && !forExport){ var od0=S.obstDraft; o+='<rect class="p-obst draft" x="'+f3(Math.min(od0.a.x,od0.b.x))+'" y="'+f3(Math.min(od0.a.y,od0.b.y))+'" width="'+f3(Math.abs(od0.b.x-od0.a.x))+'" height="'+f3(Math.abs(od0.b.y-od0.a.y))+'"/>';
         o+='<text class="p-obst-t" x="'+f3((od0.a.x+od0.b.x)/2)+'" y="'+f3((od0.a.y+od0.b.y)/2+0.05)+'" text-anchor="middle">'+fmt(Math.abs(od0.b.x-od0.a.x)*100)+' × '+fmt(Math.abs(od0.b.y-od0.a.y)*100)+' cm</text>'; }
       if(S.markHover && !forExport){ var hr0=S.markHover.room, he0=S.markHover.edge, hn0=hr0.pts.length;
-        o+='<polyline class="p-mk hov" points="'+ptsStr(edgeSamples(hr0.pts[he0],hr0.pts[(he0+1)%hn0],hr0.bulge[he0]||0,16).map(function(p){ return toW(hr0,p); }))+'"/>'; } }
+        var hs0=edgeSamples(hr0.pts[he0],hr0.pts[(he0+1)%hn0],hr0.bulge[he0]||0,16), hp0={}; if(S.markHover.t!=null){ hp0[he0]=S.markHover.t; hs0=accSpan({accPos:hp0},he0,hs0); }
+        o+='<polyline class="p-mk hov" points="'+ptsStr(hs0.map(function(p){ return toW(hr0,p); }))+'"/>'; } }
     if(S.mode==="suelo"){
       rooms.forEach(function(r){ o+=ufObstSvg(r,function(p){ return toW(r,p); },forExport?"obHx":"obHp"); });
       if(S.obstDraft && !forExport){ var od=S.obstDraft; o+='<rect class="p-obst draft" x="'+f3(Math.min(od.a.x,od.b.x))+'" y="'+f3(Math.min(od.a.y,od.b.y))+'" width="'+f3(Math.abs(od.b.x-od.a.x))+'" height="'+f3(Math.abs(od.b.y-od.a.y))+'"/>';
@@ -3364,7 +3380,7 @@
     $("rActive").addEventListener("change",function(e){ room.active=e.target.checked; update(false); });
     bindSideCommon(card,room);
     card.querySelectorAll("[data-mk]").forEach(function(sl){ var i=+sl.getAttribute("data-mk"); sl.value=(room.marks||{})[i]||"";
-      sl.addEventListener("change",function(){ room.marks=room.marks||{}; if(sl.value) room.marks[i]=sl.value; else delete room.marks[i]; update(false); }); });
+      sl.addEventListener("change",function(){ room.marks=room.marks||{}; if(sl.value) room.marks[i]=sl.value; else delete room.marks[i]; if(sl.value!=="acceso" && room.accPos) delete room.accPos[i]; update(false); }); });
     $("rTi").value=thSet(room.ti)?room.ti:""; $("rWin").value=thSet(room.winA)?room.winA:"";
     [["rTi","ti"],["rWin","winA"]].forEach(function(f){ $(f[0]).addEventListener("input",function(){ var v=String(this.value).replace(",",".");
       if(v===""){ room[f[1]]=null; thUpdate(); } else if(isFinite(+v)){ room[f[1]]=+v; thUpdate(); } }); });
@@ -4031,7 +4047,8 @@
     if(S.markTool){
       var mq=svgPointRaw(e.clientX,e.clientY), hit=mq?ufHitEdge(V(mq.x,mq.y)):null;
       if(hit){ e.preventDefault(); e.stopImmediatePropagation(); var mk=hit.room.marks=hit.room.marks||{};
-        if(mk[hit.edge]===S.markTool) delete mk[hit.edge]; else mk[hit.edge]=S.markTool;
+        if(mk[hit.edge]===S.markTool){ delete mk[hit.edge]; if(hit.room.accPos) delete hit.room.accPos[hit.edge]; }
+        else { mk[hit.edge]=S.markTool; if(S.markTool==="acceso"){ hit.room.accPos=hit.room.accPos||{}; hit.room.accPos[hit.edge]=edgeT(hit.room,hit.edge,V(mq.x,mq.y)); } }
         suppressClick=true; update(hit.room.id===S.sel); }
       return;
     }
@@ -4107,8 +4124,8 @@
   window.addEventListener("pointermove",function(e){
     if((!S.markTool && !S.doorTool && !S.viaTool) || S.drag || S.pan) return;
     var q=overPlan(e.clientX,e.clientY)?svgPointRaw(e.clientX,e.clientY):null, hit=q?ufHitEdge(V(q.x,q.y)):null, prev=S.markHover;
-    S.markHover=hit?{room:hit.room,edge:hit.edge}:null;
-    if((prev&&prev.room)!==(hit&&hit.room) || (prev&&prev.edge)!==(hit&&hit.edge)){ if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); }); }
+    S.markHover=hit?{room:hit.room,edge:hit.edge,t:S.markTool==="acceso"?edgeT(hit.room,hit.edge,V(q.x,q.y)):null}:null;
+    if((prev&&prev.room)!==(hit&&hit.room) || (prev&&prev.edge)!==(hit&&hit.edge) || (prev&&S.markHover&&prev.t!==S.markHover.t)){ if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); }); }
   });
   // ---- tool: mark the pipe passage of a room (ceiling)
   function viaTool(on){
@@ -4136,7 +4153,7 @@
     if(S.viaTool && S.markTool!==t) viaTool(false);
     S.markTool = S.markTool===t ? null : t; S.markHover=null;
     document.querySelectorAll("#markBar [data-mark]").forEach(function(b){ b.classList.toggle("on",b.getAttribute("data-mark")===S.markTool); });
-    if(S.markTool) hint('Marcando <b>'+MARKS[S.markTool].toLowerCase()+'</b>: pulsa una pared del plano. '+(S.mode!=="suelo"?(S.markTool==="acceso"?'Es la puerta de la calle: la primera fila de paneles va pegada a esta pared, igual que junto a las ventanas, y el resto se reparte por la estancia. Las puertas entre estancias no cuentan. ':S.markTool==="ventana"?'La primera fila de paneles va pegada a la ventana y el resto se reparte por la estancia. La pared cuenta en el cálculo térmico. ':'Se usa en el cálculo térmico de la estancia. '):S.markTool==="escalera"?'Por esa pared no pasará ningún tubo; lo que quede al otro lado necesita su propio colector. ':S.markTool==="ventana"?'Junto a ella el tubo irá a '+clampSep(S.uf.sepWin)+' cm en una franja de '+fmt(S.uf.winW,1)+' m. ':'Junto a él el tubo irá a '+clampSep(S.uf.sepExt)+' cm en una franja de '+fmt(S.uf.extW,1)+' m. ')+'<button class="btn ghost small" id="markDone">Terminar</button>');
+    if(S.markTool) hint('Marcando <b>'+MARKS[S.markTool].toLowerCase()+'</b>: pulsa una pared del plano. '+(S.mode!=="suelo"?(S.markTool==="acceso"?'Es la puerta de la calle: pulsa la pared justo donde está la puerta y se marca con su ancho. La primera fila de paneles va pegada a esta pared, igual que junto a las ventanas, y el resto se reparte por la estancia. Las puertas entre estancias no cuentan. ':S.markTool==="ventana"?'La primera fila de paneles va pegada a la ventana y el resto se reparte por la estancia. La pared cuenta en el cálculo térmico. ':'Se usa en el cálculo térmico de la estancia. '):S.markTool==="escalera"?'Por esa pared no pasará ningún tubo; lo que quede al otro lado necesita su propio colector. ':S.markTool==="ventana"?'Junto a ella el tubo irá a '+clampSep(S.uf.sepWin)+' cm en una franja de '+fmt(S.uf.winW,1)+' m. ':'Junto a él el tubo irá a '+clampSep(S.uf.sepExt)+' cm en una franja de '+fmt(S.uf.extW,1)+' m. ')+'<button class="btn ghost small" id="markDone">Terminar</button>');
     else hint("");
     var md=$("markDone"); if(md) md.addEventListener("click",function(){ setMarkTool(S.markTool); });
     renderPlan();
@@ -5337,7 +5354,7 @@
           {when:function(){ return !!S.obstTool; },el:function(T){ return roomSel(T.dorm); },x:"<p>Pincha en una esquina dentro del <b>Dormitorio</b> y arrastra hasta la contraria, como si fuera un armario hasta el techo. Ahí no se pondrán paneles.</p><p>Si dibujas otro pegado o encima, se unen en una sola figura (una L, por ejemplo).</p>"},
           {when:function(){ return true; },el:"#obstBtn",x:"<p>Los muebles que llegan al techo, las vigas o los conductos ocupan sitio donde no puede ir ningún panel. Pulsa <b>Añadir obstáculo</b>.</p>"}
         ]});
-      P.push({info:true,anim:"acceso",el:'#markBar [data-mark="acceso"]',t:"Puerta de acceso",x:"<p>Marca la pared de la <b>puerta de la calle</b>. Igual que con las ventanas, la primera fila de paneles de esa estancia va pegada a ella, que es por donde más frío entra, y el resto se reparte por igual por la estancia para que se note lo mismo en toda ella. Las puertas entre estancias no cuentan.</p>"});
+      P.push({info:true,anim:"acceso",el:'#markBar [data-mark="acceso"]',t:"Puerta de acceso",x:"<p>Pulsa la pared de la <b>puerta de la calle</b> justo donde está la puerta: se marca con el ancho de una puerta. Igual que con las ventanas, la primera fila de paneles de esa estancia va pegada a ella, que es por donde más frío entra, y el resto se reparte por igual por la estancia para que se note lo mismo en toda ella. Las puertas entre estancias no cuentan.</p>"});
       P.push({info:true,anim:"paso",el:"#viaBtn",t:"Paso de tubos",x:"<p>Si por el camino más corto hay una viga o algo que no se puede atravesar, pulsa <b>Marcar paso de tubos</b> y luego la pared donde está el agujero, desde cualquiera de las dos estancias. Es un agujero en la pared, sin dirección: los tubos que tengan que cruzar esa pared la cruzan por ahí, vayan hacia donde vayan, y a los demás no les afecta. Los metros de tubo se calculan por ese recorrido. Si no marcas nada, se toma el camino más corto.</p>"});
       P.push({mission:true,anim:"tuberia",t:"Muestra la tubería",badge:"Tubería a la vista",
         done:function(){ return !!S.showPipes; },

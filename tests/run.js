@@ -284,6 +284,20 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("deshacer deja la pared recta otra vez", await p.evaluate(() => window.__dbg.S.rooms.every(r => r.bulge.every(b => !b))));
   await p.close();
 
+  // 7a. puerta de acceso: se dibuja con el ancho de una puerta donde se pulsa, no a lo largo de toda la pared
+  out.push("Puerta de acceso");
+  p = await open("#planificador");
+  await p.evaluate(() => { const D = window.__dbg, S = D.S; S.floors = [{ id: D.nid(), name: "P", rooms: [D.rectRoom("Salón", 0, 0, 7, 4)], collectors: [] }]; S.fi = 0; D.update(true); });
+  const w2a = (x, y) => p.evaluate(([x, y]) => { const svg = document.querySelector("#planWrap svg"), q = new DOMPoint(x, y).matrixTransform(svg.getScreenCTM()); return [q.x, q.y]; }, [x, y]);
+  await p.click('#markBar [data-mark="acceso"]'); await p.waitForTimeout(200);
+  let [ax, ay] = await w2a(1.5, 0); await p.mouse.move(ax, ay); await p.waitForTimeout(80); await p.mouse.click(ax, ay); await p.waitForTimeout(300);
+  const acc = await p.evaluate(() => { const m = [...document.querySelectorAll("#planWrap .p-mk.acc")].map(e => e.getBBox()), r = window.__dbg.S.rooms[0];
+    return { n: m.length, w: m[0] && m[0].width, x: m[0] && m[0].x, mark: (r.marks || {})[0], pos: (r.accPos || {})[0] }; });
+  ok("la marca mide 0,90 m y queda donde se pulsa (pared de 7 m)", acc.n === 1 && acc.mark === "acceso" && Math.abs(acc.w - 0.9) < 0.01 && Math.abs(acc.x - 1.05) < 0.06, JSON.stringify(acc));
+  const old = await p.evaluate(() => { const D = window.__dbg, r = D.S.rooms[0]; delete r.accPos; D.update(true); const b = document.querySelector("#planWrap .p-mk.acc").getBBox(); return { w: b.width, x: b.x }; });
+  ok("en proyectos guardados antes (sin posición) sale centrada en la pared", Math.abs(old.w - 0.9) < 0.01 && Math.abs(old.x - 3.05) < 0.01, JSON.stringify(old));
+  await p.close();
+
   // 7b. suelo radiante en una vivienda real (reconstruida de un plano de un usuario): una estancia pequeña con el colector en su
   // pared y otra estrecha entre otras deben llevar su circuito, sin el aviso de «ocupada por tubos que pasan» si no pasa ninguno
   out.push("Suelo radiante en una vivienda real");
