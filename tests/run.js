@@ -49,6 +49,23 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   for (const h of ["", "#planificador", "#suelo"]) { const p = await open(h); if (h) { await p.click("#loadExample"); await p.waitForTimeout(1500); } await p.close(); }
   ok("sin errores de JavaScript en portada, techo y suelo", errors.length === 0, errors.join(" | "));
 
+  // 1b. portada: plano de ejemplo con su cajetín (techo y suelo) y recortes reales del plano en las funciones
+  out.push("Portada");
+  { const p = await open("", { width: 1366, height: 900 });
+    const cj = () => p.evaluate(() => ({ plan: !!document.querySelector("#heroPlan svg .room-g, #heroPlan svg polygon"), tags: [...document.querySelectorAll("#heroTags dt")].map(e => e.textContent), vals: [...document.querySelectorAll("#heroTags dd")].map(e => parseInt(e.textContent.replace(/\D/g, ""), 10)) }));
+    const t = await cj();
+    ok("techo: plano dibujado y cajetín con superficie, paneles, circuitos y tubo", t.plan && t.tags.join() === "Superficie,Paneles,Circuitos,Tubo PEX" && t.vals.every(v => v > 0), JSON.stringify(t));
+    await p.click('.cj-sys button[data-sys="suelo"]'); await p.waitForTimeout(200);
+    const s = await cj();
+    ok("suelo: el botón cambia el plano y el cajetín (colectores, circuitos y tubo)", s.plan && s.tags.join() === "Superficie,Colectores,Circuitos,Tubo PEX" && s.vals.every(v => v > 0) && (await p.getAttribute('.cj-sys button[data-sys="suelo"]', "aria-pressed")) === "true", JSON.stringify(s));
+    const crops = await p.evaluate(() => [...document.querySelectorAll("[data-crop]")].map(f => !!f.querySelector("svg[viewBox]")));
+    ok("cada función lleva su recorte del plano de ejemplo", crops.length === 5 && crops.every(Boolean), JSON.stringify(crops));
+    const mats = await p.evaluate(() => document.querySelectorAll("#heroMats div:not(.grp)").length);
+    ok("lista de materiales del ejemplo", mats >= 5, String(mats));
+    const tells = await p.evaluate(() => document.querySelectorAll(".kicker, .cta-band, .s-thermo").length + [...document.querySelectorAll("#siteView button, #siteView a, #pricingView button, #chooseView .ch-go")].filter(e => /[→←]/.test(e.textContent)).length);
+    ok("sin etiquetas en píldora, franjas con degradado ni flechas en los botones", tells === 0, String(tells));
+    await p.close(); }
+
   // 2. cifras del ejemplo de techo frente a la referencia
   out.push("Ejemplo de techo radiante");
   let p = await open("#planificador");

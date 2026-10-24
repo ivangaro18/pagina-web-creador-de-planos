@@ -10,7 +10,7 @@ Web y herramienta para planificar instalaciones de **techo radiante** (paneles) 
 - `.claude/skills/probar-y-publicar/`: el procedimiento para comprobar y publicar cada cambio.
 - `README.md`: descripción breve.
 
-Librerías por CDN (en `<head>`): jsPDF + jspdf-autotable (PDF) y supabase-js v2 (cuentas). Fuentes: IBM Plex Sans/Mono.
+Librerías por CDN (en `<head>`): jsPDF + jspdf-autotable (PDF) y supabase-js v2 (cuentas). Fuentes: IBM Plex Sans/Mono en la app; Archivo (con su eje de anchura: titulares en ancho expandido) en la web comercial, precios, elección de sistema y acceso.
 
 Dentro de `index.html`:
 1. `<style>`: paleta como variables en `:root` (tema claro único, a propósito). `body.mode-suelo` y las clases `.only-techo` / `.only-suelo` muestran u ocultan elementos según el sistema.
@@ -39,7 +39,7 @@ Dentro de `index.html`:
    - **thermal calculation**: pérdidas por estancia (zonas climáticas CTE, U de cerramientos, ventilación), impulsión de diseño, emisión UNE-EN 1264, caudales. Está en **beta** (`BETA.th`, se guarda en `localStorage["pr_beta"]`): triángulo amarillo con la nota al pasar el ratón y casilla «Activar»; desactivado se ocultan sus tarjetas (`.beta-off`), la parte térmica de la ficha de la estancia y su sección y nota del PDF. Para marcar otra función como beta, reutiliza el mismo marcado (`.beta`, `data-beta`).
    - **recommended collector position** (suelo): búsqueda asíncrona de la mejor pared (`REC`, `recRun`).
    - **plans**: `TEST_PHASE=true` (todo gratis). Plan "proyecto" oculta las cifras hasta finalizar y luego queda en solo lectura; planes de empresa mensual/trimestral/anual. La simulación de plan va en `localStorage["pr_plan_sim"]`. La ocultación es solo en el cliente.
-   - **product site**: `showView`, vista previa de la portada.
+   - **product site**: `showView`, vista previa de la portada (`heroPreview`: el plano de ejemplo de techo y de suelo con su cajetín, y los recortes del plano de cada función, `data-crop`). Estilo de la web: una hoja de proyecto (marco, cajetín, colores de ida y retorno), sin etiquetas en mayúsculas en píldora, degradados, tarjetas con sombra ni flechas en los botones; sus variables (`--paper`, `--s-ink`…) van en `.site, #chooseView, #authView`.
    - **accounts (Supabase)**: `SUPA_URL`/`SUPA_KEY` (clave publicable, protegida por RLS). El acceso solo se exige en los hosts de `AUTH_HOSTS` (github.io, localhost). Tablas: `proyectos` (id, modo, nombre, datos JSON, actualizado), `empresas` (user_id, datos), `suscripciones` (plan, estado, fin). Guardado automático en la nube con `projSnapshot()`/`projApply()`; `window.__SUPA_MOCK` permite simular Supabase.
    - **guided tutorial**: misiones paso a paso sobre un proyecto de práctica (`tourPlan`, `TOUR`).
    - Bucle principal: `update(rebuild)` = `computeAll` → `renderPlan` → (`buildEditor`) → detalle → tablas → térmico → recomendación → plan.
