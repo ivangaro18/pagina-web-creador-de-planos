@@ -26,7 +26,7 @@ const server = http.createServer((q, r) => { r.writeHead(200, { "Content-Type": 
 const CURSOR = `(() => { if (document.getElementById("fakeCur")) return; const d = document.createElement("div"); d.id = "fakeCur";
   d.innerHTML = '<svg width="26" height="30" viewBox="0 0 26 30"><path d="M3 2 L3 24 L9 18.5 L13 27.5 L17 25.8 L13 17 L21 17 Z" fill="#111" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg>';
   d.style.cssText = "position:fixed;left:0;top:0;z-index:2147483647;pointer-events:none;transform:translate(-3px,-2px);";
-  const c = document.createElement("div"); c.id = "fakeClick"; c.style.cssText = "position:fixed;z-index:2147483646;pointer-events:none;border-radius:50%;border:3px solid rgba(238,123,58,.95);background:rgba(238,123,58,.18);display:none;";
+  const c = document.createElement("div"); c.id = "fakeClick"; c.style.cssText = "position:fixed;z-index:2147483646;pointer-events:none;border-radius:50%;border:3px solid rgba(217,69,47,.95);background:rgba(217,69,47,.18);display:none;";
   document.body.appendChild(c); document.body.appendChild(d); })()`;
 
 class Rec {

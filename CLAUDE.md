@@ -10,10 +10,10 @@ Web y herramienta para planificar instalaciones de **techo radiante** (paneles) 
 - `.claude/skills/probar-y-publicar/`: el procedimiento para comprobar y publicar cada cambio.
 - `README.md`: descripción breve.
 
-Librerías por CDN (en `<head>`): jsPDF + jspdf-autotable (PDF) y supabase-js v2 (cuentas). Fuentes: IBM Plex Sans/Mono en la app; Archivo (con su eje de anchura: titulares en ancho expandido) en la web comercial, precios, elección de sistema y acceso.
+Librerías por CDN (en `<head>`): jsPDF + jspdf-autotable (PDF) y supabase-js v2 (cuentas). Fuente: Archivo en todo (web, app y textos del plano), con su eje de anchura: titulares en ancho expandido y cifras tabulares.
 
 Dentro de `index.html`:
-1. `<style>`: paleta como variables en `:root` (tema claro único, a propósito). `body.mode-suelo` y las clases `.only-techo` / `.only-suelo` muestran u ocultan elementos según el sistema.
+1. `<style>`: paleta como variables en `:root` (tema claro único por ahora; el modo oscuro vendrá más adelante). Estilo de hoja de proyecto en web y app: marcos de tinta, hojas sin redondeo ni sombra, etiquetas en minúscula normal (nada de mayúsculas espaciadas), botones de tinta y colores de ida/retorno solo donde significan algo. El bloque final del estilo de la app («planner on the project-sheet look») sobrescribe las reglas base. `body.mode-suelo` y las clases `.only-techo` / `.only-suelo` muestran u ocultan elementos según el sistema.
 2. HTML de las vistas, que se alternan con `hidden` desde `showView()`:
    - `#siteView`: web comercial (portada con plano de ejemplo, funciones, cómo funciona, precios, preguntas).
    - `#pricingView`: página de precios y planes.

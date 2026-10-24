@@ -65,6 +65,12 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
     const tells = await p.evaluate(() => document.querySelectorAll(".kicker, .cta-band, .s-thermo").length + [...document.querySelectorAll("#siteView button, #siteView a, #pricingView button, #chooseView .ch-go")].filter(e => /[→←]/.test(e.textContent)).length);
     ok("sin etiquetas en píldora, franjas con degradado ni flechas en los botones", tells === 0, String(tells));
     await p.close(); }
+  { const p = await open("#planificador"); await p.click("#loadExample"); await p.waitForTimeout(900);
+    const up = await p.evaluate(() => [...document.querySelectorAll("#appView .section-title, #appView th, #appView .stat .k, #appView .eyebrow, #appView .chip")].filter(e => getComputedStyle(e).textTransform === "uppercase").length);
+    ok("app: títulos, cabeceras de tabla y datos sin mayúsculas forzadas", up === 0, String(up));
+    const t = await p.evaluate(() => { const i = document.getElementById("projName"); return i.scrollWidth <= i.clientWidth + 1; });
+    ok("app: el nombre del proyecto se ve entero en la cabecera", t);
+    await p.close(); }
 
   // 2. cifras del ejemplo de techo frente a la referencia
   out.push("Ejemplo de techo radiante");
