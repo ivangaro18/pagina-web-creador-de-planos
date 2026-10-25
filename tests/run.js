@@ -418,6 +418,46 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("con tes y tramos de más de 7 m: 7 m de PEX 16 y el resto de 20, con un manguito reducido por tramo",
     te.lejos.te && te.lejos.red > 0 && !te.lejos.bad16 && te.lejos.rows["Manguito reducido 16–20"] === te.lejos.red + " ud." && !!te.lejos.rows["Tubo PEX 20 mm"] && te.lejos.rows["Racor PEX 20 con rosca 1/2\""] === te.lejos.red + " ud." && te.lejos.rows["Te de latón 1/2\""] === 2 * te.lejos.g + " ud.", JSON.stringify(te.lejos));
   ok("si con tes no caben todos los circuitos en 6 salidas: una salida por circuito, sin tes", !te.lleno.te && te.lleno.g === 0 && te.lleno.outs === te.lleno.circ && !te.lleno.un && !!te.lleno.rows["Colector de 40 salidas"], JSON.stringify({ te: te.lleno.te, g: te.lleno.g, outs: te.lleno.outs, circ: te.lleno.circ, un: te.lleno.un }));
+  // todas las marcas y modelos: la cobertura de cada estancia respeta el rango de la marca (nunca pasa del máximo; si no llega al
+  // mínimo, lo avisa), solo salen paneles de los modelos marcados y ningún circuito pasa del límite en serie
+  const allb = await p.evaluate(() => { const D = window.__dbg, S = D.S, V = D.V, sel = document.getElementById("sBrand"), out = {}; let seed = 4242; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (const k of ["sunthalpy", "renovis", "nic", "gkc", "gkcs"]) { sel.value = k; sel.dispatchEvent(new Event("change"));
+      const keys = S.panels.map(q => q.key), combos = [null].concat(keys); out[k] = { rango: S.gMin + "-" + S.gMax, n: 0, sobre: [], bajoSinAviso: [], ajenos: 0, serie: 0, bajo: 0, conPaneles: 0 };
+      for (const only of combos) { S.panels.forEach(q => q.on = !only || q.key === only);
+        for (let t = 0; t < 18; t++) { const w = 2.4 + rnd() * 6, h = 2.4 + rnd() * 5, L = t % 3 === 2;
+          const r = L ? { id: D.nid(), name: "L" + t, pts: [V(0, 0), V(w, 0), V(w, h * 0.45), V(w * 0.5, h * 0.45), V(w * 0.5, h), V(0, h)], bulge: [0, 0, 0, 0, 0, 0], tx: 0, ty: 0, rot: 0, attach: null, active: true, override: false, minPct: 30, maxPct: 60, lc: "puntos", lp: "ninguna" } : D.rectRoom("R" + t, 0, 0, w, h, {});
+          S.floors = [{ id: D.nid(), name: "x", rooms: [r], collectors: [{ id: D.nid(), name: "C", x: 0.6, y: 0.6, cap: 30 }] }]; S.fi = 0; S.sel = r.id; D.update(false);
+          const x = D.results[r.id], o = out[k], tag = (only || "todos") + " " + r.name + " " + w.toFixed(1) + "×" + h.toFixed(1); o.n++;
+          if (x.minPct !== S.gMin || x.maxPct !== S.gMax) o.sobre.push(tag + " rango " + x.minPct + "-" + x.maxPct);
+          if (x.pct > S.gMax + 0.5) o.sobre.push(tag + " " + x.pct.toFixed(1) + "%");
+          if (x.panels.length) o.conPaneles++;
+          if (x.pct < S.gMin - 0.5) { o.bajo++; if (!(x.msgs || []).some(m => /No se alcanza|Ningún panel/.test(m.x))) o.bajoSinAviso.push(tag + " " + x.pct.toFixed(1) + "%"); }
+          x.panels.forEach(q => { if (!S.panels.some(t => t.on !== false && ((t.w === q.tw && t.h === q.th) || (t.w === q.th && t.h === q.tw)))) o.ajenos++; });
+          (x.cs || []).forEach(c => { const ps = x.panels.filter(q => q.circuit === c.i); const lim = Math.min(...ps.map(q => { const m = (S.panels.find(t => (t.w === q.tw && t.h === q.th) || (t.w === q.th && t.h === q.tw)) || {}); return { sunthalpy: 2, renovis: 3, gkc: 1, gkcs: 1, nic: Math.min(q.tw, q.th) === 50 ? 2 : 1 }[k]; })); if (ps.length > lim) o.serie++; }); } }
+      S.panels.forEach(q => q.on = true); o = null; }
+    sel.value = "sunthalpy"; sel.dispatchEvent(new Event("change"));
+    Object.values(out).forEach(o => { o.sobre = o.sobre.slice(0, 4); o.bajoSinAviso = o.bajoSinAviso.slice(0, 4); }); return out; });
+  for (const [k, o] of Object.entries(allb)) ok("marca " + k + " (" + o.rango + " %): " + o.n + " estancias, " + o.conPaneles + " con paneles; nunca fuera de rango sin aviso, solo sus modelos, sin pasar el límite en serie" + (o.bajo ? " (" + o.bajo + " no llegan al mínimo y lo avisan)" : ""),
+    !o.sobre.length && !o.bajoSinAviso.length && !o.ajenos && !o.serie && o.conPaneles > o.n * 0.8, JSON.stringify(o));
+  // vivienda de ejemplo con cada marca: cálculo térmico sin huecos (sin NaN) y material con los paneles de la marca
+  await p.click("#loadExample"); await p.waitForTimeout(800);
+  const exAll = await p.evaluate(() => { const D = window.__dbg, S = D.S, sel = document.getElementById("sBrand"), o = {};
+    S.rooms.forEach((r, i) => { r.marks = Object.assign({}, r.marks || {}, { 0: i % 2 ? "ventana" : "exterior" }); });
+    for (const k of ["sunthalpy", "renovis", "nic", "gkc", "gkcs"]) { sel.value = k; sel.dispatchEvent(new Event("change")); const T = D.TH, rows = [...document.querySelectorAll("#reportBody tr")].map(tr => tr.innerText);
+      const nums = [T.tv, T.totQ, T.totOut, T.totFlow].concat(...T.rows.map(x => [x.Q, x.out, x.flow].concat(x.circ.map(c => c.flow), x.circ.map(c => c.dp || 0))));
+      o[k] = { tv: T.tv, out: Math.round(T.totOut), nan: nums.filter(v => v == null || !isFinite(v)).length, paneles: rows.filter(t => t.indexOf("Panel " + BRANDS_LINE(k)) === 0).length, text: /NaN|undefined/.test(document.getElementById("thSummary").innerText + rows.join("")) }; }
+    function BRANDS_LINE(k) { return { sunthalpy: "sunthaldress", renovis: "Renovis", nic: "NIC", gkc: "GKC Classic", gkcs: "GKC Super Classic" }[k]; }
+    sel.value = "sunthalpy"; sel.dispatchEvent(new Event("change")); return o; });
+  ok("vivienda de ejemplo con cada marca: cálculo térmico completo (sin NaN) y material con los paneles de la marca", Object.values(exAll).every(x => x.tv > 0 && x.out > 0 && !x.nan && x.paneles > 0 && !x.text), JSON.stringify(exAll));
+  // el rango propio de una estancia es de la marca con la que se puso
+  const ovb = await p.evaluate(() => { const D = window.__dbg, S = D.S, sel = document.getElementById("sBrand"), r = D.rectRoom("Estancia 2", 0, 0, 8, 6.25, { override: true, minPct: 30, maxPct: 35 });
+    S.floors = [{ id: D.nid(), name: "x", rooms: [r], collectors: [] }]; S.fi = 0; S.sel = r.id; D.update(true); const o = {};
+    const st = () => { const x = D.results[r.id]; return x.minPct + "-" + x.maxPct + "/" + document.getElementById("rOver").checked + "/" + !document.getElementById("ovNote").hidden; };
+    o.sun = st(); sel.value = "gkc"; sel.dispatchEvent(new Event("change")); o.gkc = st();
+    const cb = document.getElementById("rOver"); cb.checked = true; cb.dispatchEvent(new Event("change")); o.gkcPropio = st() + "/" + r.ovb;
+    sel.value = "sunthalpy"; sel.dispatchEvent(new Event("change")); o.vuelta = st(); return o; });
+  ok("rango propio de una estancia: vale para la marca con la que se puso; con otra marca se usa la de la marca y lo explica",
+    ovb.sun === "30-35/true/false" && ovb.gkc === "60-75/false/true" && ovb.gkcPropio === "60-75/true/false/gkc" && ovb.vuelta === "30-60/false/true", JSON.stringify(ovb));
   // las demás marcas: cada una con sus paneles, su límite en serie y su emisión según la ficha
   const otras = await p.evaluate(() => { const D = window.__dbg, S = D.S, out = {}, sel = document.getElementById("sBrand");
     const want = { renovis: [15, 55], nic: [16, 162 / 2.4], gkc: [15, 68], gkcs: [15, 77] };

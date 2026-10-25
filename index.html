@@ -1493,6 +1493,9 @@
       rules:"Como GKC Classic: primarios cada 90 cm como máximo, secundarios cada 30 o 40 cm; tornillos de 7 cm cada 20 cm en el centro de las pistas; 25–50 cm entre filas para las conexiones. Temperatura máxima del panel no publicada: se limita a 45 °C.",
       src:[["Giacomini GKC, ficha 0353EN (07/2025)","https://dam.giacomini.com/giacomini.com/product_documentations/datasheets/KSU.pdf"]]}
   };
+  // a room's own coverage range belongs to the brand it was set for (ovb; before brands, Sunthalpy): with another brand the
+  // room takes that brand's default, and going back brings its own range back
+  function ownCov(r){ return !!r.override && (r.ovb||"sunthalpy")===S.brand; }
   function brand(){ return BRANDS[S.brand]||BRANDS.sunthalpy; }
   function brandPanels(b,k){ return b.models.map(function(m){ return {id:"p_"+k+"_"+m.key.replace(/\W/g,""),key:m.key,name:"Panel "+b.line+" "+m.key,w:m.w,h:m.h,on:true}; }); }
   function modelOf(tw,th){ var ms=brand().models; for(var i=0;i<ms.length;i++){ var m=ms[i]; if((m.w===tw&&m.h===th)||(m.w===th&&m.h===tw)) return m; } return null; }
@@ -1796,10 +1799,10 @@
   }
   function lightKeep(l){ var h=(+l.s||30)/200; return {x0:l.x-h,y0:l.y-h,x1:l.x+h,y1:l.y+h}; }
   function calcRoom(room){
-    var key=JSON.stringify([room.marks||{},room.pts,room.bulge,room.active,room.override,room.minPct,room.maxPct,room.lc,room.lp,room.customL||false,room.customL?room.lights||[]:0,room._cko||[],room.obst||[],S.gMin,S.gMax,S.clear,S.gap,S.strip,S.panels]);
+    var key=JSON.stringify([room.marks||{},room.pts,room.bulge,room.active,room.override,room.minPct,room.maxPct,room.lc,room.lp,room.customL||false,room.customL?room.lights||[]:0,room._cko||[],room.obst||[],room.ovb||"",S.brand,S.gMin,S.gMax,S.clear,S.gap,S.strip,S.panels]);
     if(room._ck===key && room._cr) return room._cr;
     var out=localOutline(room), area=Math.abs(signedArea(out));
-    var minPct=room.override?room.minPct:S.gMin, maxPct=room.override?room.maxPct:S.gMax; if(maxPct<minPct) maxPct=minPct;
+    var own=ownCov(room), minPct=own?room.minPct:S.gMin, maxPct=own?room.maxPct:S.gMax; if(maxPct<minPct) maxPct=minPct;
     var res={area:area,minPct:minPct,maxPct:maxPct,minA:area*minPct/100,maxA:area*maxPct/100,panels:[],lights:[],leds:[],ledLen:0,strips:[],rects:[],groups:[],
       circuits:0,covered:0,pct:0,msgs:[],inactive:!room.active,keep:[],removed:0};
     // panels first next to windows and the entrance door: the sides of the free rectangle that face those walls
@@ -3484,7 +3487,7 @@
         (S.mode==="suelo"?'':'<span class="section-title" style="margin:2px 0 6px;">Iluminación</span><div class="grid2"><div class="field"><label class="lbl" for="rLc">Centro (entre paneles)</label><select id="rLc"><option value="ninguna">Sin luz</option><option value="puntos">Puntos de luz</option><option value="tira">Tira LED</option></select></div>'+
         '<div class="field"><label class="lbl" for="rLp">Perímetro (junto a paredes)</label><select id="rLp"><option value="ninguna">Sin luz</option><option value="puntos">Puntos de luz</option><option value="tira">Tira LED</option></select></div></div>'+
         '<label class="check"><input type="checkbox" id="rCustL"> Iluminación personalizada</label><div class="light-box" id="lightBox"></div>'+
-        '<label class="check"><input type="checkbox" id="rOver"> Rango de cobertura propio</label>'+
+        '<label class="check"><input type="checkbox" id="rOver"> Rango de cobertura propio</label><p class="note" id="ovNote" hidden style="margin:2px 0 6px;"></p>'+
         '<div class="grid2" id="overFields"><div class="field"><label class="lbl" for="rMin">% mínimo</label><input type="number" id="rMin" min="0" max="100"></div><div class="field"><label class="lbl" for="rMax">% máximo</label><input type="number" id="rMax" min="0" max="100"></div></div>'+
         '<span class="section-title" style="margin:6px 0 6px;">Estructura de techo</span><div class="btn-row" style="margin-bottom:10px;"><button class="btn ghost small" id="rRotate">Rotar estructura</button><span class="note" style="margin:0;" id="rRotInfo"></span></div>')+
         (BETA.th?'':'<div hidden>')+'<span class="section-title" style="margin:6px 0 6px;">Cálculo térmico</span><div class="grid2"><div class="field"><label class="lbl" for="rTi">Temperatura interior (°C)</label><input type="number" id="rTi" step="0.5" min="10" max="30"></div><div class="field"><label class="lbl" for="rWin">Ventanas (m²)</label><input type="number" id="rWin" step="0.1" min="0"></div></div>'+
@@ -3508,7 +3511,8 @@
       $("rSep").value=String(room.sep||0); $("rSep").addEventListener("change",function(e){ room.sep=+e.target.value||null; update(false); });
       return;
     }
-    $("rOver").checked=room.override; $("rMin").value=room.minPct; $("rMax").value=room.maxPct; $("overFields").hidden=!room.override;
+    $("rOver").checked=ownCov(room); $("rMin").value=room.minPct; $("rMax").value=room.maxPct; $("overFields").hidden=!ownCov(room);
+    if(room.override && !ownCov(room)){ var ob=BRANDS[room.ovb||"sunthalpy"]; $("ovNote").hidden=false; $("ovNote").textContent="Su rango propio ("+fmt(room.minPct)+"–"+fmt(room.maxPct)+" %) es para "+(ob?ob.name+" "+ob.line:"otra marca")+": con "+brand().name+" "+brand().line+" se usa la cobertura de la marca ("+fmt(S.gMin)+"–"+fmt(S.gMax)+" %). Márcalo para darle uno propio con esta marca."; }
     $("rRotInfo").textContent=room.structRot?"Secundarios cruzados a los paneles":"Secundarios a lo largo de los paneles";
     $("rRotate").addEventListener("click",function(){ room.structRot=!room.structRot; $("rRotInfo").textContent=room.structRot?"Secundarios cruzados a los paneles":"Secundarios a lo largo de los paneles"; if(!S.showStruct){ S.showStruct=true; $("showStruct").checked=true; syncStructLegend(); } update(false); });
     $("rLc").value=room.lc||"ninguna"; $("rLp").value=room.lp||"ninguna";
@@ -3517,7 +3521,7 @@
       if(room.customL && !room.lights.length) lightAddStart(room); });
     $("rLc").addEventListener("change",function(e){ room.lc=e.target.value; update(false); });
     $("rLp").addEventListener("change",function(e){ room.lp=e.target.value; update(false); });
-    $("rOver").addEventListener("change",function(e){ room.override=e.target.checked; if(room.override){ room.minPct=S.gMin; room.maxPct=S.gMax; $("rMin").value=room.minPct; $("rMax").value=room.maxPct; } $("overFields").hidden=!room.override; update(false); });
+    $("rOver").addEventListener("change",function(e){ room.override=e.target.checked; if(room.override){ room.ovb=S.brand; room.minPct=S.gMin; room.maxPct=S.gMax; $("rMin").value=room.minPct; $("rMax").value=room.maxPct; } $("ovNote").hidden=true; $("overFields").hidden=!room.override; update(false); });
     [["rMin","minPct"],["rMax","maxPct"]].forEach(function(p){ $(p[0]).addEventListener("input",function(e){ var v=parseFloat(e.target.value); if(isFinite(v)){ room[p[1]]=v; update(false);} }); });
   }
   // ---- custom light points: table in the room editor, points placed with a click on the room detail
@@ -4144,7 +4148,7 @@
     S.brand=k; S.panels=brandPanels(BRANDS[k],k);
     // each maker has its own default coverage; rooms with their own range keep it
     if(BRANDS[k].cover){ S.gMin=BRANDS[k].cover[0]; S.gMax=BRANDS[k].cover[1]; $("gMin").value=S.gMin; $("gMax").value=S.gMax; } S.panels.forEach(function(p){ if(keep[p.w+"x"+p.h]===false) p.on=false; });
-    if(!BRANDS[k].finish[S.finish]) S.finish=Object.keys(BRANDS[k].finish)[0]; renderBrand(); update(false); }
+    if(!BRANDS[k].finish[S.finish]) S.finish=Object.keys(BRANDS[k].finish)[0]; renderBrand(); update(true); }
 
   function renderCollectors(){
     var box=$("collList"); box.innerHTML="";
