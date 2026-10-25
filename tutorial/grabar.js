@@ -170,6 +170,14 @@ const SCENES = {
     await r.click("#undoBtn"); await p.waitForTimeout(300); await r.hold(0.6); await r.press(); await p.waitForTimeout(300); await r.hold(0.8);
     await r.click("#redoBtn"); await p.waitForTimeout(300); await r.hold(2);
   },
+  async borrador(r, p, mode) {
+    await setFloor(p, mode, TWO.map((q, i) => i ? Object.assign({}, q, { o: {} }) : Object.assign({}, q, { marks: { 0: "ventana" } })));
+    await p.evaluate(() => { const S = window.__dbg.S, d = S.rooms[1]; d.obst = [{ x0: 0.2, y0: 0.2, x1: 1.2, y1: 0.8 }, { x0: 1.6, y0: 3, x1: 2.8, y1: 3.7 }]; window.__dbg.update(true); window.__dbg.histReset(); });
+    await view(r, p, "#markBar", ["#markBar", "#planWrap"], 1000, 10);
+    await r.click("#eraseBtn"); await r.hold(0.4); await r.moveW(5.7, 0.5, 0.8); await r.press(); await p.waitForTimeout(400); await r.hold(0.8);
+    await r.moveW(2.5, 0.05, 0.8); await r.press(); await p.waitForTimeout(400); await r.hold(0.8);
+    await r.click("#eraseBtn"); await r.hold(1.8);
+  },
   async curvo(r, p, mode) {
     await setFloor(p, mode, TWO); await view(r, p, "#markBar", ["#bgBar", "#planWrap"], 1000, 10, [0.6, 0.85]);
     await r.click('#bgBar [data-bg="curve"]'); await r.hold(0.3); await r.moveW(5, 2.6); await r.press(); await r.hold(0.4);
@@ -201,7 +209,8 @@ const SCENES = {
   },
   async paso(r, p, mode) {
     await setFloor(p, mode, TWO, COLL(mode), { pipes: true }); await view(r, p, "#markBar", ["#markBar", "#planWrap"], 1000, 10);
-    await r.hold(0.4); await r.click("#viaBtn"); await r.moveW(4.97, 0.7, 0.8); await r.press(); await p.waitForTimeout(400); await r.hold(0.4);
+    await r.hold(0.4); await r.click("#viaBtn"); await r.moveW(4.97, 0.7, 0.8); await r.press(); await p.waitForTimeout(400); await r.hold(0.6);
+    await r.moveW(6.6, 1.6, 0.7); await r.press(); await p.waitForTimeout(500); await r.hold(0.8);
     await r.click("#viaBtn"); await r.hold(2);
   },
   async tuberia(r, p, mode) {

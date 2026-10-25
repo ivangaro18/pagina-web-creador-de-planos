@@ -191,6 +191,36 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   await p.close();
 
   // 5. deshacer / rehacer y material de control
+  p = await open("#planificador");
+  // paso de tubos con dirección: se marca el agujero y después la estancia hacia la que pasan; todo tubo que entra en ella lo hace por el agujero
+  const dvia = await p.evaluate(() => { const D = window.__dbg, S = D.S, R = D.rectRoom;
+    const A = R("A", 0, 0, 4, 6), B = R("B", 4, 0, 4, 3), Rr = R("R", 4, 3, 4, 3);
+    S.floors = [{ id: D.nid(), name: "P", rooms: [A, B, Rr], collectors: [{ id: D.nid(), name: "C", x: 1, y: 5.4, cap: 16 }] }]; S.fi = 0; S.sel = A.id; D.update(true);
+    const P = { x: 7, y: 3 }, near = () => { let n = 0, ok = 0; D.pipeLayout(D.curFloor()).tubes.forEach(t => { if (t.room !== Rr) return; n++; let dm = 1e9; for (let i = 1; i < t.pts.length; i++) { const a = t.pts[i - 1], b = t.pts[i], dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy || 1e-9, u = Math.max(0, Math.min(1, ((P.x - a.x) * dx + (P.y - a.y) * dy) / L2)); dm = Math.min(dm, Math.hypot(a.x + u * dx - P.x, a.y + u * dy - P.y)); } if (dm < 0.35) ok++; }); return { n, ok }; };
+    const sin = near(); Rr.via = { edge: 0, t: 3, dir: 1 }; D.update(true); const con = near();
+    Rr.via.dir = -1; D.update(true); const otro = near(); return { sin, con, otro, arrow: document.querySelectorAll("#planWrap .p-via-ah").length }; });
+  ok("paso con dirección hacia una estancia: todos sus tubos entran por el agujero (sin él, por el camino corto)", dvia.sin.ok === 0 && dvia.con.n > 0 && dvia.con.ok === dvia.con.n && dvia.arrow === 1, JSON.stringify(dvia));
+  ok("  con la dirección contraria no les afecta", dvia.otro.ok === 0, JSON.stringify(dvia.otro));
+  // marcar el paso con el ratón: primero la pared, luego la estancia de destino
+  await p.evaluate(() => { const D = window.__dbg, S = D.S, R = D.rectRoom; const A = R("A", 0, 0, 4, 6), B = R("B", 4, 0, 4, 3), Rr = R("R", 4, 3, 4, 3);
+    S.floors = [{ id: D.nid(), name: "P", rooms: [A, B, Rr], collectors: [{ id: D.nid(), name: "C", x: 1, y: 5.4, cap: 16 }] }]; S.fi = 0; S.sel = A.id; S.zoom = null; D.update(true); document.getElementById("planWrap").scrollIntoView({ block: "center" }); });
+  const w2v = (x, y) => p.evaluate(([x, y]) => { const q = new DOMPoint(x, y).matrixTransform(document.querySelector("#planWrap svg").getScreenCTM()); return [q.x, q.y]; }, [x, y]);
+  await p.click("#viaBtn"); let vpt = await w2v(7, 3.02); await p.mouse.click(vpt[0], vpt[1]); await p.waitForTimeout(200); vpt = await w2v(6, 4.8); await p.mouse.click(vpt[0], vpt[1]); await p.waitForTimeout(200);
+  const mv = await p.evaluate(() => { const S = window.__dbg.S, rs = S.rooms, v = rs.map(r => r.via ? { room: r.name, dir: r.via.dir } : null).filter(Boolean); return { v, hint: document.getElementById("modeHint").innerText }; });
+  await p.click("#viaBtn");
+  ok("  marcarlo con el ratón: agujero y después la estancia hacia la que pasan", mv.v.length === 1 && ((mv.v[0].room === "R" && mv.v[0].dir === 1) || (mv.v[0].room === "B" && mv.v[0].dir === -1)) && /hacia/.test(mv.hint), JSON.stringify(mv));
+
+  // borrador: quita lo dibujado (obstáculos, marcas, pasos, colectores) de uno en uno y nunca una estancia
+  await p.evaluate(() => { const D = window.__dbg, S = D.S, R = D.rectRoom; const A = R("A", 0, 0, 5, 4), B = R("B", 5, 0, 3, 4);
+    A.obst = [{ x0: 0.3, y0: 0.3, x1: 1.3, y1: 0.9 }, { x0: 3, y0: 2.6, x1: 4.2, y1: 3.4 }]; A.marks = { 0: "ventana" }; B.via = { edge: 3, t: 2, dir: 1 };
+    S.floors = [{ id: D.nid(), name: "P", rooms: [A, B], collectors: [{ id: D.nid(), name: "C", x: 1, y: 3.4, cap: 12 }] }]; S.fi = 0; S.sel = A.id; S.zoom = null; D.update(true); });
+  await p.click("#eraseBtn");
+  for (const [x, y] of [[0.8, 0.6], [2.5, 2], [2.5, 0.03], [5, 2], [1, 3.4]]) { vpt = await w2v(x, y); await p.mouse.click(vpt[0], vpt[1]); await p.waitForTimeout(250); }
+  const er = await p.evaluate(() => { const S = window.__dbg.S, A = S.rooms[0], B = S.rooms[1]; return { rooms: S.rooms.length, obst: (A.obst || []).length, left: A.obst && A.obst[0] && A.obst[0].x0, marks: Object.keys(A.marks || {}).length, via: !!B.via, colls: S.collectors.length }; });
+  await p.click("#eraseBtn");
+  ok("borrador: quita un obstáculo (el otro se queda), la marca, el paso y el colector; las estancias siguen", er.rooms === 2 && er.obst === 1 && er.left === 3 && er.marks === 0 && !er.via && er.colls === 0, JSON.stringify(er));
+  await p.close();
+
   out.push("Deshacer, rehacer y material de control");
   p = await open("#planificador");
   await p.click("#loadExample"); await p.waitForTimeout(900);
@@ -405,6 +435,8 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
       out[k] = { n, bad }; }
     sel.value = "sunthalpy"; sel.dispatchEvent(new Event("change")); return out; });
   ok("vivienda de ejemplo con cada marca: ningún circuito pasa del límite en serie de sus paneles", Object.values(exb).every(x => x.n > 0 && !x.bad), JSON.stringify(exb));
+  const cov = await p.evaluate(() => { const sel = document.getElementById("sBrand"), o = {}; for (const k of ["renovis", "nic", "gkc", "sunthalpy"]) { sel.value = k; sel.dispatchEvent(new Event("change")); o[k] = window.__dbg.S.gMin + "-" + window.__dbg.S.gMax + "/" + document.getElementById("gMin").value; } return o; });
+  ok("cobertura por defecto según la marca (Sunthalpy 30–60, Renovis 60–80, NIC 50–65, GKC 60–75)", cov.sunthalpy === "30-60/30" && cov.renovis === "60-80/60" && cov.nic === "50-65/50" && cov.gkc === "60-75/60", JSON.stringify(cov));
   await p.evaluate(() => { document.getElementById("sFinish").value = "alic"; document.getElementById("sFinish").dispatchEvent(new Event("change")); });
   ok("acabado alicatado: hasta 60 °C", await p.evaluate(() => window.__dbg.TH.vmax === 55), "vmax " + await p.evaluate(() => window.__dbg.TH.vmax));
   const mig = await p.evaluate(() => { const D = window.__dbg;
