@@ -284,6 +284,25 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("deshacer deja la pared recta otra vez", await p.evaluate(() => window.__dbg.S.rooms.every(r => r.bulge.every(b => !b))));
   await p.close();
 
+  // 6b. plano del Catastro: dirección → referencia catastral → centro de la parcela y sus datos → mapa a escala, sin calibrar
+  // (respuestas simuladas: la prueba no depende de la red ni de los servicios públicos)
+  out.push("Plano del Catastro");
+  p = await open("#planificador");
+  const PNG1 = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64"), wmsUrls = [];
+  await p.route(/cartociudad\.es\/geocoder\/api\/geocoder\/(find|candidates)/, r => { const one = { id: "x", type: "portal", address: "CALLE MAYOR 5, Toledo", muni: "Toledo", province: "Toledo", lat: 39.857, lng: -4.024, refCatastral: "1234567VK1213S" };
+    r.fulfill({ status: 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify(/find/.test(r.request().url()) ? one : [one]) }); });
+  await p.route(/ovc\.catastro\.meh\.es\/ovcservweb\/.*Consulta_CPMRC/, r => r.fulfill({ status: 200, contentType: "text/xml", headers: { "Access-Control-Allow-Origin": "*" }, body: '<consulta_coordenadas xmlns="http://www.catastro.meh.es/"><coordenadas><coord><geo><xcen>-4.0241</xcen><ycen>39.8571</ycen></geo><ldt>CL MAYOR 5 TOLEDO (TOLEDO)</ldt></coord></coordenadas></consulta_coordenadas>' }));
+  await p.route(/ovc\.catastro\.meh\.es\/ovcservweb\/.*Consulta_DNPRC/, r => r.fulfill({ status: 200, contentType: "text/xml", headers: { "Access-Control-Allow-Origin": "*" }, body: '<consulta_dnp xmlns="http://www.catastro.meh.es/"><bico><bi><ldt>CL MAYOR 5 TOLEDO</ldt><debi><luso>Residencial</luso><sfc>142</sfc><ant>1978</ant></debi></bi></bico></consulta_dnp>' }));
+  await p.route(/ovc\.catastro\.meh\.es\/Cartografia\/WMS/, r => { wmsUrls.push(r.request().url()); r.fulfill({ status: 200, contentType: "image/png", headers: { "Access-Control-Allow-Origin": "*" }, body: PNG1 }); });
+  await p.click("#catBtn"); await p.fill("#catQ", "Calle Mayor 5, Toledo"); await p.selectOption("#catSize", "40"); await p.click("#catForm button"); await p.waitForTimeout(1500);
+  const cat = await p.evaluate(() => { const b = window.__dbg.curFloor().bg; return b && { s: b.s, pw: b.pw, cal: b.cal, cat: b.cat, modal: document.getElementById("catModal").hidden, tool: window.__dbg.S.bgTool, addr: document.getElementById("pAddr").value }; });
+  const bb = (new globalThis.URL(wmsUrls[0] || "http://x/?BBOX=0,0,0,0")).searchParams.get("BBOX").split(",").map(Number);
+  ok("busca la dirección y trae el plano de la parcela de fondo", !!cat && cat.modal === true && cat.pw === 800, JSON.stringify(cat));
+  ok("llega a escala (40 m en 800 píxeles), sin calibrar, y pasa a calcar", !!cat && Math.abs(cat.s * cat.pw - 40) < 1e-6 && cat.cal === true && cat.tool === "trace", JSON.stringify(cat));
+  ok("el mapa pedido mide 40 m sobre el terreno, centrado en la parcela", Math.abs((bb[2] - bb[0]) * Math.cos(39.8571 * Math.PI / 180) - 40) < 0.05 && Math.abs((bb[0] + bb[2]) / 2 / 6378137 * 180 / Math.PI + 4.0241) < 1e-6, wmsUrls[0]);
+  ok("guarda la referencia catastral, el uso, la superficie y el año, y rellena la dirección de la obra", !!cat && cat.cat.rc === "1234567VK1213S" && cat.cat.ant === 1978 && cat.cat.sfc === 142 && cat.cat.uso === "Residencial" && /Calle Mayor 5/.test(cat.addr), JSON.stringify(cat && cat.cat));
+  await p.close();
+
   // 7a. puerta de acceso: se dibuja con el ancho de una puerta donde se pulsa, no a lo largo de toda la pared
   out.push("Puerta de acceso");
   p = await open("#planificador");
