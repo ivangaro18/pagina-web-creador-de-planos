@@ -210,7 +210,7 @@ const SCENES = {
   async paso(r, p, mode) {
     await setFloor(p, mode, TWO, COLL(mode), { pipes: true }); await view(r, p, "#markBar", ["#markBar", "#planWrap"], 1000, 10);
     await r.hold(0.4); await r.click("#viaBtn"); await r.moveW(4.97, 0.7, 0.8); await r.press(); await p.waitForTimeout(400); await r.hold(0.6);
-    await r.moveW(6.6, 1.6, 0.7); await r.press(); await p.waitForTimeout(500); await r.hold(0.8);
+    await r.moveW(3.6, 1.6, 0.7); await r.press(); await p.waitForTimeout(500); await r.hold(0.8);
     await r.click("#viaBtn"); await r.hold(2);
   },
   async tuberia(r, p, mode) {

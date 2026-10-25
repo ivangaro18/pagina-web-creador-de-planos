@@ -197,18 +197,18 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
     const A = R("A", 0, 0, 4, 6), B = R("B", 4, 0, 4, 3), Rr = R("R", 4, 3, 4, 3);
     S.floors = [{ id: D.nid(), name: "P", rooms: [A, B, Rr], collectors: [{ id: D.nid(), name: "C", x: 1, y: 5.4, cap: 16 }] }]; S.fi = 0; S.sel = A.id; D.update(true);
     const P = { x: 7, y: 3 }, near = () => { let n = 0, ok = 0; D.pipeLayout(D.curFloor()).tubes.forEach(t => { if (t.room !== Rr) return; n++; let dm = 1e9; for (let i = 1; i < t.pts.length; i++) { const a = t.pts[i - 1], b = t.pts[i], dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy || 1e-9, u = Math.max(0, Math.min(1, ((P.x - a.x) * dx + (P.y - a.y) * dy) / L2)); dm = Math.min(dm, Math.hypot(a.x + u * dx - P.x, a.y + u * dy - P.y)); } if (dm < 0.35) ok++; }); return { n, ok }; };
-    const sin = near(); Rr.via = { edge: 0, t: 3, dir: 1 }; D.update(true); const con = near();
-    Rr.via.dir = -1; D.update(true); const otro = near(); return { sin, con, otro, arrow: document.querySelectorAll("#planWrap .p-via-ah").length }; });
-  ok("paso con dirección hacia una estancia: todos sus tubos entran por el agujero (sin él, por el camino corto)", dvia.sin.ok === 0 && dvia.con.n > 0 && dvia.con.ok === dvia.con.n && dvia.arrow === 1, JSON.stringify(dvia));
+    const sin = near(); Rr.via = { edge: 0, t: 3, dir: -1 }; D.update(true); const con = near();
+    Rr.via.dir = 1; D.update(true); const otro = near(); return { sin, con, otro, arrow: document.querySelectorAll("#planWrap .p-via-ah").length }; });
+  ok("paso con dirección (de los paneles hacia el colector): los tubos de esa estancia pasan por el agujero (sin él, por el camino corto)", dvia.sin.ok === 0 && dvia.con.n > 0 && dvia.con.ok === dvia.con.n && dvia.arrow === 1, JSON.stringify(dvia));
   ok("  con la dirección contraria no les afecta", dvia.otro.ok === 0, JSON.stringify(dvia.otro));
   // marcar el paso con el ratón: primero la pared, luego la estancia de destino
   await p.evaluate(() => { const D = window.__dbg, S = D.S, R = D.rectRoom; const A = R("A", 0, 0, 4, 6), B = R("B", 4, 0, 4, 3), Rr = R("R", 4, 3, 4, 3);
     S.floors = [{ id: D.nid(), name: "P", rooms: [A, B, Rr], collectors: [{ id: D.nid(), name: "C", x: 1, y: 5.4, cap: 16 }] }]; S.fi = 0; S.sel = A.id; S.zoom = null; D.update(true); document.getElementById("planWrap").scrollIntoView({ block: "center" }); });
   const w2v = (x, y) => p.evaluate(([x, y]) => { const q = new DOMPoint(x, y).matrixTransform(document.querySelector("#planWrap svg").getScreenCTM()); return [q.x, q.y]; }, [x, y]);
-  await p.click("#viaBtn"); let vpt = await w2v(7, 3.02); await p.mouse.click(vpt[0], vpt[1]); await p.waitForTimeout(200); vpt = await w2v(6, 4.8); await p.mouse.click(vpt[0], vpt[1]); await p.waitForTimeout(200);
+  await p.click("#viaBtn"); let vpt = await w2v(7, 3.02); await p.mouse.click(vpt[0], vpt[1]); await p.waitForTimeout(200); vpt = await w2v(6, 1.5); await p.mouse.click(vpt[0], vpt[1]); await p.waitForTimeout(200);
   const mv = await p.evaluate(() => { const S = window.__dbg.S, rs = S.rooms, v = rs.map(r => r.via ? { room: r.name, dir: r.via.dir } : null).filter(Boolean); return { v, hint: document.getElementById("modeHint").innerText }; });
   await p.click("#viaBtn");
-  ok("  marcarlo con el ratón: agujero y después la estancia hacia la que pasan", mv.v.length === 1 && ((mv.v[0].room === "R" && mv.v[0].dir === 1) || (mv.v[0].room === "B" && mv.v[0].dir === -1)) && /hacia/.test(mv.hint), JSON.stringify(mv));
+  ok("  marcarlo con el ratón: agujero y después la estancia hacia la que van camino del colector", mv.v.length === 1 && ((mv.v[0].room === "R" && mv.v[0].dir === -1) || (mv.v[0].room === "B" && mv.v[0].dir === 1)) && /hacia/.test(mv.hint), JSON.stringify(mv));
 
   // borrador: quita lo dibujado (obstáculos, marcas, pasos, colectores) de uno en uno y nunca una estancia
   await p.evaluate(() => { const D = window.__dbg, S = D.S, R = D.rectRoom; const A = R("A", 0, 0, 5, 4), B = R("B", 5, 0, 3, 4);

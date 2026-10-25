@@ -2005,7 +2005,7 @@
     var dir=r.via.dir, to=dir>0?r:o, ar="";
     if(dir){ var nn=mul(g.nin,dir), tip=add(g.P,mul(nn,0.42)), tail=add(g.P,mul(nn,-0.3)), wg=mul(g.u,0.11);
       ar=ln(tail,tip,"p-via-ar")+'<polygon class="p-via-ah" points="'+ptsStr([tip,add(add(tip,mul(nn,-0.16)),wg),add(add(tip,mul(nn,-0.16)),mul(wg,-1))])+'"/>'; }
-    return '<g><title>Paso de tubos entre '+esc(r.name)+(o?' y '+esc(o.name):'')+(dir&&to?': los tubos entran en '+esc(to.name)+' por aquí':'')+'</title>'+ar+ln(a,b,"p-via")+ln(add(a,mul(g.nin,-0.16)),add(a,mul(g.nin,0.16)),"p-via-j")+ln(add(b,mul(g.nin,-0.16)),add(b,mul(g.nin,0.16)),"p-via-j")+'</g>'; }
+    return '<g><title>Paso de tubos entre '+esc(r.name)+(o?' y '+esc(o.name):'')+(dir&&to?': los tubos pasan por aquí hacia '+esc(to.name)+', camino del colector':'')+'</title>'+ar+ln(a,b,"p-via")+ln(add(a,mul(g.nin,-0.16)),add(a,mul(g.nin,0.16)),"p-via-j")+ln(add(b,mul(g.nin,-0.16)),add(b,mul(g.nin,0.16)),"p-via-j")+'</g>'; }
   function circsOf(r,res){ var g=[]; res.panels.forEach(function(p){ (g[p.circuit]=g[p.circuit]||[]).push(p); });
     var o=[], segs=[]; g.forEach(function(ps,i){ if(!ps) return; var pts=ps.map(function(p){ return toW(r,V(p.x+p.w/2,p.y+p.h/2)); }), j=ps.length>2 ? joinRun(ps,segs) : joinOf(ps[0],ps[ps.length-1],segs);
       o.push({i:i,a:pts[0],b:pts[pts.length-1],n:ps.length,na:toW(r,j.na),nb:toW(r,j.nb),join:j.path.map(function(q){ return toW(r,q); })}); }); return o; }
@@ -2157,10 +2157,11 @@
     // a passage is a hole in a wall: every tube that crosses that wall, into or out of either room and whatever room is on the
     // other side of each stretch of it, goes through the hole. The wall is the straight side it was marked on, joined with the
     // side of the room behind the hole (so it does not matter from which room it was marked). Elsewhere a hole changes nothing.
-    // with a direction (marked since 2026-10): every tube that goes into the room the arrow points to goes in through the hole;
-    // going in anywhere else costs as much as a long detour, and tubes that do not go into that room do not notice it
+    // with a direction (marked since 2026-10): the arrow says where the tubes go on their way from the panels to the collector, so
+    // routed from the collector (as here) every tube that goes into the room the arrow comes from goes in through the hole; going
+    // in anywhere else costs as much as a long detour, and tubes that do not go into that room do not notice it
     var pas=[], dpas=[]; rs.forEach(function(r,ri){ var g=viaGeom(r); if(!g) return; var Q=add(g.P,mul(g.nin,-0.12)), other=-1; W.forEach(function(w,wi){ if(wi!==ri && other<0 && pointIn(Q,w)) other=wi; });
-      if(r.via.dir){ var into=r.via.dir>0?ri:other; if(into>=0) dpas.push({P:g.P,R:into,A:g.A,u:g.u,n:g.nin,L:g.L,t:g.t}); return; }
+      if(r.via.dir){ var into=r.via.dir>0?other:ri; if(into>=0) dpas.push({P:g.P,R:into,A:g.A,u:g.u,n:g.nin,L:g.L,t:g.t}); return; }
       var lo=0, hi=g.L, segs=[];
       if(other>=0){ var o=rs[other], m=o.pts.length; for(var e=0;e<m;e++){ if(o.bulge[e]) continue; var C=toW(o,o.pts[e]), D=toW(o,o.pts[(e+1)%m]);
         if(Math.abs(dot(sub(C,g.A),g.nin))>0.05 || Math.abs(dot(sub(D,g.A),g.nin))>0.05) continue;
@@ -4281,7 +4282,7 @@
   function viaTool(on){ S.viaPend=null;
     if(on){ if(S.markTool) setMarkTool(S.markTool); if(S.obstTool) obstTool(false); if(S.eraseTool) eraseTool(false); }
     S.viaTool=!!on; S.markHover=null; $("viaBtn").classList.toggle("on",!!on);
-    if(on){ hint('<span><b>Paso de tubos:</b> primero pulsa en la pared donde está el agujero y después la estancia <b>hacia la que pasan los tubos</b>. Todo tubo que entre en esa estancia lo hará por el agujero, venga de donde venga; a los demás no les afecta. Si no marcas nada, van por el camino más corto. Pulsa un paso ya marcado para quitarlo.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>');
+    if(on){ hint('<span><b>Paso de tubos:</b> primero pulsa en la pared donde está el agujero y después la estancia <b>hacia la que van los tubos</b>, siguiendo su camino desde los paneles hasta el colector. Todo tubo que vaya de un lado al otro en ese sentido pasará por el agujero; a los demás no les afecta. Si no marcas nada, van por el camino más corto. Pulsa un paso ya marcado para quitarlo.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>');
       $("viaDone").addEventListener("click",function(){ viaTool(false); }); }
     else hint("");
     renderPlan();
@@ -4292,10 +4293,10 @@
     var done='<button class="btn ghost small" id="viaDone" type="button">Terminar</button>', fin=function(h,w){ hint(h+done,w); $("viaDone").addEventListener("click",function(){ viaTool(false); }); };
     var pr=S.viaPend && S.rooms.indexOf(S.viaPend)>=0 ? S.viaPend : null;
     if(pr && pr.via){ var o0=viaOther(pr), g0=viaGeom(pr), inR=pointIn(q,results[pr.id].wout), inO=o0 && pointIn(q,results[o0.id].wout);
-      if(!inR && !inO){ fin('<span>Pulsa dentro de <b>'+esc(pr.name)+'</b> o de <b>'+esc(o0?o0.name:"")+'</b>: la estancia hacia la que pasan los tubos.</span>',true); return true; }
+      if(!inR && !inO){ fin('<span>Pulsa dentro de <b>'+esc(pr.name)+'</b> o de <b>'+esc(o0?o0.name:"")+'</b>: la estancia hacia la que van los tubos, camino del colector.</span>',true); return true; }
       if(g0 && len(sub(q,g0.P))<0.12) return true;
       pr.via.dir=inR?1:-1; S.viaPend=null; var to=inR?pr:o0, from=inR?o0:pr; update(pr.id===S.sel);
-      fin('<span>Paso de tubos de <b>'+esc(from.name)+'</b> hacia <b>'+esc(to.name)+'</b>: todo tubo que entre en '+esc(to.name)+' lo hará por ahí. Sigue marcando o pulsa Terminar.</span>'); return true; }
+      fin('<span>Paso de tubos de <b>'+esc(from.name)+'</b> hacia <b>'+esc(to.name)+'</b>: los tubos que vayan de '+esc(from.name)+' hacia el colector por '+esc(to.name)+' pasarán por ahí. Sigue marcando o pulsa Terminar.</span>'); return true; }
     var gone=null; S.rooms.forEach(function(r){ var g=viaGeom(r); if(g && len(sub(q,g.P))<0.3) gone=r; });
     if(gone){ delete gone.via; S.viaPend=null; update(gone.id===S.sel); fin('<span>Paso de tubos quitado.</span>'); return true; }
     var hit=ufHitEdge(q); if(!hit) return false; var r=hit.room, e=hit.edge, n=r.pts.length;
@@ -4304,7 +4305,7 @@
     var old=r.via; r.via={edge:e,t:t}; var o=viaOther(r);
     if(!o){ if(old) r.via=old; else delete r.via; fin('<span>Esa pared no da a otra estancia: el paso de tubos va en una pared entre dos estancias.</span>',true); return true; }
     S.viaPend=r; update(r.id===S.sel);
-    fin('<span>Agujero marcado entre <b>'+esc(r.name)+'</b> y <b>'+esc(o.name)+'</b>. Ahora pulsa la estancia <b>hacia la que pasan los tubos</b>.</span>');
+    fin('<span>Agujero marcado entre <b>'+esc(r.name)+'</b> y <b>'+esc(o.name)+'</b>. Ahora pulsa la estancia <b>hacia la que van los tubos</b>, camino del colector.</span>');
     return true;
   }
   function setMarkTool(t){
@@ -5552,7 +5553,7 @@
           {when:function(){ return true; },el:"#obstBtn",x:"<p>Los muebles que llegan al techo, las vigas o los conductos ocupan sitio donde no puede ir ningún panel. Pulsa <b>Añadir obstáculo</b>.</p>"}
         ]});
       P.push({info:true,anim:"acceso",el:'#markBar [data-mark="acceso"]',t:"Puerta de acceso",x:"<p>Pulsa la pared de la <b>puerta de la calle</b> justo donde está la puerta: se marca con el ancho de una puerta. Igual que con las ventanas, la primera fila de paneles de esa estancia va pegada a ella, que es por donde más frío entra, y el resto se reparte por igual por la estancia para que se note lo mismo en toda ella. Las puertas entre estancias no cuentan.</p>"});
-      P.push({info:true,anim:"paso",el:"#viaBtn",t:"Paso de tubos",x:"<p>Si los tubos tienen que pasar por un agujero concreto (por ejemplo, porque por el camino más corto hay una viga), pulsa <b>Marcar paso de tubos</b>, luego la pared donde está el agujero y después la estancia <b>hacia la que pasan</b> los tubos: se dibuja una flecha.</p><p>Todo tubo que entre en esa estancia lo hará por el agujero, venga de donde venga; a los demás no les afecta. Los metros de tubo se calculan por ese recorrido.</p>"});
+      P.push({info:true,anim:"paso",el:"#viaBtn",t:"Paso de tubos",x:"<p>Si los tubos tienen que pasar por un agujero concreto (por ejemplo, porque por el camino más corto hay una viga), pulsa <b>Marcar paso de tubos</b>, luego la pared donde está el agujero y después la estancia <b>hacia la que van</b> los tubos, siguiendo su camino desde los paneles hasta el colector: se dibuja una flecha.</p><p>Todo tubo que vaya en ese sentido pasará por el agujero; a los demás no les afecta. Los metros de tubo se calculan por ese recorrido.</p>"});
       P.push({mission:true,anim:"tuberia",t:"Muestra la tubería",badge:"Tubería a la vista",
         done:function(){ return !!S.showPipes; },
         skip:function(){ var c=$("showPipes"); if(c && !c.checked){ c.checked=true; c.dispatchEvent(new Event("change")); } },
