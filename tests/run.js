@@ -343,8 +343,8 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   out.push("Marca de los paneles");
   p = await open("#planificador");
   const br = await p.evaluate(() => ({ opts: [...document.querySelectorAll("#sBrand option")].map(o => o.textContent), cat: [...document.querySelectorAll("#catalogBody tr")].map(t => t.innerText.replace(/\s+/g, " ").trim()), info: document.getElementById("brandInfo").innerText }));
-  ok("selector de marca con Sunthalpy y sus modelos A 40×150, B 60×150 y C 80×150 (2 en serie)",
-    br.opts.length === 1 && /Sunthalpy/.test(br.opts[0]) && br.cat.length === 3 && /A 40 × 150 2 13/.test(br.cat[0]) && /B 60 × 150 2 18/.test(br.cat[1]) && /C 80 × 150 2 21,2/.test(br.cat[2]) && /1 l\/min/.test(br.info), JSON.stringify(br));
+  ok("selector de marca (Sunthalpy, Uponor, Zehnder, Giacomini); Sunthalpy con A 40×150, B 60×150 y C 80×150 (2 en serie)",
+    br.opts.length === 5 && /Sunthalpy/.test(br.opts[0]) && ["Uponor · Renovis", "Zehnder · NIC", "Giacomini · GKC Classic", "Giacomini · GKC Super"].every(t => br.opts.some(o => o.indexOf(t) === 0)) && br.cat.length === 3 && /A 40 × 150 2 13/.test(br.cat[0]) && /B 60 × 150 2 18/.test(br.cat[1]) && /C 80 × 150 2 21,2/.test(br.cat[2]) && /1 l\/min/.test(br.info), JSON.stringify(br));
   const ser = await p.evaluate(() => {
     const D = window.__dbg, S = D.S, R = D.rectRoom, V = D.V; let seed = 777; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647, o = {};
     const inP = (r, pt, q) => { const a = D.toW(r, V(q.x, q.y)), b = D.toW(r, V(q.x + q.w, q.y + q.h)); return pt.x >= Math.min(a.x, b.x) - 1e-6 && pt.x <= Math.max(a.x, b.x) + 1e-6 && pt.y >= Math.min(a.y, b.y) - 1e-6 && pt.y <= Math.max(a.y, b.y) + 1e-6; };
@@ -370,6 +370,23 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("emisión según la curva de Sunthalpy (≈ 64 W/m² a 5 K, 120 a 10 K, 236 a 20 K)", Math.abs(thb.q5 - 64.5) < 1 && Math.abs(thb.q10 - 120) < 1 && Math.abs(thb.q20 - 236) < 2, JSON.stringify(thb));
   ok("acabado enyesado: el agua no pasa de 40 °C aunque se pidan 55 (y lo avisa)", thb.vmax === 40 && thb.warn, JSON.stringify(thb));
   ok("caudal de 1 l/min por circuito y pérdida de carga con los kPa de los paneles", Math.abs(thb.flow - 60 * thb.circ) < 1e-6 && thb.dpMin >= 13, JSON.stringify(thb));
+  // las demás marcas: cada una con sus paneles, su límite en serie y su emisión según la ficha
+  const otras = await p.evaluate(() => { const D = window.__dbg, S = D.S, out = {}, sel = document.getElementById("sBrand");
+    const want = { renovis: [15, 55], nic: [16, 162 / 2.4], gkc: [15, 68], gkcs: [15, 77] };
+    for (const k of Object.keys(want)) { sel.value = k; sel.dispatchEvent(new Event("change"));
+      S.floors = [{ id: D.nid(), name: "x", rooms: [D.rectRoom("Salón", 0, 0, 6, 4.5, {}), D.rectRoom("Dormitorio", 6, 0, 3.5, 4.5, {})], collectors: [{ id: D.nid(), name: "C", x: 1, y: 3.8, cap: 20 }] }]; S.fi = 0; D.update(true);
+      let n = 0, over = 0, foreign = 0; S.rooms.forEach(r => { const x = D.results[r.id]; n += x.panels.length; (x.cs || []).forEach(c => { const ps = x.panels.filter(q => q.circuit === c.i), lim = Math.min(...ps.map(q => k === "renovis" ? 3 : k === "nic" && Math.min(q.tw, q.th) === 50 ? 2 : 1)); if (ps.length > lim) over++; }); x.panels.forEach(q => { if (!S.panels.some(t => t.on !== false && t.w === q.tw && t.h === q.th)) foreign++; }); });
+      out[k] = { brand: S.brand, n, over, foreign, q: Math.round(D.brandQ(want[k][0]) * 10) / 10, want: Math.round(want[k][1] * 10) / 10, info: document.getElementById("brandInfo").innerText.slice(0, 60), flow: D.TH.totFlow }; }
+    sel.value = "sunthalpy"; sel.dispatchEvent(new Event("change")); return out; });
+  ok("Uponor Renovis, Zehnder NIC y Giacomini GKC: paneles de su ficha, sin pasar su límite en serie y con su emisión (±3 %)",
+    Object.values(otras).every(x => x.n > 0 && !x.over && !x.foreign && Math.abs(x.q - x.want) <= x.want * 0.03 && x.flow > 0), JSON.stringify(otras));
+  await p.click("#loadExample"); await p.waitForTimeout(800);
+  const exb = await p.evaluate(() => { const D = window.__dbg, out = {}, sel = document.getElementById("sBrand");
+    for (const k of ["sunthalpy", "renovis", "nic", "gkc", "gkcs"]) { sel.value = k; sel.dispatchEvent(new Event("change")); let bad = 0, n = 0;
+      D.S.rooms.forEach(r => { const x = D.results[r.id]; n += x.panels.length; (x.cs || []).forEach(c => { const ps = x.panels.filter(q => q.circuit === c.i), lim = Math.min(...ps.map(q => k === "renovis" ? 3 : k === "sunthalpy" ? 2 : k === "nic" && Math.min(q.tw, q.th) === 50 ? 2 : 1)); if (ps.length > lim) bad++; }); });
+      out[k] = { n, bad }; }
+    sel.value = "sunthalpy"; sel.dispatchEvent(new Event("change")); return out; });
+  ok("vivienda de ejemplo con cada marca: ningún circuito pasa del límite en serie de sus paneles", Object.values(exb).every(x => x.n > 0 && !x.bad), JSON.stringify(exb));
   await p.evaluate(() => { document.getElementById("sFinish").value = "alic"; document.getElementById("sFinish").dispatchEvent(new Event("change")); });
   ok("acabado alicatado: hasta 60 °C", await p.evaluate(() => window.__dbg.TH.vmax === 55), "vmax " + await p.evaluate(() => window.__dbg.TH.vmax));
   const mig = await p.evaluate(() => { const D = window.__dbg;

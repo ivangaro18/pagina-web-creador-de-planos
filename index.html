@@ -1444,21 +1444,56 @@
   // ---------------- panel brands ----------------
   // What changes with the manufacturer of the ceiling panels (data sheet): sizes, how many go in series per circuit,
   // design flow and pressure drop per panel, thermal output (W/m²K against water–room difference) and temperature limits.
+  // Each entry, from the maker's own data sheet (src): models (w×h cm, series = most panels in series per circuit, sheet = what the
+  // sheet allows when we keep a lower limit, dp = kPa per panel at the design flow, fl = l/h per panel), flow (l/min per circuit,
+  // fixed by the maker), emission as a curve kc [ΔT, W/m²K] or K·ΔT^n, water limits per finish, t20 = panels per shared outlet.
+  // Systems fed in parallel (Tichelmann lines) are planned as one panel (or the allowed series) per circuit: on the safe side.
   var BRANDS={
     sunthalpy:{name:"Sunthalpy",line:"sunthaldress",
       models:[{key:"A",w:40,h:150,series:2,sheet:3,dp:13,wk:7.8},{key:"B",w:60,h:150,series:2,dp:18,wk:11.7},{key:"C",w:80,h:150,series:2,dp:21.2,wk:15.6}],
       flow:1, kc:[[0,18.3],[1,17.2],[2,16.1],[3,15.1],[4,13.9],[5,12.9],[6,12.5],[7,12.3],[8,12.2],[10,12],[13,11.9],[17,11.8]],
-      finish:{yeso:{n:"Juntas enyesadas y pintado",t:40},alic:{n:"Alicatado",t:60}}, tMin:5, bar:6, mm:15, kg:9, mod:40, tube:"PE-RT de 10 mm con conexión pushfit", t20:[3,4]}
+      finish:{yeso:{n:"Juntas enyesadas y pintado",t:40},alic:{n:"Alicatado",t:60}}, tMin:5, bar:6, mm:15, kg:9, mod:40, tube:"PE-RT de 10 mm con conexión pushfit", t20:[3,4],
+      emis:"la curva medida de la ficha: de 18 W/m²K con poca diferencia a 12 W/m²K a partir de 10 K (A 7,8 W/K, B 11,7 y C 15,6 por panel)",
+      src:[["Ficha técnico comercial sunthaldress (11/2023)",null]]},
+    renovis:{name:"Uponor",line:"Renovis",
+      models:[{key:"2000",w:62.5,h:200,series:3},{key:"1200",w:62.5,h:120,series:3},{key:"800",w:62.5,h:80,series:3}],
+      kc:[[10,3.7],[15,3.67],[25,3.67]],
+      finish:{enl:{n:"Placa con enlucido de 4 mm",t:50}}, tMin:15, bar:6, mm:15, kg:12.1, mod:40, tube:"PE-Xa 9,9×1,1 mm a 50 mm, conexión Q&E; líneas de 20×2 en retorno invertido", t20:[2,6],
+      emis:"EN 1264-5 en techo: 55 W/m² a 15 K (unos 37 W/m² a 10 K, leído del gráfico); la superficie no pasa de 29 °C",
+      rules:"Perfiles CD 60/27 cada 40 cm y cuelgues cada 90 cm como máximo; 10 mm de holgura a los muros; tornillos cada 17 cm; juntas al tresbolillo. Los focos solo en el centro del panel; donde se taladre, panel ciego (Renovis Diamant 2000×625).",
+      src:[["Uponor Renovis, información técnica (02/2014)","https://brandportal.uponor.com/m/6e92069e4e052335/original/TI-Renovis-EN-1066436.pdf"],["Uponor, techo radiante y refrescante (10/2023)","https://brandportal.uponor.com/m/366a92c64bd79225/original/TI-Ceiling-Heating-Cooling-DE-1092315.pdf"]]},
+    nic:{name:"Zehnder",line:"NIC (Nestsystems)",
+      models:[{key:"NIC 600",w:120,h:200,series:1},{key:"NIC 300",w:120,h:100,series:1},{key:"NIC 150",w:120,h:50,series:2}],
+      kc:[[10,4.13],[16,4.22],[20,4.25],[28,4.31]],
+      finish:{std:{n:"Placa de yeso (juntas con cinta)",t:40}}, tMin:15, bar:4, mm:42, kg:14, tube:"PE-Xa 8×1 mm, en paralelo a colectores lineales de multicapa 20×2 con tes rápidas", t20:[2,4],
+      emis:"ensayo EN 14037 de la ficha: NIC 600 da 99 W a 10 K, 162 W a 16 K y 204 W a 20 K (unos 41–43 W/m² por cada 10 K)",
+      rules:"Cada panel va en paralelo a la línea de 20 mm (se planifica un panel por circuito; dos NIC 150 pueden ir en serie). Máximo 4 bar a 40 °C. Los paneles activos no se cortan; zonas sin panel con la placa de cierre de 2000×1200.",
+      src:[["Zehnder Nestsystems, catálogo (2016)","https://www.zehnder.es/fileadmin/user_upload/ES/Documentaciones/RHC/Z-RHC-_Nestsystems_2016.pdf"],["Zehnder Systems, tarifa 2026","https://www.zehnder.es/fileadmin/user_upload/ES/Documentaciones/CSY/Z-CSY-Tarifa-Zehnder-Systems_2026_v5.pdf"]]},
+    gkc:{name:"Giacomini",line:"GKC Classic",
+      models:[{key:"KS120Y200",w:120,h:200,series:1,dp:20,fl:90},{key:"KS60Y200",w:60,h:200,series:1,dp:20,fl:45},{key:"KS60Y120",w:60,h:120,series:1,dp:20,fl:45}],
+      K:68/Math.pow(15,1.1), n:1.1,
+      finish:{std:{n:"Placa de yeso",t:45}}, tMin:15, mm:45, kg:13.3, tube:"tubo 8×1 mm con barrera antioxígeno, paneles en paralelo con multicapa 20×2", t20:[2,4],
+      emis:"EN 14037: 68 W/m² a 15 K (la ficha solo da ese punto; se supone n = 1,1). 45 l/h y unos 20 kPa por circuito interno",
+      rules:"Perfiles con primarios cada 90 cm como máximo y secundarios cada 30 o 40 cm (montaje longitudinal); tornillos de 7 cm en el centro de las pistas marcadas, cada 20 cm; 25–50 cm entre filas de paneles para las conexiones. El de 1200×2000 se puede partir en dos de 1200×1000. Temperatura máxima del panel no publicada: se limita a 45 °C.",
+      src:[["Giacomini GKC, ficha 0353EN (07/2025)","https://dam.giacomini.com/giacomini.com/product_documentations/datasheets/KSU.pdf"]]},
+    gkcs:{name:"Giacomini",line:"GKC Super Classic",
+      models:[{key:"KSS120Y200",w:120,h:200,series:1,dp:20,fl:90},{key:"KSS60Y200",w:60,h:200,series:1,dp:20,fl:45},{key:"KSS60Y120",w:60,h:120,series:1,dp:20,fl:45}],
+      K:77/Math.pow(15,1.1), n:1.1,
+      finish:{std:{n:"Placa de yeso",t:45}}, tMin:15, mm:45, kg:13.3, tube:"tubo 8×1 mm a 30 mm con barrera antioxígeno, paneles en paralelo con multicapa 20×2", t20:[2,4],
+      emis:"EN 14037: 77 W/m² a 15 K (la ficha solo da ese punto; se supone n = 1,1). 45 l/h y unos 20 kPa por circuito interno",
+      rules:"Como GKC Classic: primarios cada 90 cm como máximo, secundarios cada 30 o 40 cm; tornillos de 7 cm cada 20 cm en el centro de las pistas; 25–50 cm entre filas para las conexiones. Temperatura máxima del panel no publicada: se limita a 45 °C.",
+      src:[["Giacomini GKC, ficha 0353EN (07/2025)","https://dam.giacomini.com/giacomini.com/product_documentations/datasheets/KSU.pdf"]]}
   };
   function brand(){ return BRANDS[S.brand]||BRANDS.sunthalpy; }
-  function brandPanels(b,k){ return b.models.map(function(m){ return {id:"p_"+k+"_"+m.key,key:m.key,name:"Panel "+b.line+" "+m.key,w:m.w,h:m.h,on:true}; }); }
+  function brandPanels(b,k){ return b.models.map(function(m){ return {id:"p_"+k+"_"+m.key.replace(/\W/g,""),key:m.key,name:"Panel "+b.line+" "+m.key,w:m.w,h:m.h,on:true}; }); }
   function modelOf(tw,th){ var ms=brand().models; for(var i=0;i<ms.length;i++){ var m=ms[i]; if((m.w===tw&&m.h===th)||(m.w===th&&m.h===tw)) return m; } return null; }
   function seriesOf(tw,th){ var m=modelOf(tw,th); return m?m.series:2; }
-  function brandK(dH){ var c=brand().kc, x=Math.max(0,dH); for(var i=1;i<c.length;i++) if(x<=c[i][0]) return c[i-1][1]+(c[i][1]-c[i-1][1])*(x-c[i-1][0])/(c[i][0]-c[i-1][0]); return c[c.length-1][1]; }
+  function brandK(dH){ var b=brand(), c=b.kc, x=Math.max(0,dH); if(!c) return b.K*Math.pow(Math.max(0.5,x),b.n-1); for(var i=1;i<c.length;i++) if(x<=c[i][0]) return c[i-1][1]+(c[i][1]-c[i-1][1])*(x-c[i-1][0])/(c[i][0]-c[i-1][0]); return c[c.length-1][1]; }
   function brandQ(dH){ return dH>0 ? brandK(dH)*dH : 0; }                                   // W per m² of panel
   function brandDH(q){ if(!(q>0)) return 0; var lo=0, hi=80; for(var i=0;i<50;i++){ var m=(lo+hi)/2; if(brandQ(m)<q) lo=m; else hi=m; } return (lo+hi)/2; }
   function brandTmax(){ var b=brand(), f=b.finish[S.finish]||b.finish[Object.keys(b.finish)[0]]; return f.t; }
   function seriesText(){ var ms=brand().models, same=ms.every(function(m){ return m.series===ms[0].series; }), sh=ms.filter(function(m){ return m.sheet && m.sheet>m.series; });
+    if(same && ms[0].series===1) return "Un panel por circuito (van en paralelo).";
     return "En serie, como máximo "+(same ? ms[0].series+" paneles" : ms.map(function(m){ return m.series+" del "+m.key; }).join(", ").replace(/, ([^,]*)$/," y $1"))+" por circuito"+
       (sh.length ? " (la ficha permite "+sh.map(function(m){ return m.sheet+" del "+m.key; }).join(", ")+"; se deja en "+sh[0].series+" por seguridad)." : "."); }
   var S={
@@ -1809,8 +1844,9 @@
       runs.forEach(function(ru){ if(lng || ru.length===2) pairs.push(ru); else if(single<0) single=ru[0]; else pairs.push(ru); });
       if(!lng) for(var it=0,ch=true;ch && it<50;it++){ ch=false;
         for(var x=0;x<pairs.length;x++){ var P=pairs[x]; if(P.length<2) continue;
-          if(single>=0) for(var k=0;k<2;k++){ if(cost(P[1-k],single)<cost(P[0],P[1])-1e-6){ var s0=single; single=P[k]; P[k]=s0; ch=true; } }
+          if(single>=0) for(var k=0;k<2;k++){ if(cap[single]>=2 && cost(P[1-k],single)<cost(P[0],P[1])-1e-6){ var s0=single; single=P[k]; P[k]=s0; ch=true; } }
           for(var y=x+1;y<pairs.length;y++){ var Q=pairs[y]; if(Q.length<2) continue; var c0=cost(P[0],P[1])+cost(Q[0],Q[1]), c1=cost(P[0],Q[0])+cost(P[1],Q[1]), c2=cost(P[0],Q[1])+cost(P[1],Q[0]);
+            var two=function(a,b){ return cap[a]>=2 && cap[b]>=2; }; if(!two(P[0],Q[0]) || !two(P[1],Q[1])) c1=Infinity; if(!two(P[0],Q[1]) || !two(P[1],Q[0])) c2=Infinity;
             if(c1<c0-1e-6 && c1<=c2){ var t=P[1]; P[1]=Q[0]; Q[0]=t; ch=true; } else if(c2<c0-1e-6){ var t2=P[1]; P[1]=Q[1]; Q[1]=t2; ch=true; } } } }
       if(single>=0) pairs.push([single]);
       if(!lng) pairs.forEach(function(pr){ pr.sort(function(a,b){ return a-b; }); });
@@ -3776,7 +3812,7 @@
       if(y>255){ doc.addPage(); y=18; }
       doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor.apply(doc,MUT);
       var note=UFM ? "Notas: separación del tubo en plancha de tetones universal (múltiplos de 5 cm). Junto a ventanas y muros exteriores el tubo va más junto (zona periférica, UNE-EN 1264). Cada circuito tiene como máximo "+fmt(S.uf.maxLen)+" m contando la ida y vuelta al colector con recorrido ortogonal y "+fmt(S.uf.vert,1)+" m de bajada por tramo. Las estancias separadas por una escalera llevan su propio colector. Los metros de tubo incluyen un "+fmt(S.uf.margin)+"% de margen." : "Notas: cada colector incluye ida y retorno. Cada circuito lleva 2 conexiones (ida y retorno): en el colector, 1 bicono completo; en el panel, 1 racor de tubo de panel a rosca 1/2\", 1 racor PEX con rosca 1/2\" y 1 casquillo. Manguito de unión: 1 por cada unión entre dos paneles del mismo circuito. Paneles "+brand().name+" "+brand().line+": "+seriesText().toLowerCase()+" Caudal de diseño "+fmt(brand().flow)+" l/min por circuito; acabado "+brand().finish[S.finish].n.toLowerCase()+", agua como máximo a "+brandTmax()+" °C. Los metros de PEX son una estimación con recorrido ortogonal, subida al techo de "+fmt(S.vert,1)+" m por tramo, descontando "+fmt(S.tail,1)+" m de tubo del propio panel por tramo, y "+fmt(S.margin)+"% de margen.";
-      if(BETA.th) note+=" Cálculo térmico orientativo: pérdidas por transmisión (U · superficie · diferencia de temperatura) por los muros exteriores y ventanas marcados, suelo y techo, más ventilación y un "+fmt(S.th.marg)+"% de margen. "+(UFM?"Emisión del suelo según UNE-EN 1264 con tubo "+(TH_TUBE[S.th.tube]||TH_TUBE["16x2"]).n+" y "+fmt(S.th.su)+" mm de mortero.":"Emisión de los paneles según la curva de la ficha de "+brand().name+" (de 18 a 12 W/m²K según la diferencia entre el agua y el ambiente).")+" No sustituye al proyecto firmado por un técnico.";
+      if(BETA.th) note+=" Cálculo térmico orientativo: pérdidas por transmisión (U · superficie · diferencia de temperatura) por los muros exteriores y ventanas marcados, suelo y techo, más ventilación y un "+fmt(S.th.marg)+"% de margen. "+(UFM?"Emisión del suelo según UNE-EN 1264 con tubo "+(TH_TUBE[S.th.tube]||TH_TUBE["16x2"]).n+" y "+fmt(S.th.su)+" mm de mortero.":"Emisión de los paneles "+brand().name+" "+brand().line+" según su ficha: "+brand().emis+".")+" No sustituye al proyecto firmado por un técnico.";
       if(!UFM && S.t20) note+=" Con tubo de 20 mm, dos circuitos de la misma estancia (3 o 4 paneles) comparten una salida: bicono de 20 en el colector y una te de latón en la ida y otra en el retorno, con racores de tubo de panel en los extremos y racor de multicapa de 20 en el centro. El PEX de 20 no pasa de 20 m sumando ida y retorno.";
       var nl=doc.splitTextToSize(note,PW-2*M); doc.text(nl,M,y); y+=nl.length*3.4+3;
       if(company.foot){ var fl2=doc.splitTextToSize(company.foot,PW-2*M); if(y+fl2.length*3.6>283){ doc.addPage(); y=18; } doc.setTextColor.apply(doc,INK); doc.setFontSize(8); doc.text(fl2,M,y); }
@@ -4022,7 +4058,7 @@
     var b=brand(), body=$("catalogBody"); body.innerHTML="";
     S.panels.forEach(function(t){ var m=modelOf(t.w,t.h)||{};
       var tr=document.createElement("tr"); tr.className=t.on===false?"off":"";
-      tr.innerHTML='<td class="chk"><input type="checkbox" aria-label="Usar el panel '+esc(t.key||t.name)+'"'+(t.on===false?'':' checked')+'></td><td><b>'+esc(t.key||"")+'</b></td><td class="num">'+fmt(t.w)+' × '+fmt(t.h)+'</td><td class="num">'+(m.series||"–")+'</td><td class="num">'+(m.dp!=null?fmt(m.dp,1):"–")+'</td>';
+      tr.innerHTML='<td class="chk"><input type="checkbox" aria-label="Usar el panel '+esc(t.key||t.name)+'"'+(t.on===false?'':' checked')+'></td><td><b>'+esc(t.key||"")+'</b></td><td class="num">'+fmt(t.w,t.w%1?1:0)+' × '+fmt(t.h,t.h%1?1:0)+'</td><td class="num">'+(m.series||"–")+'</td><td class="num">'+(m.dp!=null?fmt(m.dp,1):"–")+'</td>';
       tr.querySelector("input").addEventListener("change",function(e){
         if(!e.target.checked && S.panels.filter(function(p){ return p.on!==false; }).length<=1){ e.target.checked=true; hint("Deja al menos un modelo de panel marcado.",true); return; }
         t.on=e.target.checked; renderCatalog(); update(false); });
@@ -4034,8 +4070,10 @@
   function renderBrand(){ var b=brand();
     $("sBrand").innerHTML=Object.keys(BRANDS).map(function(k){ return '<option value="'+k+'">'+esc(BRANDS[k].name+" · "+BRANDS[k].line)+'</option>'; }).join(""); $("sBrand").value=S.brand;
     $("sFinish").innerHTML=Object.keys(b.finish).map(function(k){ return '<option value="'+k+'">'+esc(b.finish[k].n)+' (máx. '+b.finish[k].t+' °C)</option>'; }).join(""); $("sFinish").value=b.finish[S.finish]?S.finish:Object.keys(b.finish)[0];
-    $("brandInfo").innerHTML='Placa de <b>'+b.mm+' mm</b> y <b>'+b.kg+' kg/m²</b>, sobre perfilería cada <b>'+b.mod+' cm</b>. Tubo '+esc(b.tube)+'. Caudal de diseño <b>'+fmt(b.flow)+' l/min</b> por circuito. Agua entre '+b.tMin+' y '+brandTmax()+' °C, máx. '+b.bar+' bar. '+esc(seriesText());
-    $("thBrandNote").innerHTML='Emisión de los paneles según la ficha de '+esc(b.name)+': '+b.models.map(function(m){ return m.key+' '+fmt(m.wk,1)+' W/°C'; }).join(', ')+' (unos 13 W/m² por °C entre el agua y la sala; la curva medida baja de 18 a 12 W/m²K al subir la diferencia, y es la que se usa). Caudal de '+fmt(b.flow)+' l/min por circuito. La impulsión no pasa de '+brandTmax()+' °C con el acabado elegido.';
+    var src=(b.src||[]).map(function(x){ return x[1]?'<a href="'+x[1]+'" target="_blank" rel="noopener">'+esc(x[0])+'</a>':esc(x[0]); }).join(' · ');
+    $("brandInfo").innerHTML=[b.mm?'Placa de <b>'+fmt(b.mm)+' mm</b>'+(b.kg?' y <b>'+fmt(b.kg,b.kg%1?1:0)+' kg/m²</b>':'')+(b.mod?', sobre perfilería cada <b>'+b.mod+' cm</b>':'')+'.':'', b.tube?'Tubo '+esc(b.tube)+'.':'',
+      b.flow?'Caudal de diseño <b>'+fmt(b.flow)+' l/min</b> por circuito.':'', 'Agua entre '+b.tMin+' y '+brandTmax()+' °C'+(b.bar?', máx. '+b.bar+' bar':'')+'.', esc(seriesText()), b.rules?esc(b.rules):'', src?'Fuente: '+src+'.':''].filter(Boolean).join(' ');
+    $("thBrandNote").innerHTML='Emisión de los paneles '+esc(b.name+' '+b.line)+' según su ficha: '+esc(b.emis)+'. '+(b.flow?'Caudal de '+fmt(b.flow)+' l/min por circuito. ':b.models.some(function(m){ return m.fl; })?'Caudal por panel de la ficha. ':'El caudal sale del salto ida–retorno. ')+'La impulsión no pasa de '+brandTmax()+' °C con el acabado elegido.';
     $("thVmaxT").max=brandTmax();
     renderCatalog(); }
   // projects saved before the brands (free panel sizes) or with an unknown brand: the brand's panels
@@ -4663,6 +4701,10 @@
     for(var i=0;i<60;i++){ var m=(lo+hi)/2; if(thLM(m,dV)>dH) lo=m; else hi=m; } return (lo+hi)/2; }
   function thDp(lh,L,tk){ var tb=TH_TUBE[tk||S.th.tube]||TH_TUBE["16x2"], di=tb.d-2*tb.e, v=lh/3.6e6/(Math.PI*di*di/4); if(!(v>0)) return 0;
     var Re=v*di/0.66e-6, f=Re<2300?64/Re:0.316*Math.pow(Re,-0.25); return f*(L/di)*992*v*v/2/1000*1.15; }   // kPa, +15 % for bends
+  // l/h of a ceiling circuit: the maker's fixed flow per circuit, or its flow per panel (in series: that of the panels), or else
+  // the share (dflt) of the flow the room needs
+  function circFlow(res,i,dflt){ var B=brand(); if(B.flow) return B.flow*60; var f=0;
+    res.panels.forEach(function(p){ if(p.circuit!==i) return; var m=modelOf(p.tw,p.th); if(m && m.fl) f=Math.max(f,m.fl); }); return f||dflt; }
   function computeThermal(){
     var T=S.th, UF=S.mode==="suelo", rows=[], vmax=UF?T.vmaxS:Math.min(T.vmaxT,brandTmax()), sig=Math.max(1,+T.sig||5), anyExt=false, B=brand();
     S.floors.forEach(function(fl){ fl.rooms.forEach(function(r){ var res=results[r.id]; if(!res) return;
@@ -4695,7 +4737,7 @@
         fd=1+Ro/Ru+(o.ti-tu)/(Math.max(1,o.qo)*Ru); o.down=o.out*(fd-1); }
       o.flow=s>0 ? o.out*fd/(s*1.163) : 0;
       // ceiling: each circuit at the maker's design flow (panels in series), so the spread is what comes out of it
-      if(!UF && res.circuits){ o.flow=res.circuits*B.flow*60; o.sig=o.out/(o.flow*1.163); o.tr=tv-o.sig; }
+      if(!UF && res.circuits && (B.flow || B.models.some(function(m){ return m.fl; }))){ o.flow=0; for(var cf=0;cf<res.circuits;cf++) o.flow+=circFlow(res,cf,0); o.sig=o.flow>0?o.out/(o.flow*1.163):0; o.tr=tv-o.sig; }
       totOut+=o.out; totFlow+=o.flow;
       if(o.short>Math.max(15,o.Q*0.03)){
         if(UF && o.dHreq>o.dHmax+1e-9) o.warn.push("Necesita "+fmt(o.q)+" W/m² y el suelo da como máximo "+fmt(o.qmax)+" W/m² sin pasar de "+(o.bath?33:29)+" °C en la superficie. Faltan "+fmt(o.short)+" W: mejora el aislamiento, junta más el tubo, usa un pavimento que transmita mejor o añade un apoyo (toallero o radiador).");
@@ -4709,13 +4751,13 @@
         res.circ.forEach(function(c,i){ var f=o.flow*(tl?(c.inLen||0)/tl:1/res.circ.length), dp=thDp(f,c.inst||0);
           o.circ.push({name:"C"+(i+1),col:res.col,len:c.inst||0,flow:f,dp:dp,color:c.color});
           if(dp>dpMax){ dpMax=dp; dpO={o:o,name:"C"+(i+1)}; } }); }
-      else { var pd=[], fc=B.flow*60;   // pressure drop of the panels of each circuit at the design flow (data sheet), plus the PEX
-        res.panels.forEach(function(p){ var m=modelOf(p.tw,p.th); pd[p.circuit]=(pd[p.circuit]||0)+(m?m.dp:0); });
+      else { var pd=[], ga=[], ta=0, fc=function(i){ return circFlow(res,i,ta?o.flow*(ga[i]||0)/ta:0); };   // pressure drop of the panels of each circuit at the design flow (data sheet), plus the PEX
+        res.panels.forEach(function(p){ var m=modelOf(p.tw,p.th); pd[p.circuit]=(pd[p.circuit]||0)+(m&&m.dp?m.dp:0); ga[p.circuit]=(ga[p.circuit]||0)+p.w*p.h; ta+=p.w*p.h; });
         var cdp=function(i){ return pd[i]||0; };
-        if(res.outs && res.outs.length) res.outs.forEach(function(ou){ var f=fc*ou.ci.length, dp=thDp(f,ou.len||0,ou.d===20?"20x2":"16x2")+Math.max.apply(null,ou.ci.map(cdp));
+        if(res.outs && res.outs.length) res.outs.forEach(function(ou){ var f=ou.ci.reduce(function(t,i){ return t+fc(i); },0), dp=thDp(f,ou.len||0,ou.d===20?"20x2":"16x2")+Math.max.apply(null,ou.ci.map(cdp));
             o.circ.push({name:ou.ci.map(function(i){ return "C"+(i+1); }).join("+")+(ou.d===20?" (tubo 20)":""),col:res.col,len:ou.len||0,flow:f,n:ou.n,dp:dp});
             if(dp>dpMax){ dpMax=dp; dpO={o:o,name:ou.ci.map(function(i){ return "C"+(i+1); }).join("+")}; } });
-        else for(var ci2=0;ci2<res.circuits;ci2++){ var dp2=thDp(fc,res.circ[ci2]?res.circ[ci2].len:0,"16x2")+cdp(ci2); o.circ.push({name:"C"+(ci2+1),col:res.col,len:res.circ[ci2]?res.circ[ci2].len:0,flow:fc,n:res.circ[ci2]?res.circ[ci2].n:0,dp:dp2}); } }
+        else for(var ci2=0;ci2<res.circuits;ci2++){ var dp2=thDp(fc(ci2),res.circ[ci2]?res.circ[ci2].len:0,"16x2")+cdp(ci2); o.circ.push({name:"C"+(ci2+1),col:res.col,len:res.circ[ci2]?res.circ[ci2].len:0,flow:fc(ci2),n:res.circ[ci2]?res.circ[ci2].n:0,dp:dp2}); } }
       o.circ.forEach(function(c){ var lm=c.flow/60;
         if(c.flow>0 && UF && lm>4) o.warn.push("El circuito "+c.name+" pide "+fmt(lm,1)+" l/min: es mucho para un caudalímetro normal; divide la estancia en más circuitos.");
         if(UF && c.dp>25) o.warn.push("El circuito "+c.name+" pierde "+fmt(c.dp,1)+" kPa: es largo para su caudal; acorta el circuito o divídelo.");
@@ -5117,7 +5159,7 @@
     renderTables();
     var t={n:0,area:sum("area"),c:sum("circuits"),pex:sum("pex")}; S.rooms.forEach(function(r){ t.n+=results[r.id].panels.length; });
     HP.techo={svg:tv,tags:cell("Superficie",fmt(t.area,0),"m²")+cell("Paneles",t.n)+cell("Circuitos",t.c)+cell("Tubo PEX",fmt(Math.ceil(t.pex)),"m")};
-    var pick=["Panel sunthaldress C","Colector de 16 salidas","Tubo PEX","Bicono para PEX","Perfil TC secundario","Placa de pladur","Tira LED"], h='<div class="grp">Vivienda de ejemplo de '+fmt(t.area,0)+' m², techo radiante</div>';
+    var pick=["Panel sunthaldress C","Panel "+brand().line,"Colector de 16 salidas","Tubo PEX","Bicono para PEX","Perfil TC secundario","Placa de pladur","Tira LED"], h='<div class="grp">Vivienda de ejemplo de '+fmt(t.area,0)+' m², techo radiante</div>';
     reportRows.forEach(function(r){ if(pick.some(function(k){ return r.label.indexOf(k)===0; })) h+='<div><span>'+esc(r.label)+'</span><b>'+fmt(r.qty,r.qty%1?1:0)+' '+r.unit+'</b></div>'; });
     $("heroMats").innerHTML=h;
     var sv=draw("suelo");

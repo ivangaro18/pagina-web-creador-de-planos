@@ -247,7 +247,8 @@ const SCENES = {
   },
   async marca(r, p, mode) {
     await setFloor(p, mode, TWO); await view(r, p, "#brandCard", ["#brandCard", "#catalogCard"], 900, 20);
-    await r.pick("#sBrand", 0); await r.hold(0.8); await r.pick("#sFinish", 1); await r.hold(1.2); await r.pick("#sFinish", 0); await r.hold(1.8);
+    await r.pick("#sBrand", 2); await r.hold(1.6); await r.pick("#sBrand", 1); await r.hold(1.6); await r.pick("#sBrand", 0); await r.hold(0.8);
+    await r.pick("#sFinish", 1); await r.hold(1.2); await r.pick("#sFinish", 0); await r.hold(1.8);
   },
   async paneles(r, p, mode) {
     await setFloor(p, mode, TWO); await view(r, p, "#detailCard", ["#catalogCard", "#detailSvg"], 1000, 20);
