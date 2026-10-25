@@ -386,7 +386,7 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("con tes y tramos cortos: colector de 6 salidas como máximo, todo en PEX 16, sin manguitos reducidos",
     te.cerca.te && te.cerca.g > 0 && te.cerca.outs <= 6 && te.cerca.outs < te.cerca.circ && te.cerca.red === 0 && !te.cerca.rows["Tubo PEX 20 mm"] && !te.cerca.rows["Manguito reducido 16–20"] && /Colector de [2-6] salidas/.test(Object.keys(te.cerca.rows).join("|")), JSON.stringify(te.cerca));
   ok("con tes y tramos de más de 7 m: 7 m de PEX 16 y el resto de 20, con un manguito reducido por tramo",
-    te.lejos.te && te.lejos.red > 0 && !te.lejos.bad16 && te.lejos.rows["Manguito reducido 16–20"] === te.lejos.red + " ud." && !!te.lejos.rows["Tubo PEX 20 mm"], JSON.stringify(te.lejos));
+    te.lejos.te && te.lejos.red > 0 && !te.lejos.bad16 && te.lejos.rows["Manguito reducido 16–20"] === te.lejos.red + " ud." && !!te.lejos.rows["Tubo PEX 20 mm"] && te.lejos.rows["Racor PEX 20 con rosca 1/2\""] === te.lejos.red + " ud." && te.lejos.rows["Te de latón 1/2\""] === 2 * te.lejos.g + " ud.", JSON.stringify(te.lejos));
   ok("si con tes no caben todos los circuitos en 6 salidas: una salida por circuito, sin tes", !te.lleno.te && te.lleno.g === 0 && te.lleno.outs === te.lleno.circ && !te.lleno.un && !!te.lleno.rows["Colector de 40 salidas"], JSON.stringify({ te: te.lleno.te, g: te.lleno.g, outs: te.lleno.outs, circ: te.lleno.circ, un: te.lleno.un }));
   // las demás marcas: cada una con sus paneles, su límite en serie y su emisión según la ficha
   const otras = await p.evaluate(() => { const D = window.__dbg, S = D.S, out = {}, sel = document.getElementById("sBrand");

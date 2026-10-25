@@ -3674,8 +3674,9 @@
     if(TER && tot.g20) reportRows.push({key:"bicono",label:"Bicono para PEX 16",note:"2 por salida, en el colector (ida y retorno); las salidas con te también salen en 16. Incluye casquillo",qty:tot.uni+2*tot.g20,unit:"ud."});
     else if(tot.uni) reportRows.push({key:"bicono",label:"Bicono para PEX"+(tot.g20?" 16":""),note:"2 por salida de tubo de 16, en el colector (ida y retorno). Incluye casquillo",qty:tot.uni,unit:"ud."});
     if(TER && tot.g20){
-      reportRows.push({key:"te20",label:"Te de latón",note:"2 por salida agrupada (ida y retorno)",qty:2*tot.g20,unit:"ud."});
-      if(tot.red) reportRows.push({key:"mc20",label:"Racor de multicapa 20 mm",note:"En el centro de la te cuando llega tubo de 20",qty:tot.red,unit:"ud."});
+      // each te: brass te 1/2", the two panel-tube fittings at its sides (in "rpanel") and one PEX fitting in the middle, 16 or 20
+      reportRows.push({key:"te20",label:"Te de latón 1/2\"",note:"2 por salida agrupada (ida y retorno); a los lados, los racores del tubo de 10 del panel",qty:2*tot.g20,unit:"ud."});
+      if(tot.red) reportRows.push({key:"rpex20",label:"Racor PEX 20 con rosca 1/2\"",note:"En el centro de cada te a la que llega tubo de 20",qty:tot.red,unit:"ud."});
     } else if(tot.g20){
       reportRows.push({key:"bicono20",label:"Bicono para PEX 20",note:"2 por salida agrupada, en el colector (ida y retorno)",qty:2*tot.g20,unit:"ud."});
       reportRows.push({key:"te20",label:"Te de latón",note:"2 por salida agrupada (ida y retorno), al final del tubo de 20",qty:2*tot.g20,unit:"ud."});
@@ -3683,8 +3684,8 @@
     }
     reportRows.push({key:"rpanel",label:"Racor tubo de panel a rosca 1/2\"",note:tot.g20?"2 por circuito de 16 (ida y retorno) y 2 en los extremos de cada te":"2 por circuito (ida y retorno)",qty:tot.uni+4*tot.g20,unit:"ud."});
     var r16=tot.uni+(TER?tot.te16:0);
-    if(r16){ reportRows.push({key:"rpex",label:"Racor PEX con rosca 1/2\"",note:"2 por circuito de tubo de 16 (ida y retorno)"+(TER&&tot.te16?" y 1 en cada te a la que llega tubo de 16":""),qty:r16,unit:"ud."});
-      reportRows.push({key:"casq",label:"Casquillo PEX",note:"Uno por cada racor PEX",qty:r16,unit:"ud."}); }
+    if(r16) reportRows.push({key:"rpex",label:"Racor PEX"+(TER&&tot.g20?" 16":"")+" con rosca 1/2\"",note:"2 por circuito de tubo de 16 (ida y retorno)"+(TER&&tot.te16?" y 1 en el centro de cada te a la que llega tubo de 16":""),qty:r16,unit:"ud."});
+    if(tot.uni) reportRows.push({key:"casq",label:"Casquillo PEX",note:"2 por circuito de tubo de 16 (ida y retorno)",qty:tot.uni,unit:"ud."});
     ctrlRows(allRooms().reduce(function(t,r){ return t+((results[r.id]||{}).outs||[]).length; },0)); renderReport();
   }
   // zone control: the client decides how many zones, so the quantities are typed in (never worked out); left at 0 they stay out of the report
