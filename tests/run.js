@@ -25,7 +25,7 @@ const INIT = "  renderCatalog(); renderCollectors(); renderFloorBar(); syncProje
 const AUTH = "var AUTH_HOSTS = /(^|\\.)github\\.io$|^localhost$|^127\\.0\\.0\\.1$/;";
 let html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 if (!html.includes(INIT) || !html.includes(AUTH)) { console.error("index.html ha cambiado: actualiza INIT o AUTH en tests/run.js para poder preparar la copia de prueba."); process.exit(2); }
-html = html.replace(INIT, "  window.__dbg={S:S,get results(){ return results; },update:update,rectRoom:rectRoom,nid:nid,curFloor:curFloor,toW:toW,V:V,pipeLayout:pipeLayout,viaGeom:viaGeom};\n" + INIT)
+html = html.replace(INIT, "  window.__dbg={S:S,get results(){ return results; },update:update,rectRoom:rectRoom,nid:nid,curFloor:curFloor,toW:toW,V:V,pipeLayout:pipeLayout,viaGeom:viaGeom,projApply:projApply,brandQ:brandQ,get TH(){ return TH; }};\n" + INIT)
            .replace(AUTH, "var AUTH_HOSTS = /^$/;");
 const server = http.createServer((q, r) => { const u = q.url.split("?")[0].split("#")[0], f = path.join(ROOT, u), ext = path.extname(u);
   if (u === "/") { r.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); r.end(html); }
@@ -176,7 +176,7 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   // through the hole the tubes go centred, side by side, and the hole is as wide as they need (minimum 0,44 m), same margin both sides
   const via4 = await p.evaluate(() => {
     const D = window.__dbg, S = D.S, R = D.rectRoom, out = {};
-    for (const [name, cap] of [["muchos", 12], ["pocos", 2]]) {
+    for (const [name, cap] of [["muchos", 12], ["pocos", 6]]) {
       const E7 = R("Estancia 7", 0, 0, 8.5, 4.2), E10 = R("Estancia 10", 1.9, 4.2, 4.7, 3), Sm = R("Cuarto", 6.6, 4.2, 1.6, 2.5, { lc: "ninguna" }); E7.via = { edge: 2, t: 3.2 };
       if (name === "pocos") { E7.pts = [D.V(0, 0), D.V(3, 0), D.V(3, 2), D.V(0, 2)].map(q => D.V(q.x + 4.6, q.y + 2.2)); E7.pts = [D.V(0, 0), D.V(1.6, 0), D.V(1.6, 2), D.V(0, 2)]; E7.tx = 4.5; E7.ty = 2.2; E7.via = { edge: 2, t: 0.8 }; }
       S.floors = [{ id: D.nid(), name: "P", rooms: [E7, E10, Sm], collectors: [{ id: D.nid(), name: "C", x: 7.6, y: 5.0, cap }] }]; S.fi = 0; S.showPipes = true; D.update(true);
@@ -337,6 +337,45 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("la elección se recuerda al volver a abrir", !(await vis()).res);
   await p.locator('#thermRes [data-beta="th"]').check(); await p.waitForTimeout(400);
   ok("se vuelve a activar desde la otra tarjeta", (await vis()).res && (await vis()).card);
+  await p.close();
+
+  // marca de los paneles: Sunthalpy (ficha técnica) decide modelos, paneles en serie, caudal, pérdida de carga y emisión
+  out.push("Marca de los paneles");
+  p = await open("#planificador");
+  const br = await p.evaluate(() => ({ opts: [...document.querySelectorAll("#sBrand option")].map(o => o.textContent), cat: [...document.querySelectorAll("#catalogBody tr")].map(t => t.innerText.replace(/\s+/g, " ").trim()), info: document.getElementById("brandInfo").innerText }));
+  ok("selector de marca con Sunthalpy y sus modelos A 40×150, B 60×150 y C 80×150 (3, 2 y 2 en serie)",
+    br.opts.length === 1 && /Sunthalpy/.test(br.opts[0]) && br.cat.length === 3 && /A 40 × 150 3 13/.test(br.cat[0]) && /B 60 × 150 2 18/.test(br.cat[1]) && /C 80 × 150 2 21,2/.test(br.cat[2]) && /1 l\/min/.test(br.info), JSON.stringify(br));
+  const ser = await p.evaluate(() => {
+    const D = window.__dbg, S = D.S, R = D.rectRoom, V = D.V; let seed = 777; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647, o = {};
+    const inP = (r, pt, q) => { const a = D.toW(r, V(q.x, q.y)), b = D.toW(r, V(q.x + q.w, q.y + q.h)); return pt.x >= Math.min(a.x, b.x) - 1e-6 && pt.x <= Math.max(a.x, b.x) + 1e-6 && pt.y >= Math.min(a.y, b.y) - 1e-6 && pt.y <= Math.max(a.y, b.y) + 1e-6; };
+    for (const only of ["A", "C", null]) { S.panels.forEach(q => q.on = !only || q.key === only); const st = { max: 0, over: 0, diag: 0, fuera: 0, n: 0, n3: 0, mang: 0, joints: 0 };
+      for (let t = 0; t < 50; t++) { const w = 2.5 + rnd() * 6, h = 2.5 + rnd() * 5;
+        S.floors = [{ id: D.nid(), name: "x", rooms: [R("R" + t, 0, 0, w, h)], collectors: [{ id: D.nid(), name: "C", x: w, y: 0.3, cap: 30 }] }]; S.fi = 0; D.update(false);
+        const r = S.floors[0].rooms[0], res = D.results[r.id]; st.mang += res.mang;
+        (res.cs || []).forEach(c => { const ps = res.panels.filter(q => q.circuit === c.i), lim = Math.min(...ps.map(q => q.tw === 40 ? 3 : 2)); st.n++; st.joints += ps.length - 1;
+          st.max = Math.max(st.max, ps.length); if (ps.length === 3) st.n3++; if (ps.length > lim) st.over++;
+          if (!inP(r, c.na, ps[0]) || !inP(r, c.nb, ps[ps.length - 1])) st.fuera++;
+          for (let i = 1; i < c.join.length; i++) { const a = c.join[i - 1], e = c.join[i]; if (Math.abs(a.x - e.x) > 1e-6 && Math.abs(a.y - e.y) > 1e-6) st.diag++; } }); }
+      o[only || "todos"] = st; }
+    S.panels.forEach(q => q.on = true); return o; });
+  ok("solo paneles A: circuitos de hasta 3 en serie (" + ser.A.n3 + " de 3), nunca más", ser.A.max === 3 && ser.A.over === 0 && ser.A.n3 > 0, JSON.stringify(ser.A));
+  ok("solo paneles C: como máximo 2 en serie", ser.C.max === 2 && ser.C.over === 0, JSON.stringify(ser.C));
+  ok("modelos mezclados: ningún circuito pasa del límite de sus paneles", ser.todos.over === 0, JSON.stringify(ser.todos));
+  ok("circuitos de 3: uniones en ángulo recto, extremos dentro de sus paneles y un manguito por unión", [ser.A, ser.todos].every(x => !x.diag && !x.fuera && x.mang === x.joints), JSON.stringify(ser));
+  const thb = await p.evaluate(() => { const D = window.__dbg, S = D.S;
+    S.floors = [{ id: D.nid(), name: "x", rooms: [D.rectRoom("Salón", 0, 0, 5, 4, {})], collectors: [{ id: D.nid(), name: "C", x: 1, y: 3.4, cap: 12 }] }]; S.fi = 0; S.floors[0].rooms[0].marks = { 0: "ventana", 1: "exterior" };
+    S.th.vmaxT = 55; D.update(true); const T = D.TH, o = T.rows[0], r = D.results[o.room.id];
+    return { q5: D.brandQ(5), q10: D.brandQ(10), q20: D.brandQ(20), vmax: T.vmax, warn: document.getElementById("thSummary").innerText.includes("como máximo a 40"),
+      flow: o.flow, circ: r.circuits, dp: o.circ.map(c => c.dp), dpMin: Math.min(...o.circ.map(c => c.dp)), out: o.out, A: o.A, tm: o.tm, ti: o.ti }; });
+  ok("emisión según la curva de Sunthalpy (≈ 64 W/m² a 5 K, 120 a 10 K, 236 a 20 K)", Math.abs(thb.q5 - 64.5) < 1 && Math.abs(thb.q10 - 120) < 1 && Math.abs(thb.q20 - 236) < 2, JSON.stringify(thb));
+  ok("acabado enyesado: el agua no pasa de 40 °C aunque se pidan 55 (y lo avisa)", thb.vmax === 40 && thb.warn, JSON.stringify(thb));
+  ok("caudal de 1 l/min por circuito y pérdida de carga con los kPa de los paneles", Math.abs(thb.flow - 60 * thb.circ) < 1e-6 && thb.dpMin >= 13, JSON.stringify(thb));
+  await p.evaluate(() => { document.getElementById("sFinish").value = "alic"; document.getElementById("sFinish").dispatchEvent(new Event("change")); });
+  ok("acabado alicatado: hasta 60 °C", await p.evaluate(() => window.__dbg.TH.vmax === 55), "vmax " + await p.evaluate(() => window.__dbg.TH.vmax));
+  const mig = await p.evaluate(() => { const D = window.__dbg;
+    D.projApply({ v: 1, mode: "techo", title: "Antiguo", fi: 0, floors: [{ id: 1, name: "P", rooms: [D.rectRoom("Salón", 0, 0, 5, 4, {})], collectors: [] }], cfg: { panels: [{ id: 9, name: "Panel 80×100", w: 80, h: 100 }], gMin: 30, gMax: 60 } }, false);
+    return { brand: D.S.brand, finish: D.S.finish, panels: D.S.panels.map(q => q.key + q.w + "x" + q.h + (q.on ? "" : "-")).join(","), n: D.results[D.S.rooms[0].id].panels.length, sel: document.getElementById("sBrand").value }; });
+  ok("un proyecto guardado antes de las marcas se abre con Sunthalpy y sus paneles", mig.brand === "sunthalpy" && mig.finish === "yeso" && mig.panels === "A40x150,B60x150,C80x150" && mig.n > 0 && mig.sel === "sunthalpy", JSON.stringify(mig));
   await p.close();
 
   // 8. tutorial: se recorre entero en techo y suelo (saltando las misiones) y salen los pasos de lo nuevo

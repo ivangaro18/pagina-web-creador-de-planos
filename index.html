@@ -399,6 +399,10 @@
   .logo-box img{max-height:56px;max-width:180px;background:#fff;border-radius:4px;padding:3px;}
   .logo-empty{font-size:.8rem;color:var(--muted);}
   .file-btn{position:relative;overflow:hidden;}
+  .brand-info{font-size:.78rem;color:var(--muted);margin:2px 0 8px;line-height:1.5;}
+  .brand-info b{color:var(--ink);font-weight:600;}
+  table.catalog td.chk{width:34px;text-align:center;}
+  table.catalog tr.off td{opacity:.5;}
   /* ---------- background plan (import, calibrate, trace) ---------- */
   .bg-bar{border-top:1px dashed var(--line);padding-top:8px;}
   .bg-bar .bg-t{font-weight:600;color:var(--ink);}
@@ -808,7 +812,7 @@
       <div class="s-head"><h2>Lo que el planificador calcula por ti</h2><p>Cada imagen es un trozo del mismo plano de ejemplo, tal como lo dibuja la herramienta.</p></div>
       <div class="feat">
         <div class="feat-row"><figure class="feat-fig" data-crop="forma"></figure><div><h3>Estancias de cualquier forma</h3><p>Dibuja sobre una cuadrícula de puntos, curva las paredes que quieras y escribe las medidas. Cada estancia nueva se pega a un lado de otra. También puedes calcar encima de un PDF o una foto del plano.</p></div></div>
-        <div class="feat-row"><figure class="feat-fig" data-crop="paneles"></figure><div><h3>Paneles colocados solos</h3><p>Eliges qué parte del techo cubrir y el planificador pone el panel más grande que cabe, centrado, a 10 cm de las paredes y con hueco para la iluminación. Como máximo, dos paneles por circuito.</p></div></div>
+        <div class="feat-row"><figure class="feat-fig" data-crop="paneles"></figure><div><h3>Paneles colocados solos</h3><p>Eliges qué parte del techo cubrir y el planificador pone el panel más grande que cabe, centrado, a 10 cm de las paredes y con hueco para la iluminación. Eliges la marca de los paneles y se aplican sus medidas y sus normas: cuántos paneles van en serie, caudal, pérdida de carga y emisión.</p></div></div>
         <div class="feat-row"><figure class="feat-fig" data-crop="tubos"></figure><div><h3>Colectores y metros de PEX</h3><p>Arrastras los colectores al plano y cada estancia va entera al más cercano con salidas libres. Los metros de tubo cuentan la ida, el retorno, la subida al techo y el tubo que ya traen los paneles.</p></div></div>
         <div class="feat-row"><figure class="feat-fig" data-crop="pladur"></figure><div><h3>Estructura de pladur</h3><p>Angular, perfiles primarios y TC secundarios alineados con los paneles, con sus cuelgues. Puedes girar la estructura y comparar cuántas barras y placas salen.</p></div></div>
         <div class="feat-row"><figure class="feat-fig" data-crop="suelo"></figure><div><h3>Suelo radiante por circuitos</h3><p>En suelo, el tubo se reparte por estancias en circuitos de 120 m como máximo, más cerrado junto a ventanas y muros exteriores. El planificador también te dice en qué pared conviene el colector.</p></div></div>
@@ -989,7 +993,7 @@
   <rect x="20" y="168" width="280" height="6" fill="#C9D7E1"/>
   <rect x="20" y="22" width="6" height="152" fill="#1E3A4F"/><rect x="294" y="22" width="6" height="152" fill="#1E3A4F"/>
 </svg>
-        <span class="ch-body"><h2>Techo radiante</h2><p>Paneles en el techo, circuitos de 2 paneles, colectores, tubería PEX, estructura de pladur e informe de materiales.</p><span class="ch-go">Abrir el planificador de techo</span></span>
+        <span class="ch-body"><h2>Techo radiante</h2><p>Paneles en el techo, circuitos según el fabricante de los paneles, colectores, tubería PEX, estructura de pladur e informe de materiales.</p><span class="ch-go">Abrir el planificador de techo</span></span>
       </button>
       <button class="ch-card floor" data-go="app-suelo" type="button"><svg class="ch-art" viewBox="0 0 320 200" aria-hidden="true">
   <rect x="20" y="20" width="280" height="160" rx="4" fill="#FFFDFB" stroke="#1E3A4F" stroke-width="5"/>
@@ -1103,11 +1107,17 @@
 
   <div class="layout">
     <aside class="stack">
+      <div class="card only-techo" id="brandCard">
+        <span class="section-title">Marca de los paneles</span>
+        <div class="field"><label class="lbl" for="sBrand">Fabricante</label><select id="sBrand"></select></div>
+        <div class="field"><label class="lbl" for="sFinish">Acabado del techo</label><select id="sFinish"></select></div>
+        <div id="brandInfo" class="brand-info"></div>
+        <p class="note" style="margin-top:0;">Las medidas de los paneles, cuántos van en serie, el caudal, la pérdida de carga y la emisión del cálculo térmico salen de la ficha técnica del fabricante.</p>
+      </div>
       <div class="card only-techo" id="catalogCard">
-        <span class="section-title">Catálogo de paneles</span>
-        <table class="catalog"><thead><tr><th>Modelo</th><th class="num">Ancho cm</th><th class="num">Largo cm</th><th></th></tr></thead><tbody id="catalogBody"></tbody></table>
-        <button class="btn ghost small" id="addPanel" style="margin-top:8px;">+ Añadir modelo</button>
-        <p class="note">Introduce las medidas de los paneles que vayas a usar, de cualquier fabricante.</p>
+        <span class="section-title">Paneles <span id="catBrand"></span></span>
+        <table class="catalog"><thead><tr><th>Usar</th><th>Modelo</th><th class="num">Medida cm</th><th class="num">En serie</th><th class="num">kPa</th></tr></thead><tbody id="catalogBody"></tbody></table>
+        <p class="note">Medidas estándar del fabricante. Desmarca las que no vayas a usar: se coloca siempre el panel más grande que quepa. «En serie»: paneles como máximo por circuito; «kPa»: pérdida de carga de cada panel al caudal de diseño.</p>
       </div>
       <div class="card only-techo" id="coverCard">
         <span class="section-title">Cobertura por defecto</span>
@@ -1124,7 +1134,7 @@
           <div class="field"><label class="lbl" for="sGap">Junta entre paneles (mm)</label><input type="number" id="sGap" min="0" step="1"></div>
         </div>
         <div class="field"><label class="lbl" for="sStrip">Ancho franja de luz (cm)</label><input type="number" id="sStrip" min="10" step="1"></div>
-        <p class="note">El tipo de iluminación se elige en cada estancia. Máx. 2 paneles por circuito y siempre el panel más grande posible. En estancias que no son rectangulares, los paneles se colocan en las zonas rectangulares más grandes.</p>
+        <p class="note">El tipo de iluminación se elige en cada estancia. <span id="seriesNote"></span> Siempre el panel más grande posible. En estancias que no son rectangulares, los paneles se colocan en las zonas rectangulares más grandes.</p>
       </div>
       <div class="card only-techo" id="pladurCard">
         <span class="section-title">Techo de pladur</span>
@@ -1194,13 +1204,11 @@
           <div class="field only-suelo"><label class="lbl" for="thPav">Pavimento general</label><select id="thPav"></select></div>
           <div class="field only-suelo"><label class="lbl" for="thTube">Tubo</label><select id="thTube"></select></div>
           <div class="field only-suelo"><label class="lbl" for="thSu">Mortero sobre el tubo (mm)</label><input type="number" id="thSu" step="5" min="15" max="100"></div>
-          <div class="field only-techo"><label class="lbl" for="thKp">Panel (W/m²K)</label><input type="number" id="thKp" step="0.5" min="1" max="30"></div>
           <div class="field only-techo"><label class="lbl" for="thVmaxT">Impulsión máxima (°C)</label><input type="number" id="thVmaxT" step="1" min="25" max="55"></div>
         </div>
         <div id="thFloors"></div>
         <p class="note">Marca en el plano las ventanas y los muros exteriores de cada estancia: con ellos se calculan las pérdidas. Los baños van a 24 °C; cualquier estancia puede tener su propia temperatura. Es un cálculo orientativo: el proyecto lo firma un técnico.</p>
-        <p class="note only-techo" style="margin-top:0;">Potencia del panel: la ficha de Sunthalpy da unos 12 W/m² de panel por cada °C entre el agua y el ambiente (180 W un panel S con el agua a 30 °C y la sala a 20 °C). Pon el dato de tu fabricante.</p>
-        <p class="note only-suelo" style="margin-top:0;">Emisión según UNE-EN 1264: depende de la separación del tubo, del pavimento y del mortero. El suelo no pasa de 29 °C (33 °C en baños).</p>
+        <p class="note only-techo" style="margin-top:0;" id="thBrandNote"></p>        <p class="note only-suelo" style="margin-top:0;">Emisión según UNE-EN 1264: depende de la separación del tubo, del pavimento y del mortero. El suelo no pasa de 29 °C (33 °C en baños).</p>
       </div>
     </aside>
 
@@ -1433,8 +1441,26 @@
     return f;
   }
   function emptyFloor(name){ return {id:nid(), name:name||"Planta baja", rooms:[], collectors:[]}; }
+  // ---------------- panel brands ----------------
+  // What changes with the manufacturer of the ceiling panels (data sheet): sizes, how many go in series per circuit,
+  // design flow and pressure drop per panel, thermal output (W/m²K against water–room difference) and temperature limits.
+  var BRANDS={
+    sunthalpy:{name:"Sunthalpy",line:"sunthaldress",
+      models:[{key:"A",w:40,h:150,series:3,dp:13,wk:7.8},{key:"B",w:60,h:150,series:2,dp:18,wk:11.7},{key:"C",w:80,h:150,series:2,dp:21.2,wk:15.6}],
+      flow:1, kc:[[0,18.3],[1,17.2],[2,16.1],[3,15.1],[4,13.9],[5,12.9],[6,12.5],[7,12.3],[8,12.2],[10,12],[13,11.9],[17,11.8]],
+      finish:{yeso:{n:"Juntas enyesadas y pintado",t:40},alic:{n:"Alicatado",t:60}}, tMin:5, bar:6, mm:15, kg:9, mod:40, tube:"PE-RT de 10 mm con conexión pushfit", t20:[3,4]}
+  };
+  function brand(){ return BRANDS[S.brand]||BRANDS.sunthalpy; }
+  function brandPanels(b,k){ return b.models.map(function(m){ return {id:"p_"+k+"_"+m.key,key:m.key,name:"Panel "+b.line+" "+m.key,w:m.w,h:m.h,on:true}; }); }
+  function modelOf(tw,th){ var ms=brand().models; for(var i=0;i<ms.length;i++){ var m=ms[i]; if((m.w===tw&&m.h===th)||(m.w===th&&m.h===tw)) return m; } return null; }
+  function seriesOf(tw,th){ var m=modelOf(tw,th); return m?m.series:2; }
+  function brandK(dH){ var c=brand().kc, x=Math.max(0,dH); for(var i=1;i<c.length;i++) if(x<=c[i][0]) return c[i-1][1]+(c[i][1]-c[i-1][1])*(x-c[i-1][0])/(c[i][0]-c[i-1][0]); return c[c.length-1][1]; }
+  function brandQ(dH){ return dH>0 ? brandK(dH)*dH : 0; }                                   // W per m² of panel
+  function brandDH(q){ if(!(q>0)) return 0; var lo=0, hi=80; for(var i=0;i<50;i++){ var m=(lo+hi)/2; if(brandQ(m)<q) lo=m; else hi=m; } return (lo+hi)/2; }
+  function brandTmax(){ var b=brand(), f=b.finish[S.finish]||b.finish[Object.keys(b.finish)[0]]; return f.t; }
+  function seriesText(){ return "En serie, como máximo "+brand().models.map(function(m){ return m.series+" del "+m.key; }).join(", ").replace(/, ([^,]*)$/," y $1")+" por circuito."; }
   var S={
-    panels:[{id:nid(),name:"Panel 80×150",w:80,h:150},{id:nid(),name:"Panel 40×150",w:40,h:150},{id:nid(),name:"Panel 80×100",w:80,h:100},{id:nid(),name:"Panel 40×100",w:40,h:100}],
+    brand:"sunthalpy", finish:"yeso", panels:brandPanels(BRANDS.sunthalpy,"sunthalpy"),
     t20:true,gMin:30,gMax:60,clear:10,gap:2,strip:30,vert:1.5,margin:10,tail:1,secCm:40,primCm:90,bar:3,hang:1.2,board:"1.2x2.5",showStruct:false,
     colorByCircuit:false, showPipes:false, prices:{}, ctrl:{},
     floors:[emptyFloor("Planta baja")], fi:0, sel:null, drag:null, frozenVB:null,
@@ -1484,7 +1510,7 @@
   // ---------------- panel layout engine ----------------
   function variants(){
     var out=[];
-    S.panels.forEach(function(t){ var w=t.w/100,h=t.h/100; if(!(w>0&&h>0)) return;
+    S.panels.forEach(function(t){ var w=t.w/100,h=t.h/100; if(!(w>0&&h>0) || t.on===false) return;
       out.push({typeId:t.id,name:t.name,tw:t.w,th:t.h,w:w,h:h,a:w*h,rot:false});
       if(Math.abs(w-h)>EPS) out.push({typeId:t.id,name:t.name,tw:t.w,th:t.h,w:h,h:w,a:w*h,rot:true}); });
     return out;
@@ -1511,8 +1537,8 @@
     else if(Math.max(bx,by)>=0.2){ if(by>=bx){ o.push([V(i,by/2),V(W-i,by/2)],[V(i,L-by/2),V(W-i,L-by/2)]); } else { o.push([V(bx/2,i),V(bx/2,L-i)],[V(W-bx/2,i),V(W-bx/2,L-i)]); } }
     return o;
   }
-  // circuits for a set of panels: same-model panels go in pairs, the odd ones left over share circuits between them
-  function circOf(tc){ var c=0, odd=0; for(var t in tc){ c+=Math.floor(tc[t]/2); odd+=tc[t]%2; } return {c:c+Math.ceil(odd/2), odd:odd}; }
+  // circuits for a set of panels: same-model panels in full series (as many as the maker allows), the ones left over share circuits
+  function circOf(tc){ var c=0, odd=0; for(var t in tc){ var d=t.split("x"), k=seriesOf(+d[0],+d[1]); c+=Math.floor(tc[t]/k); odd+=tc[t]%k; } return {c:c+Math.ceil(odd/2), odd:odd}; }
   // catalogue panels that are exactly m cells of the base variant (side by side in a row, or stacked in a column)
   function mergeOpts(v,vars){
     var o={col:[],row:[]}, tol=0.011;
@@ -1765,24 +1791,27 @@
       if(CL) (room.lights||[]).forEach(function(l,i){ res.lights.push(V(l.x,l.y)); res.keep.push(KO[i]); if(!pointIn(V(l.x,l.y),out)) res.msgs.push({t:"warn",x:"El punto de luz "+(i+1)+" queda fuera de la estancia: revisa sus distancias."}); });
       res.reg=(room._cko||[]).slice();
       if(res.removed) res.msgs.push({t:"ok",x:"Se han quitado "+res.removed+" panel"+(res.removed>1?"es":"")+" que caían encima de "+[CL&&(room.lights||[]).length?"los puntos de luz":"",res.reg.length?"el registro del colector":"",(room.obst||[]).length?"los obstáculos":""].filter(Boolean).join(", ").replace(/, ([^,]*)$/," o $1")+"."});
-      // pair neighbouring panels. The layout order snakes through the room, so each panel touches the next one: pair consecutive
-      // panels, choosing where the lone one goes (odd count) for the shortest joints. Any two panels can be joined: the model only
-      // changes the area covered. Then swaps between pairs while they shorten it further.
+      // group neighbouring panels in series. The layout order snakes through the room, so each panel touches the next one: the
+      // circuits are runs of consecutive panels, as long as the maker allows for those models (Sunthalpy: 3 of the A, 2 of the B
+      // or C). Fewest circuits first, then the shortest joints. Any panels can be joined: the model only changes the area and the limit.
+      // With runs of at most two, swaps between pairs while they shorten the joints further.
       var pc=res.panels.map(function(p){ return V(p.x+p.w/2,p.y+p.h/2); }), np=pc.length, pairs=[], single=-1;
+      var cap=res.panels.map(function(p){ return seriesOf(p.tw,p.th); }), mxs=Math.max.apply(null,cap.concat([1]));
       var cost=function(i,j){ return manh(pc[i],pc[j]); };
-      var DP=[[0,Infinity]], how=[[null,null]];
-      for(var di=1;di<=np;di++){ DP.push([Infinity,Infinity]); how.push([null,null]);
-        for(var sg=0;sg<2;sg++){
-          if(di>=2 && DP[di-2][sg]+cost(di-2,di-1)<DP[di][sg]){ DP[di][sg]=DP[di-2][sg]+cost(di-2,di-1); how[di][sg]="p"; }
-          if(sg===1 && DP[di-1][0]<DP[di][1]){ DP[di][1]=DP[di-1][0]; how[di][1]="s"; } } }
-      for(var di2=np,sg2=np%2;di2>0;){ if(how[di2][sg2]==="p"){ pairs.push([di2-2,di2-1]); di2-=2; } else { single=di2-1; di2--; sg2=0; } }
-      for(var it=0,ch=true;ch && it<50;it++){ ch=false;
-        for(var x=0;x<pairs.length;x++){ var P=pairs[x];
+      var DP=[0], how=[0];
+      for(var di=1;di<=np;di++){ DP.push(Infinity); how.push(1);
+        for(var kk=1,lim=Infinity,jc=0;kk<=Math.min(mxs,di);kk++){ var ix=di-kk; lim=Math.min(lim,cap[ix]); if(kk>lim) break; if(kk>1) jc+=cost(ix,ix+1);
+          var dv=DP[ix]+1000+jc; if(dv<DP[di]-1e-9){ DP[di]=dv; how[di]=kk; } } }
+      var runs=[]; for(var di2=np;di2>0;di2-=how[di2]){ var ru=[]; for(var q=di2-how[di2];q<di2;q++) ru.push(q); runs.unshift(ru); }
+      var lng=runs.some(function(ru){ return ru.length>2; });
+      runs.forEach(function(ru){ if(lng || ru.length===2) pairs.push(ru); else if(single<0) single=ru[0]; else pairs.push(ru); });
+      if(!lng) for(var it=0,ch=true;ch && it<50;it++){ ch=false;
+        for(var x=0;x<pairs.length;x++){ var P=pairs[x]; if(P.length<2) continue;
           if(single>=0) for(var k=0;k<2;k++){ if(cost(P[1-k],single)<cost(P[0],P[1])-1e-6){ var s0=single; single=P[k]; P[k]=s0; ch=true; } }
-          for(var y=x+1;y<pairs.length;y++){ var Q=pairs[y], c0=cost(P[0],P[1])+cost(Q[0],Q[1]), c1=cost(P[0],Q[0])+cost(P[1],Q[1]), c2=cost(P[0],Q[1])+cost(P[1],Q[0]);
+          for(var y=x+1;y<pairs.length;y++){ var Q=pairs[y]; if(Q.length<2) continue; var c0=cost(P[0],P[1])+cost(Q[0],Q[1]), c1=cost(P[0],Q[0])+cost(P[1],Q[1]), c2=cost(P[0],Q[1])+cost(P[1],Q[0]);
             if(c1<c0-1e-6 && c1<=c2){ var t=P[1]; P[1]=Q[0]; Q[0]=t; ch=true; } else if(c2<c0-1e-6){ var t2=P[1]; P[1]=Q[1]; Q[1]=t2; ch=true; } } } }
       if(single>=0) pairs.push([single]);
-      pairs.forEach(function(pr){ pr.sort(function(a,b){ return a-b; }); });
+      if(!lng) pairs.forEach(function(pr){ pr.sort(function(a,b){ return a-b; }); });
       pairs.sort(function(a,b){ return a[0]-b[0]; });
       pairs.forEach(function(pr,ci){ pr.forEach(function(ix){ res.panels[ix].circuit=ci; }); });
       res.circuits=pairs.length;
@@ -1925,11 +1954,15 @@
   function viaSvg(r){ var g=viaGeom(r); if(!g) return ""; var hw=(HOLE_W[r.id]||HOLE_MIN)/2, a=add(g.P,mul(g.u,-hw)), b=add(g.P,mul(g.u,hw)), o=viaOther(r), ln=function(p,q,c){ return '<line class="'+c+'" x1="'+f3(p.x)+'" y1="'+f3(p.y)+'" x2="'+f3(q.x)+'" y2="'+f3(q.y)+'"/>'; };
     return '<g><title>Paso de tubos entre '+esc(r.name)+(o?' y '+esc(o.name):'')+'</title>'+ln(a,b,"p-via")+ln(add(a,mul(g.nin,-0.16)),add(a,mul(g.nin,0.16)),"p-via-j")+ln(add(b,mul(g.nin,-0.16)),add(b,mul(g.nin,0.16)),"p-via-j")+'</g>'; }
   function circsOf(r,res){ var g=[]; res.panels.forEach(function(p){ (g[p.circuit]=g[p.circuit]||[]).push(p); });
-    var o=[], segs=[]; g.forEach(function(ps,i){ if(!ps) return; var pts=ps.map(function(p){ return toW(r,V(p.x+p.w/2,p.y+p.h/2)); }), j=joinOf(ps[0],ps[ps.length-1],segs);
+    var o=[], segs=[]; g.forEach(function(ps,i){ if(!ps) return; var pts=ps.map(function(p){ return toW(r,V(p.x+p.w/2,p.y+p.h/2)); }), j=ps.length>2 ? joinRun(ps,segs) : joinOf(ps[0],ps[ps.length-1],segs);
       o.push({i:i,a:pts[0],b:pts[pts.length-1],n:ps.length,na:toW(r,j.na),nb:toW(r,j.nb),join:j.path.map(function(q){ return toW(r,q); })}); }); return o; }
   // where the tubes meet a circuit (room frame): a single panel, two points near its middle; two panels, a point inside each one
   // next to the side that faces the other, joined square (never across, never through the gap between other panels' joints).
   // segs: the joints already drawn in the room, so one lying on another is moved aside.
+  // three or more panels in series: a joint between each panel and the next, square across the middle ones
+  function joinRun(ps,segs){ var js=[]; for(var k=0;k+1<ps.length;k++) js.push(joinOf(ps[k],ps[k+1],segs));
+    var path=js[0].path.slice(); for(var m=1;m<js.length;m++){ var a=path[path.length-1], b=js[m].na; if(Math.abs(a.x-b.x)>1e-9 && Math.abs(a.y-b.y)>1e-9) path.push(V(b.x,a.y)); path=path.concat(js[m].path); }
+    return {na:js[0].na,nb:js[js.length-1].nb,path:path}; }
   function joinOf(A,B,segs){
     var ca=V(A.x+A.w/2,A.y+A.h/2), cb=V(B.x+B.w/2,B.y+B.h/2);
     if(A===B) return {na:V(ca.x-0.05,ca.y),nb:V(ca.x+0.05,ca.y),path:[]};
@@ -1956,7 +1989,7 @@
   function outletsFor(cs,col,via){
     var outs=[], used={}, near=[];
     if(S.t20 && col){ var cand=[];
-      for(var x=0;x<cs.length;x++) for(var y=x+1;y<cs.length;y++){ var n=cs[x].n+cs[y].n; if(n<3||n>4) continue;
+      for(var x=0;x<cs.length;x++) for(var y=x+1;y<cs.length;y++){ var n=cs[x].n+cs[y].n, t20=brand().t20; if(n<t20[0]||n>t20[1]) continue;
         // each te is reached by the tube that comes on the panels (up to 3 m each side): the two circuits must be close
         var da=manh(cs[x].a,cs[y].a), db=manh(cs[x].b,cs[y].b); if(da>6 || db>6) continue;
         var Ta=mul(add(cs[x].na,cs[y].na),0.5), Tb=mul(add(cs[x].nb,cs[y].nb),0.5), L=runLen(col,Ta,Tb,via); cand.push({x:x,y:y,L:L,Ta:Ta,Tb:Tb,sp:da+db}); }
@@ -2010,7 +2043,7 @@
     fl.rooms.forEach(function(r){
       var res=results[r.id], col=res.col, mg=1+S.margin/100;
       // each run (ida and retorno) starts with the tube that comes fitted on the panel: that part is not PEX
-      res.cs.forEach(function(c){ res.circ[c.i]={a:c.a,b:c.b,col:col,len:0,n:c.n,d:16}; if(c.n===2) res.mang++; });
+      res.cs.forEach(function(c){ res.circ[c.i]={a:c.a,b:c.b,col:col,len:0,n:c.n,d:16}; res.mang+=Math.max(0,c.n-1); });
       res.outs=outletsFor(res.cs,col,null); res.outlets=res.outs.length;
       res.outs.forEach(function(o){ var l=col?o.raw*mg:0; o.len=l; res.pex+=l;
         o.ci.forEach(function(i){ var c=res.circ[i]; c.len=l/o.ci.length; c.d=o.d; c.out=o; });
@@ -3306,7 +3339,7 @@
     h+='<div class="stats"><div class="stat"><div class="k">Superficie</div><div class="v">'+fmt(res.area,2)+'</div><div class="s">m²</div></div>'+
       '<div class="stat"><div class="k">Cobertura</div><div class="v">'+fmt(res.pct,1)+'%</div><div class="s">rango '+fmt(res.minPct)+'–'+fmt(res.maxPct)+'%</div></div>'+
       '<div class="stat"><div class="k">Paneles</div><div class="v">'+res.panels.length+'</div><div class="s">'+fmt(res.covered,2)+' m²</div></div>'+
-      '<div class="stat"><div class="k">Circuitos</div><div class="v">'+res.circuits+'</div><div class="s">máx. 2 paneles</div></div></div>';
+      '<div class="stat"><div class="k">Circuitos</div><div class="v">'+res.circuits+'</div><div class="s">'+esc(brand().models.map(function(m){ return m.key+" ≤ "+m.series; }).join(" · "))+' en serie</div></div></div>';
     res.groups.forEach(function(g,i){ var k=g.choice; if(!k) return;
       var lt=k.so==="v"?"franja entre columnas":k.so==="h"?"franja entre filas":"sin franja central";
       h+='<p class="layout-line">'+(res.groups.length>1?'Zona '+(i+1)+': ':'Distribución: ')+(k.mp && k.mp.n!==k.c*k.r ? '<b>'+Object.keys(k.mp.tc).map(function(t){ return k.mp.tc[t]+' paneles de '+t.replace('x','×'); }).join(' + ')+'</b>' : '<b>'+k.c+' × '+k.r+' '+esc(k.v.name)+'</b>'+(k.v.rot?' (girados)':''))+', repartidos por igual en toda la zona libre'+(k.pri?' (la primera fila, junto a la ventana o la puerta de acceso)':'')+'; '+lt+'.</p>'; });
@@ -3562,7 +3595,7 @@
       reportRows.push({key:"pex",label:"Tubo PEX 16 mm",note:"Ida y retorno de los circuitos de una salida, descontando "+fmt(S.tail,1)+" m de tubo del panel por tramo, con "+fmt(S.margin)+"% de margen",qty:Math.ceil(tot.pex16),unit:"m"});
       reportRows.push({key:"pex20",label:"Tubo PEX 20 mm",note:"Del colector a las tes de las salidas agrupadas (ida y retorno), con "+fmt(S.margin)+"% de margen",qty:Math.ceil(tot.pex20),unit:"m"});
     } else reportRows.push({key:"pex",label:"Tubo PEX",note:"Ida y retorno de todos los circuitos, descontando "+fmt(S.tail,1)+" m de tubo del panel por tramo, con "+fmt(S.margin)+"% de margen",qty:Math.ceil(tot.pex),unit:"m"});
-    reportRows.push({key:"mang",label:"Manguito de unión entre paneles",note:"1 por circuito de 2 paneles",qty:tot.mang,unit:"ud."});
+    reportRows.push({key:"mang",label:"Manguito de unión entre paneles",note:"1 por cada unión entre dos paneles del mismo circuito",qty:tot.mang,unit:"ud."});
     if(tot.uni) reportRows.push({key:"bicono",label:"Bicono para PEX"+(tot.g20?" 16":""),note:"2 por salida de tubo de 16, en el colector (ida y retorno). Incluye casquillo",qty:tot.uni,unit:"ud."});
     if(tot.g20){
       reportRows.push({key:"bicono20",label:"Bicono para PEX 20",note:"2 por salida agrupada, en el colector (ida y retorno)",qty:2*tot.g20,unit:"ud."});
@@ -3740,8 +3773,8 @@
       T({head:[["Concepto","Cantidad","Precio ud.","Importe"]],body:mb,foot:foot,footStyles:{fillColor:[229,241,235],textColor:INK,fontSize:9.5},columnStyles:{1:{halign:"right",cellWidth:26},2:{halign:"right",cellWidth:26},3:{halign:"right",cellWidth:28}}});
       if(y>255){ doc.addPage(); y=18; }
       doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor.apply(doc,MUT);
-      var note=UFM ? "Notas: separación del tubo en plancha de tetones universal (múltiplos de 5 cm). Junto a ventanas y muros exteriores el tubo va más junto (zona periférica, UNE-EN 1264). Cada circuito tiene como máximo "+fmt(S.uf.maxLen)+" m contando la ida y vuelta al colector con recorrido ortogonal y "+fmt(S.uf.vert,1)+" m de bajada por tramo. Las estancias separadas por una escalera llevan su propio colector. Los metros de tubo incluyen un "+fmt(S.uf.margin)+"% de margen." : "Notas: cada colector incluye ida y retorno. Cada circuito lleva 2 conexiones (ida y retorno): en el colector, 1 bicono completo; en el panel, 1 racor de tubo de panel a rosca 1/2\", 1 racor PEX con rosca 1/2\" y 1 casquillo. Manguito de unión: 1 por circuito de 2 paneles. Los metros de PEX son una estimación con recorrido ortogonal, subida al techo de "+fmt(S.vert,1)+" m por tramo, descontando "+fmt(S.tail,1)+" m de tubo del propio panel por tramo, y "+fmt(S.margin)+"% de margen.";
-      if(BETA.th) note+=" Cálculo térmico orientativo: pérdidas por transmisión (U · superficie · diferencia de temperatura) por los muros exteriores y ventanas marcados, suelo y techo, más ventilación y un "+fmt(S.th.marg)+"% de margen. "+(UFM?"Emisión del suelo según UNE-EN 1264 con tubo "+(TH_TUBE[S.th.tube]||TH_TUBE["16x2"]).n+" y "+fmt(S.th.su)+" mm de mortero.":"Emisión de los paneles: "+fmt(S.th.kp,1)+" W/m² por cada °C entre el agua y el ambiente.")+" No sustituye al proyecto firmado por un técnico.";
+      var note=UFM ? "Notas: separación del tubo en plancha de tetones universal (múltiplos de 5 cm). Junto a ventanas y muros exteriores el tubo va más junto (zona periférica, UNE-EN 1264). Cada circuito tiene como máximo "+fmt(S.uf.maxLen)+" m contando la ida y vuelta al colector con recorrido ortogonal y "+fmt(S.uf.vert,1)+" m de bajada por tramo. Las estancias separadas por una escalera llevan su propio colector. Los metros de tubo incluyen un "+fmt(S.uf.margin)+"% de margen." : "Notas: cada colector incluye ida y retorno. Cada circuito lleva 2 conexiones (ida y retorno): en el colector, 1 bicono completo; en el panel, 1 racor de tubo de panel a rosca 1/2\", 1 racor PEX con rosca 1/2\" y 1 casquillo. Manguito de unión: 1 por cada unión entre dos paneles del mismo circuito. Paneles "+brand().name+" "+brand().line+": "+seriesText().toLowerCase()+" Caudal de diseño "+fmt(brand().flow)+" l/min por circuito; acabado "+brand().finish[S.finish].n.toLowerCase()+", agua como máximo a "+brandTmax()+" °C. Los metros de PEX son una estimación con recorrido ortogonal, subida al techo de "+fmt(S.vert,1)+" m por tramo, descontando "+fmt(S.tail,1)+" m de tubo del propio panel por tramo, y "+fmt(S.margin)+"% de margen.";
+      if(BETA.th) note+=" Cálculo térmico orientativo: pérdidas por transmisión (U · superficie · diferencia de temperatura) por los muros exteriores y ventanas marcados, suelo y techo, más ventilación y un "+fmt(S.th.marg)+"% de margen. "+(UFM?"Emisión del suelo según UNE-EN 1264 con tubo "+(TH_TUBE[S.th.tube]||TH_TUBE["16x2"]).n+" y "+fmt(S.th.su)+" mm de mortero.":"Emisión de los paneles según la curva de la ficha de "+brand().name+" (de 18 a 12 W/m²K según la diferencia entre el agua y el ambiente).")+" No sustituye al proyecto firmado por un técnico.";
       if(!UFM && S.t20) note+=" Con tubo de 20 mm, dos circuitos de la misma estancia (3 o 4 paneles) comparten una salida: bicono de 20 en el colector y una te de latón en la ida y otra en el retorno, con racores de tubo de panel en los extremos y racor de multicapa de 20 en el centro. El PEX de 20 no pasa de 20 m sumando ida y retorno.";
       var nl=doc.splitTextToSize(note,PW-2*M); doc.text(nl,M,y); y+=nl.length*3.4+3;
       if(company.foot){ var fl2=doc.splitTextToSize(company.foot,PW-2*M); if(y+fl2.length*3.6>283){ doc.addPage(); y=18; } doc.setTextColor.apply(doc,INK); doc.setFontSize(8); doc.text(fl2,M,y); }
@@ -3984,18 +4017,33 @@
 
   // ---------------- catalog & collectors ----------------
   function renderCatalog(){
-    var body=$("catalogBody"); body.innerHTML="";
-    S.panels.forEach(function(t){
-      var tr=document.createElement("tr");
-      tr.innerHTML='<td><input type="text" aria-label="Modelo"></td><td><input type="number" min="1" aria-label="Ancho cm"></td><td><input type="number" min="1" aria-label="Largo cm"></td><td><button class="btn danger small" aria-label="Eliminar modelo">✕</button></td>';
-      var ins=tr.querySelectorAll("input"); ins[0].value=t.name; ins[1].value=t.w; ins[2].value=t.h;
-      ins[0].addEventListener("input",function(){ t.name=ins[0].value; update(false); });
-      ins[1].addEventListener("input",function(){ t.w=parseFloat(ins[1].value)||0; update(false); });
-      ins[2].addEventListener("input",function(){ t.h=parseFloat(ins[2].value)||0; update(false); });
-      tr.querySelector("button").addEventListener("click",function(){ S.panels=S.panels.filter(function(p){return p.id!==t.id;}); renderCatalog(); update(false); });
-      body.appendChild(tr);
-    });
+    var b=brand(), body=$("catalogBody"); body.innerHTML="";
+    S.panels.forEach(function(t){ var m=modelOf(t.w,t.h)||{};
+      var tr=document.createElement("tr"); tr.className=t.on===false?"off":"";
+      tr.innerHTML='<td class="chk"><input type="checkbox" aria-label="Usar el panel '+esc(t.key||t.name)+'"'+(t.on===false?'':' checked')+'></td><td><b>'+esc(t.key||"")+'</b></td><td class="num">'+fmt(t.w)+' × '+fmt(t.h)+'</td><td class="num">'+(m.series||"–")+'</td><td class="num">'+(m.dp!=null?fmt(m.dp,1):"–")+'</td>';
+      tr.querySelector("input").addEventListener("change",function(e){
+        if(!e.target.checked && S.panels.filter(function(p){ return p.on!==false; }).length<=1){ e.target.checked=true; hint("Deja al menos un modelo de panel marcado.",true); return; }
+        t.on=e.target.checked; renderCatalog(); update(false); });
+      body.appendChild(tr); });
+    $("catBrand").textContent=b.name+" · "+b.line;
+    $("seriesNote").textContent=seriesText();
   }
+  // the brand card: maker, finish (it limits the water temperature) and the data sheet in short
+  function renderBrand(){ var b=brand();
+    $("sBrand").innerHTML=Object.keys(BRANDS).map(function(k){ return '<option value="'+k+'">'+esc(BRANDS[k].name+" · "+BRANDS[k].line)+'</option>'; }).join(""); $("sBrand").value=S.brand;
+    $("sFinish").innerHTML=Object.keys(b.finish).map(function(k){ return '<option value="'+k+'">'+esc(b.finish[k].n)+' (máx. '+b.finish[k].t+' °C)</option>'; }).join(""); $("sFinish").value=b.finish[S.finish]?S.finish:Object.keys(b.finish)[0];
+    $("brandInfo").innerHTML='Placa de <b>'+b.mm+' mm</b> y <b>'+b.kg+' kg/m²</b>, sobre perfilería cada <b>'+b.mod+' cm</b>. Tubo '+esc(b.tube)+'. Caudal de diseño <b>'+fmt(b.flow)+' l/min</b> por circuito. Agua entre '+b.tMin+' y '+brandTmax()+' °C, máx. '+b.bar+' bar. '+esc(seriesText());
+    $("thBrandNote").innerHTML='Emisión de los paneles según la ficha de '+esc(b.name)+': '+b.models.map(function(m){ return m.key+' '+fmt(m.wk,1)+' W/°C'; }).join(', ')+' (unos 13 W/m² por °C entre el agua y la sala; la curva medida baja de 18 a 12 W/m²K al subir la diferencia, y es la que se usa). Caudal de '+fmt(b.flow)+' l/min por circuito. La impulsión no pasa de '+brandTmax()+' °C con el acabado elegido.';
+    $("thVmaxT").max=brandTmax();
+    renderCatalog(); }
+  // projects saved before the brands (free panel sizes) or with an unknown brand: the brand's panels
+  function brandFix(){ if(!BRANDS[S.brand]) S.brand="sunthalpy"; var b=brand(); if(!b.finish[S.finish]) S.finish=Object.keys(b.finish)[0];
+    if(!Array.isArray(S.panels) || !S.panels.length || S.panels.some(function(p){ return !p.key || !modelOf(p.w,p.h); })) S.panels=brandPanels(b,S.brand);
+    if(!S.panels.some(function(p){ return p.on!==false; })) S.panels.forEach(function(p){ p.on=true; }); }
+  function setBrand(k){ if(!BRANDS[k]) return; var keep={}; S.panels.forEach(function(p){ keep[p.w+"x"+p.h]=p.on; });
+    S.brand=k; S.panels=brandPanels(BRANDS[k],k); S.panels.forEach(function(p){ if(keep[p.w+"x"+p.h]===false) p.on=false; });
+    if(!BRANDS[k].finish[S.finish]) S.finish=Object.keys(BRANDS[k].finish)[0]; renderBrand(); update(false); }
+
   function renderCollectors(){
     var box=$("collList"); box.innerHTML="";
     S.collectors.forEach(function(c){
@@ -4564,7 +4612,8 @@
   $("showStruct").addEventListener("change",function(e){ S.showStruct=e.target.checked; syncStructLegend(); update(false); });
   $("colorByCircuit").addEventListener("change",function(e){ S.colorByCircuit=e.target.checked; renderPlan(); });
   $("showPipes").addEventListener("change",function(e){ S.showPipes=e.target.checked; document.querySelectorAll(".pipe-lg").forEach(function(x){ x.hidden=!S.showPipes; }); renderPlan(); });
-  $("addPanel").addEventListener("click",function(){ S.panels.push({id:nid(),name:"Modelo nuevo",w:60,h:120}); renderCatalog(); update(false); });
+  $("sBrand").addEventListener("change",function(e){ setBrand(e.target.value); });
+  $("sFinish").addEventListener("change",function(e){ S.finish=e.target.value; renderBrand(); update(false); });
 
   // ---------------- thermal calculation ----------------
   // Heat loss per room (transmission through marked exterior walls and windows, floor, roof, ventilation) and,
@@ -4610,18 +4659,19 @@
   function thVfor(dH,sig){ return sig/(1-Math.exp(-sig/dH)); }                             // supply–room difference that gives dH with spread sig
   function thSigma(dH,dV){ if(dH>=dV) return 0; var lo=0, hi=dV*(1-1e-9);                 // spread that gives dH with supply dV
     for(var i=0;i<60;i++){ var m=(lo+hi)/2; if(thLM(m,dV)>dH) lo=m; else hi=m; } return (lo+hi)/2; }
-  function thDp(lh,L){ var tb=TH_TUBE[S.th.tube]||TH_TUBE["16x2"], di=tb.d-2*tb.e, v=lh/3.6e6/(Math.PI*di*di/4); if(!(v>0)) return 0;
+  function thDp(lh,L,tk){ var tb=TH_TUBE[tk||S.th.tube]||TH_TUBE["16x2"], di=tb.d-2*tb.e, v=lh/3.6e6/(Math.PI*di*di/4); if(!(v>0)) return 0;
     var Re=v*di/0.66e-6, f=Re<2300?64/Re:0.316*Math.pow(Re,-0.25); return f*(L/di)*992*v*v/2/1000*1.15; }   // kPa, +15 % for bends
   function computeThermal(){
-    var T=S.th, UF=S.mode==="suelo", rows=[], vmax=UF?T.vmaxS:T.vmaxT, sig=Math.max(1,+T.sig||5), anyExt=false;
+    var T=S.th, UF=S.mode==="suelo", rows=[], vmax=UF?T.vmaxS:Math.min(T.vmaxT,brandTmax()), sig=Math.max(1,+T.sig||5), anyExt=false, B=brand();
     S.floors.forEach(function(fl){ fl.rooms.forEach(function(r){ var res=results[r.id]; if(!res) return;
       var L=thLoad(r,fl), o={room:r,fl:fl,res:res,L:L,Q:L.Q,ti:L.ti,bath:thBath(r),circ:[],flow:0,out:0,short:0,warn:[]};
       if(L.ext) anyExt=true;
       if(UF){ var pav=TH_PAV[r.pav]||TH_PAV[T.pav]||TH_PAV.cer;
         o.A=r.active?Math.max(0,res.area-(res.obArea||0)):0; o.pav=pav; o.K=thKH((r.active?res.sep:clampSep(S.uf.sep))/100,pav.r);
         o.qmax=thQmaxFloor(o.ti,o.bath); o.dHmax=o.qmax/o.K; }
-      else { o.A=r.active?res.covered:0; o.K=+T.kp||12; o.dHmax=Infinity; }
-      o.q=o.A>0?o.Q/o.A:0; o.dHreq=o.A>0?o.Q/(o.A*o.K):0;
+      else { o.A=r.active?res.covered:0; o.dHmax=Infinity; }
+      o.q=o.A>0?o.Q/o.A:0; o.dHreq=o.A>0?(UF?o.Q/(o.A*o.K):brandDH(o.q)):0;   // ceiling: the maker's curve (its W/m²K changes with the difference)
+      if(!UF) o.K=brandK(o.dHreq||5);
       res.th=o; rows.push(o); }); });
     // the room that needs the warmest water (within its surface limit) sets the supply temperature
     var need=0, des=null;
@@ -4636,12 +4686,15 @@
         return; }
       var dV=tv-o.ti, dHs=dV>sig ? thLM(sig,dV) : dV/2, dH=Math.min(o.dHreq,o.dHmax,dHs), s=dH>0 ? Math.min(thSigma(dH,dV),2*sig,dV*0.9) : 0;   // rooms that need less get at most twice the design spread; the thermostat does the rest
       if(s<sig && dH>=dHs-1e-9) s=sig;
-      o.dH=dH=s>0?thLM(s,dV):0; o.sig=s; o.out=o.K*o.A*dH; o.short=Math.max(0,o.Q-o.out); o.qo=o.out/o.A; o.tr=tv-s; o.tm=o.ti+dH;
+      o.dH=dH=s>0?thLM(s,dV):0; o.sig=s; o.out=UF?o.K*o.A*dH:o.A*brandQ(dH); o.short=Math.max(0,o.Q-o.out); o.qo=o.out/o.A; o.tr=tv-s; o.tm=o.ti+dH;
       var fd=1;
       if(UF){ o.surf=thSurf(o.ti,o.qo);
         var Ro=1/10.8+o.pav.r+Math.max(0.015,(T.su||45)/1000)/1.2, b=o.L.ft.below, Ru=b==="cal"?0.75:b==="ext"?2:1.25, tu=b==="cal"?o.ti:b==="terreno"?10:b==="ext"?T.te:(o.ti+T.te)/2;
         fd=1+Ro/Ru+(o.ti-tu)/(Math.max(1,o.qo)*Ru); o.down=o.out*(fd-1); }
-      o.flow=s>0 ? o.out*fd/(s*1.163) : 0; totOut+=o.out; totFlow+=o.flow;
+      o.flow=s>0 ? o.out*fd/(s*1.163) : 0;
+      // ceiling: each circuit at the maker's design flow (panels in series), so the spread is what comes out of it
+      if(!UF && res.circuits){ o.flow=res.circuits*B.flow*60; o.sig=o.out/(o.flow*1.163); o.tr=tv-o.sig; }
+      totOut+=o.out; totFlow+=o.flow;
       if(o.short>Math.max(15,o.Q*0.03)){
         if(UF && o.dHreq>o.dHmax+1e-9) o.warn.push("Necesita "+fmt(o.q)+" W/m² y el suelo da como máximo "+fmt(o.qmax)+" W/m² sin pasar de "+(o.bath?33:29)+" °C en la superficie. Faltan "+fmt(o.short)+" W: mejora el aislamiento, junta más el tubo, usa un pavimento que transmita mejor o añade un apoyo (toallero o radiador).");
         else if(UF) o.warn.push(tv>=vmax ? "Con la impulsión limitada a "+fmt(vmax)+" °C faltan "+fmt(o.short)+" W. Sube la impulsión máxima, mejora el aislamiento o junta más el tubo."
@@ -4654,16 +4707,20 @@
         res.circ.forEach(function(c,i){ var f=o.flow*(tl?(c.inLen||0)/tl:1/res.circ.length), dp=thDp(f,c.inst||0);
           o.circ.push({name:"C"+(i+1),col:res.col,len:c.inst||0,flow:f,dp:dp,color:c.color});
           if(dp>dpMax){ dpMax=dp; dpO={o:o,name:"C"+(i+1)}; } }); }
-      else { var ga=[], ta=0; res.panels.forEach(function(p){ ga[p.circuit]=(ga[p.circuit]||0)+p.w*p.h; ta+=p.w*p.h; });
-        if(res.outs && res.outs.length) res.outs.forEach(function(ou){ var a=ou.ci.reduce(function(t,i){ return t+(ga[i]||0); },0);
-            o.circ.push({name:ou.ci.map(function(i){ return "C"+(i+1); }).join("+")+(ou.d===20?" (tubo 20)":""),col:res.col,len:ou.len||0,flow:ta?o.flow*a/ta:0,n:ou.n}); });
-        else ga.forEach(function(a,i){ o.circ.push({name:"C"+(i+1),col:res.col,len:res.circ[i]?res.circ[i].len:0,flow:ta?o.flow*a/ta:0,n:res.circ[i]?res.circ[i].n:0}); }); }
+      else { var pd=[], fc=B.flow*60;   // pressure drop of the panels of each circuit at the design flow (data sheet), plus the PEX
+        res.panels.forEach(function(p){ var m=modelOf(p.tw,p.th); pd[p.circuit]=(pd[p.circuit]||0)+(m?m.dp:0); });
+        var cdp=function(i){ return pd[i]||0; };
+        if(res.outs && res.outs.length) res.outs.forEach(function(ou){ var f=fc*ou.ci.length, dp=thDp(f,ou.len||0,ou.d===20?"20x2":"16x2")+Math.max.apply(null,ou.ci.map(cdp));
+            o.circ.push({name:ou.ci.map(function(i){ return "C"+(i+1); }).join("+")+(ou.d===20?" (tubo 20)":""),col:res.col,len:ou.len||0,flow:f,n:ou.n,dp:dp});
+            if(dp>dpMax){ dpMax=dp; dpO={o:o,name:ou.ci.map(function(i){ return "C"+(i+1); }).join("+")}; } });
+        else for(var ci2=0;ci2<res.circuits;ci2++){ var dp2=thDp(fc,res.circ[ci2]?res.circ[ci2].len:0,"16x2")+cdp(ci2); o.circ.push({name:"C"+(ci2+1),col:res.col,len:res.circ[ci2]?res.circ[ci2].len:0,flow:fc,n:res.circ[ci2]?res.circ[ci2].n:0,dp:dp2}); } }
       o.circ.forEach(function(c){ var lm=c.flow/60;
         if(c.flow>0 && UF && lm>4) o.warn.push("El circuito "+c.name+" pide "+fmt(lm,1)+" l/min: es mucho para un caudalímetro normal; divide la estancia en más circuitos.");
         if(UF && c.dp>25) o.warn.push("El circuito "+c.name+" pierde "+fmt(c.dp,1)+" kPa: es largo para su caudal; acorta el circuito o divídelo.");
         if(c.col){ var k=colls[c.col.id]=colls[c.col.id]||{c:c.col,flow:0,n:0,dp:0}; k.flow+=c.flow; k.n++; k.dp=Math.max(k.dp,c.dp||0); } });
     });
-    TH={tv:tv,tr:tv!=null?tv-sig:null,sig:sig,rows:rows,des:des,need:need,capped:des&&need>vmax+1e-9,vmax:vmax,totQ:totQ,totOut:totOut,totFlow:totFlow,dpMax:dpMax,dpO:dpO,colls:colls,anyExt:anyExt,UF:UF};
+    if(!UF && tv!=null && totFlow>0) sig=totOut/(totFlow*1.163);   // ceiling: fixed design flow, so the overall spread is a result
+    TH={tv:tv,tr:tv!=null?tv-sig:null,sig:sig,rows:rows,des:des,need:need,capped:des&&need>vmax+1e-9,vmax:vmax,fin:!UF&&T.vmaxT>vmax,totQ:totQ,totOut:totOut,totFlow:totFlow,dpMax:dpMax,dpO:dpO,colls:colls,anyExt:anyExt,UF:UF};
     return TH;
   }
   // ---- rendering ----
@@ -4679,7 +4736,7 @@
       '<div class="stat"><div class="k">Caudal</div><div class="v">'+fmt(o.flow)+'</div><div class="s">l/h'+(o.sig?' · salto '+fmt(o.sig,1)+' K':'')+'</div></div></div>';
     h+='<p class="layout-line">Pérdidas: muros '+fmt(p.muros)+' W · ventanas '+fmt(p.ventanas)+' W ('+fmt(o.L.Aw,1)+' m²) · suelo '+fmt(p.suelo)+' W · techo '+fmt(p.techo)+' W · ventilación '+fmt(p.vent)+' W · margen '+fmt(S.th.marg)+'%.'+
       (o.L.ext?'':' <span style="color:var(--warn)">No tiene ventanas ni muros exteriores marcados.</span>')+(UF&&o.down?' Además, '+fmt(o.down)+' W se van hacia abajo.':'')+'</p>';
-    if(o.circ.length) h+='<p class="layout-line">Caudal por circuito: '+o.circ.map(function(c){ return '<b'+(c.color?' style="color:'+c.color+'"':'')+'>'+c.name+'</b> '+fmt(c.flow)+' l/h ('+fmt(c.flow/60,2)+' l/min)'+(UF?' · '+fmt(c.dp,1)+' kPa':''); }).join(' · ')+'.</p>';
+    if(o.circ.length) h+='<p class="layout-line">Caudal por circuito: '+o.circ.map(function(c){ return '<b'+(c.color?' style="color:'+c.color+'"':'')+'>'+c.name+'</b> '+fmt(c.flow)+' l/h ('+fmt(c.flow/60,2)+' l/min)'+(c.dp!=null?' · '+fmt(c.dp,1)+' kPa':''); }).join(' · ')+'.</p>';
     return h;
   }
   var thFloorsKey="";
@@ -4694,6 +4751,7 @@
     if(!T.rows.length){ sum.innerHTML='<p class="muted" style="margin:0;">Añade estancias para ver el cálculo.</p>'; $("thBody").innerHTML=""; $("thFoot").innerHTML=""; $("thcBody").innerHTML=""; return; }
     var h="";
     if(!T.anyExt) h+='<div class="msg warn">No hay ventanas ni muros exteriores marcados: la carga solo cuenta la ventilación, el suelo y el techo. Usa «Marcar ventana» y «Marcar muro exterior» en el plano.</div>';
+    if(T.fin) h+='<div class="msg warn">Con el acabado «'+esc(brand().finish[S.finish].n.toLowerCase())+'» los paneles de '+esc(brand().name)+' admiten el agua como máximo a '+fmt(T.vmax)+' °C: se calcula con ese límite y no con los '+fmt(S.th.vmaxT)+' °C indicados.</div>';
     if(T.capped) h+='<div class="msg warn">Para cubrir '+esc(T.des.room.name)+' haría falta impulsar a '+fmt(T.need,1)+' °C, por encima del máximo indicado ('+fmt(T.vmax)+' °C). Se calcula con '+fmt(T.vmax)+' °C y esa estancia se queda corta.</div>';
     var short=T.rows.filter(function(o){ return o.room.active && o.short>Math.max(15,o.Q*0.03); }).length;
     if(short) h+='<div class="msg warn">'+short+(short>1?' estancias no llegan':' estancia no llega')+' a la potencia que necesita'+(short>1?'n':'')+'. Mira el detalle en la tabla.</div>';
@@ -4701,7 +4759,7 @@
       '<div class="stat"><div class="k">Retorno</div><div class="v">'+(T.tr!=null?fmt(T.tr,1):'–')+'</div><div class="s">°C (salto '+fmt(T.sig,1)+' K)</div></div>'+
       '<div class="stat"><div class="k">Potencia</div><div class="v">'+fmt(T.totQ/1000,2)+'</div><div class="s">kW necesarios</div></div>'+
       '<div class="stat"><div class="k">Caudal</div><div class="v">'+fmt(T.totFlow)+'</div><div class="s">l/h en total</div></div></div>';
-    if(T.des) h+='<p class="layout-line">La impulsión la marca <b>'+esc(T.des.room.name)+'</b>, que es la que más potencia pide por m² ('+fmt(T.des.q)+' W/m²). Exterior '+fmt(S.th.te)+' °C.'+(UF&&T.dpO?' Circuito más desfavorable: <b>'+esc(T.dpO.o.room.name)+' '+T.dpO.name+'</b>, '+fmt(T.dpMax,1)+' kPa sin contar el colector.':'')+'</p>';
+    if(T.des) h+='<p class="layout-line">La impulsión la marca <b>'+esc(T.des.room.name)+'</b>, que es la que más potencia pide por m² ('+fmt(T.des.q)+' W/m²). Exterior '+fmt(S.th.te)+' °C.'+(T.dpO?' Circuito más desfavorable: <b>'+esc(T.dpO.o.room.name)+' '+T.dpO.name+'</b>, '+fmt(T.dpMax,1)+' kPa sin contar el colector.':'')+'</p>';
     sum.innerHTML=h;
     $("thHead").innerHTML='<tr><th>Estancia</th><th class="num">°C</th><th class="num">Necesita W</th><th class="num">W/m²</th><th class="num">Da W</th><th class="num">'+(UF?'Suelo °C':'Agua °C')+'</th><th class="num">Salto K</th><th class="num">Caudal l/h</th></tr>';
     var tb="";
@@ -4711,19 +4769,19 @@
         tb+='<tr class="clickable'+(o.room.id===S.sel?' sel':'')+'" data-room="'+o.room.id+'"><td>'+esc(o.room.name)+(bad?' <span style="color:var(--warn)" title="Revisar">●</span>':'')+'</td><td class="num">'+fmt(o.ti)+'</td><td class="num">'+fmt(o.Q)+'</td><td class="num">'+(o.A>0?fmt(o.q):'—')+'</td><td class="num">'+(o.out?(o.short>Math.max(15,o.Q*0.03)?'<span style="color:var(--warn)">'+fmt(o.out)+'</span>':fmt(o.out)):'—')+'</td><td class="num">'+(UF?(o.surf?fmt(o.surf,1):'—'):(o.tm?fmt(o.tm,1):'—'))+'</td><td class="num">'+(o.sig?fmt(o.sig,1):'—')+'</td><td class="num">'+(o.flow?fmt(o.flow):'—')+'</td></tr>'; }); });
     $("thBody").innerHTML=tb;
     $("thFoot").innerHTML='<tr><td>Total</td><td></td><td class="num">'+fmt(T.totQ)+'</td><td></td><td class="num">'+fmt(T.totOut)+'</td><td></td><td></td><td class="num">'+fmt(T.totFlow)+'</td></tr>';
-    $("thcHead").innerHTML='<tr><th>Colector</th><th>Estancia</th><th>Circuito</th><th class="num">'+(UF?'Tubo m':'PEX m')+'</th><th class="num">Caudal l/h</th><th class="num">l/min</th>'+(UF?'<th class="num">Pérdida kPa</th>':'')+'</tr>';
+    $("thcHead").innerHTML='<tr><th>Colector</th><th>Estancia</th><th>Circuito</th><th class="num">'+(UF?'Tubo m':'PEX m')+'</th><th class="num">Caudal l/h</th><th class="num">l/min</th>'+'<th class="num">Pérdida kPa</th>'+'</tr>';
     var cb="";
     allColls().forEach(function(c){ var k=T.colls[c.id]; if(!k) return; var first=true;
       T.rows.forEach(function(o){ o.circ.forEach(function(x){ if(x.col!==c) return;
-        cb+='<tr><td>'+(first?'<b>'+esc(c.name)+'</b>':'')+'</td><td>'+esc(o.room.name)+'</td><td>'+(x.color?'<b style="color:'+x.color+'">■</b> ':'')+x.name+(x.n?' · '+x.n+' panel'+(x.n>1?'es':''):'')+'</td><td class="num">'+fmt(x.len,1)+'</td><td class="num">'+fmt(x.flow)+'</td><td class="num"><b>'+fmt(x.flow/60,2)+'</b></td>'+(UF?'<td class="num">'+fmt(x.dp,1)+'</td>':'')+'</tr>'; first=false; }); });
-      cb+='<tr class="floor-row"><td colspan="4">Total '+esc(c.name)+' · '+k.n+' circuitos</td><td class="num">'+fmt(k.flow)+'</td><td class="num">'+fmt(k.flow/60,2)+'</td>'+(UF?'<td class="num">'+fmt(k.dp,1)+'</td>':'')+'</tr>'; });
+        cb+='<tr><td>'+(first?'<b>'+esc(c.name)+'</b>':'')+'</td><td>'+esc(o.room.name)+'</td><td>'+(x.color?'<b style="color:'+x.color+'">■</b> ':'')+x.name+(x.n?' · '+x.n+' panel'+(x.n>1?'es':''):'')+'</td><td class="num">'+fmt(x.len,1)+'</td><td class="num">'+fmt(x.flow)+'</td><td class="num"><b>'+fmt(x.flow/60,2)+'</b></td>'+'<td class="num">'+fmt(x.dp||0,1)+'</td>'+'</tr>'; first=false; }); });
+      cb+='<tr class="floor-row"><td colspan="4">Total '+esc(c.name)+' · '+k.n+' circuitos</td><td class="num">'+fmt(k.flow)+'</td><td class="num">'+fmt(k.flow/60,2)+'</td>'+'<td class="num">'+fmt(k.dp,1)+'</td>'+'</tr>'; });
     $("thcBody").innerHTML=cb||'<tr><td colspan="7" class="muted">Asigna las estancias a un colector para ver el caudal de cada circuito.</td></tr>';
   }
   function syncTh(){ var T=S.th;
     $("thZone").value=T.zone; $("thBuild").value=TH_BUILD[T.build]?T.build:"custom"; $("thPav").value=T.pav; $("thTube").value=T.tube;
     Object.keys(TH_NUM).forEach(function(id){ $(id).value=T[TH_NUM[id]]; }); }
   function thUpdate(){ computeThermal(); renderDetailOutput(); renderThermal(); }
-  var TH_NUM={thTe:"te",thTi:"ti",thH:"h",thUw:"uw",thUv:"uv",thUs:"us",thUc:"uc",thN:"ach",thWin:"win",thSig:"sig",thMarg:"marg",thSu:"su",thVmaxS:"vmaxS",thKp:"kp",thVmaxT:"vmaxT"};
+  var TH_NUM={thTe:"te",thTi:"ti",thH:"h",thUw:"uw",thUv:"uv",thUs:"us",thUc:"uc",thN:"ach",thWin:"win",thSig:"sig",thMarg:"marg",thSu:"su",thVmaxS:"vmaxS",thVmaxT:"vmaxT"};
   (function(){
     var opt=function(o,f){ return Object.keys(o).map(function(k){ return '<option value="'+k+'">'+(f?f(o[k]):o[k])+'</option>'; }).join(""); };
     $("thZone").innerHTML=opt(TH_ZONES,function(z){ return z.n; });
@@ -5033,6 +5091,7 @@
     else if(k==="y" || (k==="z" && e.shiftKey)){ e.preventDefault(); histGo(false); }
   });
 
+  renderBrand();
   renderCatalog(); renderCollectors(); renderFloorBar(); syncProjectInputs(); update(true);
 
   // ---------------- product site ----------------
@@ -5056,7 +5115,7 @@
     renderTables();
     var t={n:0,area:sum("area"),c:sum("circuits"),pex:sum("pex")}; S.rooms.forEach(function(r){ t.n+=results[r.id].panels.length; });
     HP.techo={svg:tv,tags:cell("Superficie",fmt(t.area,0),"m²")+cell("Paneles",t.n)+cell("Circuitos",t.c)+cell("Tubo PEX",fmt(Math.ceil(t.pex)),"m")};
-    var pick=["Panel 80×150","Colector de 16 salidas","Tubo PEX","Bicono para PEX","Perfil TC secundario","Placa de pladur","Tira LED"], h='<div class="grp">Vivienda de ejemplo de '+fmt(t.area,0)+' m², techo radiante</div>';
+    var pick=["Panel sunthaldress C","Colector de 16 salidas","Tubo PEX","Bicono para PEX","Perfil TC secundario","Placa de pladur","Tira LED"], h='<div class="grp">Vivienda de ejemplo de '+fmt(t.area,0)+' m², techo radiante</div>';
     reportRows.forEach(function(r){ if(pick.some(function(k){ return r.label.indexOf(k)===0; })) h+='<div><span>'+esc(r.label)+'</span><b>'+fmt(r.qty,r.qty%1?1:0)+' '+r.unit+'</b></div>'; });
     $("heroMats").innerHTML=h;
     var sv=draw("suelo");
@@ -5179,7 +5238,7 @@
   $("companySave").addEventListener("click",function(){ saveCompanyToCloud(); });
 
   // ---- projects: what is saved, and putting it back
-  var CFG_TECHO=["panels","gMin","gMax","clear","gap","strip","vert","margin","tail","secCm","primCm","bar","hang","board"];
+  var CFG_TECHO=["brand","finish","panels","gMin","gMax","clear","gap","strip","vert","margin","tail","secCm","primCm","bar","hang","board"];
   // lite: without the background images (the undo history keeps them once, in BGC, instead of in every step)
   function projSnapshot(lite){
     var cfg={th:S.th}; if(S.mode==="suelo") cfg.uf=S.uf; else CFG_TECHO.forEach(function(k){ cfg[k]=S[k]; });
@@ -5194,9 +5253,11 @@
     if(c.th){ Object.assign(S.th,c.th); syncTh(); }
     if(S.mode==="suelo" && c.uf){ Object.assign(S.uf,c.uf);
       [["uSep","sep"],["uMax","maxLen"],["uSepWin","sepWin"],["uWinW","winW"],["uSepExt","sepExt"],["uExtW","extW"],["uWall","wallCm"],["uVert","vert"],["uMargin","margin"],["uPlate","plate"]].forEach(function(p){ var el=$(p[0]); if(el) el.value=S.uf[p[1]]; }); }
-    if(S.mode==="techo"){ CFG_TECHO.forEach(function(k){ if(c[k]!=null) S[k]=c[k]; });
+    if(S.mode==="techo"){ if(!c.brand){ S.brand="sunthalpy"; S.finish="yeso"; }
+      CFG_TECHO.forEach(function(k){ if(c[k]!=null) S[k]=c[k]; });
+      brandFix();
       [["gMin","gMin"],["gMax","gMax"],["sClear","clear"],["sGap","gap"],["sStrip","strip"],["sVert","vert"],["sMargin","margin"],["sTail","tail"],["sSec","secCm"],["sPrim","primCm"],["sBar","bar"],["sHang","hang"],["sBoard","board"]].forEach(function(p){ var el=$(p[0]); if(el) el.value=S[p[1]]; });
-      renderCatalog(); }
+      renderBrand(); }
     var r0=S.rooms[0]; if(!keep || !S.rooms.some(function(r){ return r.id===S.sel; })) S.sel=r0?r0.id:null; S.moveId=null; S.placing=null; if(!keep) S.zoom=null;
     syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true);
     if(!keep) histReset();
@@ -5290,6 +5351,7 @@
       (TOUR.hadOwn?"<p style='color:var(--muted)'>Practicarás en un proyecto aparte: el tuyo se guarda y podrás volver a él al terminar.</p>":""),btn:"Empezar"});
     // 1. first room
     P.push({info:true,anim:"nombre",el:"#projName",t:"El nombre del proyecto",x:"<p>Pulsa el título de arriba (✎) para ponerle nombre al proyecto, por ejemplo <b>Casa García</b>. Con ese nombre se guarda en «Mis proyectos» y sale en el informe.</p>"});
+    if(!suelo) P.push({info:true,anim:"marca",el:"#brandCard",t:"Marca de los paneles",x:"<p>Lo primero es elegir el <b>fabricante</b> de los paneles: cada marca tiene sus medidas y sus normas de instalación. Con la marca cambian los modelos, cuántos paneles van en serie, el caudal, la pérdida de carga y la emisión del cálculo térmico.</p><p>Elige también el <b>acabado</b> del techo: limita la temperatura máxima del agua.</p>"});
     P.push({info:true,anim:"plano",el:"#bgImport",t:"¿Tienes un plano de la vivienda?",x:"<p>Con <b>Importar plano</b> subes un PDF o una foto del plano (también uno simple, sin cotas) y queda de fondo en la planta. Después:</p><ol><li><b>Calibrar escala</b>: pinchas los dos extremos de una pared y escribes su medida real, la que mides en obra.</li><li><b>Calcar estancias</b>: pinchas las esquinas de cada estancia por el centro de las paredes. Se ajustan solas a ángulos rectos y se pegan a las ya calcadas.</li></ol><p>Del plano solo se usan las estancias: armarios, textos o m² escritos se quedan en la imagen. En este tutorial dibujaremos las estancias a mano.</p>"});
     P.push({mission:true,anim:"estancia",t:"Crea tu primera estancia",badge:"Primera estancia",
       start:function(T){ T.base=S.rooms.length; },
@@ -5397,7 +5459,7 @@
       P.push({info:true,anim:"reglas",el:"#ufRulesCard",t:"Reglas del suelo",x:"<p>Separación del tubo, longitud máxima por circuito, franjas junto a ventanas y muros… Cambia cualquier valor y el plano se recalcula al momento.</p>"});
       P.push({info:true,anim:"salidas",el:"#collCard",t:"Salidas de los colectores",x:"<p>Indica cuántas salidas tiene cada colector. El programa reparte las estancias sin que ningún circuito se cruce.</p>"});
     } else {
-      P.push({info:true,anim:"paneles",el:"#catalogCard",t:"Tus paneles",x:"<p>Medidas de los paneles que uses, de cualquier fabricante. Se coloca siempre el más grande que quepa, con máximo 2 paneles por circuito (y hasta 4 por salida con tubo de 20).</p>"});
+      P.push({info:true,anim:"paneles",el:"#catalogCard",t:"Tus paneles",x:"<p>Los modelos del fabricante elegido, con su medida, cuántos van como máximo <b>en serie</b> en un circuito y su pérdida de carga. Desmarca los que no vayas a usar: se coloca siempre el más grande que quepa.</p>"});
       P.push({info:true,anim:"cobertura",el:"#coverCard",t:"Cobertura",x:"<p>Qué porcentaje del techo quieres cubrir con paneles.</p>"});
       P.push({info:true,anim:"pladur",el:"#pladurCard",t:"Techo de pladur",x:"<p>Placa, perfiles y cuelgues para calcular la estructura completa.</p>"});
       P.push({info:true,anim:"salidas",el:"#collCard",t:"Colectores y tubería",x:"<p>Salidas de cada colector, subida al techo y margen de tubo. Aquí también se explica la regla del tubo de 20.</p>"});

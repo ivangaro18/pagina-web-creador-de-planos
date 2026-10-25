@@ -1,9 +1,9 @@
 {
   "Salón-comedor": {
-    "paneles": 15,
-    "circuitos": 8,
+    "paneles": 19,
+    "circuitos": 10,
     "salidas": 5,
-    "pex": 53.9
+    "pex": 54.1
   },
   "Cocina": {
     "paneles": 8,
@@ -18,10 +18,10 @@
     "pex": 20.6
   },
   "Recibidor": {
-    "paneles": 6,
+    "paneles": 5,
     "circuitos": 3,
     "salidas": 2,
-    "pex": 20.7
+    "pex": 18
   },
   "Pasillo": {
     "paneles": 4,
@@ -39,18 +39,18 @@
     "paneles": 4,
     "circuitos": 2,
     "salidas": 1,
-    "pex": 15.4
+    "pex": 15.1
   },
   "Dormitorio 3": {
     "paneles": 6,
     "circuitos": 3,
     "salidas": 2,
-    "pex": 17.2
+    "pex": 17.8
   },
   "Baño 2": {
     "paneles": 4,
     "circuitos": 2,
     "salidas": 1,
-    "pex": 11.2
+    "pex": 10.9
   }
 }
