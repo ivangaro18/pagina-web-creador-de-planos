@@ -3,54 +3,54 @@
     "paneles": 17,
     "circuitos": 9,
     "salidas": 9,
-    "pex": 103.3
+    "pex": 73.6
   },
   "Cocina": {
     "paneles": 8,
     "circuitos": 4,
     "salidas": 4,
-    "pex": 51.1
+    "pex": 37.9
   },
   "Dormitorio principal": {
     "paneles": 8,
     "circuitos": 4,
     "salidas": 4,
-    "pex": 41.2
+    "pex": 28
   },
   "Recibidor": {
     "paneles": 6,
     "circuitos": 3,
     "salidas": 3,
-    "pex": 28.4
+    "pex": 18.5
   },
   "Pasillo": {
     "paneles": 3,
     "circuitos": 2,
     "salidas": 2,
-    "pex": 22
+    "pex": 15.4
   },
   "Dormitorio 2": {
     "paneles": 6,
     "circuitos": 3,
     "salidas": 3,
-    "pex": 60.8
+    "pex": 50.9
   },
   "Baño 1": {
     "paneles": 4,
     "circuitos": 2,
     "salidas": 2,
-    "pex": 30.7
+    "pex": 24.1
   },
   "Dormitorio 3": {
     "paneles": 6,
     "circuitos": 3,
     "salidas": 3,
-    "pex": 25.4
+    "pex": 15.5
   },
   "Baño 2": {
     "paneles": 4,
     "circuitos": 2,
     "salidas": 2,
-    "pex": 21.9
+    "pex": 15.3
   }
 }

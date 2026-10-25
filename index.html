@@ -814,7 +814,7 @@
       <div class="feat">
         <div class="feat-row"><figure class="feat-fig" data-crop="forma"></figure><div><h3>Estancias de cualquier forma</h3><p>Dibuja sobre una cuadrícula de puntos, curva las paredes que quieras y escribe las medidas. Cada estancia nueva se pega a un lado de otra. También puedes calcar encima de un PDF o una foto del plano.</p></div></div>
         <div class="feat-row"><figure class="feat-fig" data-crop="paneles"></figure><div><h3>Paneles colocados solos</h3><p>Eliges qué parte del techo cubrir y el planificador pone el panel más grande que cabe, centrado, a 10 cm de las paredes y con hueco para la iluminación. Eliges la marca de los paneles y se aplican sus medidas y sus normas: cuántos paneles van en serie, caudal, pérdida de carga y emisión.</p></div></div>
-        <div class="feat-row"><figure class="feat-fig" data-crop="tubos"></figure><div><h3>Colectores y metros de PEX</h3><p>Arrastras los colectores al plano y cada estancia va entera al más cercano con salidas libres. Los metros de tubo cuentan la ida, el retorno, la subida al techo y el tubo que ya traen los paneles.</p></div></div>
+        <div class="feat-row"><figure class="feat-fig" data-crop="tubos"></figure><div><h3>Colectores y metros de PEX</h3><p>Arrastras los colectores al plano y cada estancia va entera al más cercano con salidas libres. Los metros de tubo cuentan la ida, el retorno y el tubo que ya traen los paneles.</p></div></div>
         <div class="feat-row"><figure class="feat-fig" data-crop="pladur"></figure><div><h3>Estructura de pladur</h3><p>Angular, perfiles primarios y TC secundarios alineados con los paneles, con sus cuelgues. Puedes girar la estructura y comparar cuántas barras y placas salen.</p></div></div>
         <div class="feat-row"><figure class="feat-fig" data-crop="suelo"></figure><div><h3>Suelo radiante por circuitos</h3><p>En suelo, el tubo se reparte por estancias en circuitos de 120 m como máximo, más cerrado junto a ventanas y muros exteriores. El planificador también te dice en qué pared conviene el colector.</p></div></div>
       </div>
@@ -1170,7 +1170,6 @@
         <button class="btn ghost small" id="addColl" style="margin-bottom:8px;">+ Añadir colector</button>
         <p class="note" id="capSummary" style="margin:0 0 12px;"></p>
         <div class="grid2 only-techo">
-          <div class="field"><label class="lbl" for="sVert">Subida colector–techo (m)</label><input type="number" id="sVert" min="0" step="0.1"></div>
           <div class="field"><label class="lbl" for="sMargin">Margen de tubo (%)</label><input type="number" id="sMargin" min="0" step="1"></div>
         </div>
         <p class="note only-techo" style="margin-top:0;"><b>Salidas con te:</b> <span id="teNote"></span></p>
@@ -2029,7 +2028,7 @@
   function runSide(col,p,via){ var tail=Math.max(0,Math.min(3,S.tail||0)), F=PF[col.id], l=null;
     if(via && via.F){ var lv=via.F.lenTo(via.out); if(lv!=null) l=lv+len(sub(via.in,via.out))+manh(via.in,p); }
     else if(!via && F) l=F.lenTo(p);
-    if(l==null) l=via?manh(col,via.in)+manh(via.in,p):manh(col,p); return Math.max(0,l+S.vert-tail); }
+    if(l==null) l=via?manh(col,via.in)+manh(via.in,p):manh(col,p); return Math.max(0,l-tail); }   // the collector sits in the ceiling, in its access panel: no rise
   function runLen(col,a,b,via){ return runSide(col,a,via)+runSide(col,b,via); }
   // noTe: one outlet per circuit (a Sunthalpy collector that does not take tes)
   function outletsFor(cs,col,via,noTe){
@@ -2254,7 +2253,7 @@
     var L=pipeLayout(fl), o="", col=function(O){ return CC[((O.n||1)-1)%CC.length]; };
     // Sunthalpy outlets with a te: PEX 16 for the first metres (the rise to the ceiling counts), then the reducer and PEX 20
     var parts=function(t){ if(t.d!==20) return [[t.pts,false]]; if(!t.te) return [[t.pts,true]];
-      var lim=Math.max(0,brand().te.p16-S.vert), acc=0, P=t.pts;
+      var lim=brand().te.p16, acc=0, P=t.pts;
       for(var i=1;i<P.length;i++){ var dd=len(sub(P[i],P[i-1])); if(acc+dd>=lim && dd>0){ var q=add(P[i-1],mul(sub(P[i],P[i-1]),(lim-acc)/dd)); t.red=q; return [[P.slice(0,i).concat([q]),false],[[q].concat(P.slice(i)),true]]; } acc+=dd; }
       return [[P,false]]; };
     L.tubes.forEach(function(t){ t.parts=parts(t); t.parts.forEach(function(pp){ o+='<polyline class="p-tcase'+(pp[1]?' w':'')+'" points="'+ptsStr(pp[0])+'"/>'; }); });
@@ -3854,7 +3853,7 @@
       T({head:[["Concepto","Cantidad","Precio ud.","Importe"]],body:mb,foot:foot,footStyles:{fillColor:[229,241,235],textColor:INK,fontSize:9.5},columnStyles:{1:{halign:"right",cellWidth:26},2:{halign:"right",cellWidth:26},3:{halign:"right",cellWidth:28}}});
       if(y>255){ doc.addPage(); y=18; }
       doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor.apply(doc,MUT);
-      var note=UFM ? "Notas: separación del tubo en plancha de tetones universal (múltiplos de 5 cm). Junto a ventanas y muros exteriores el tubo va más junto (zona periférica, UNE-EN 1264). Cada circuito tiene como máximo "+fmt(S.uf.maxLen)+" m contando la ida y vuelta al colector con recorrido ortogonal y "+fmt(S.uf.vert,1)+" m de bajada por tramo. Las estancias separadas por una escalera llevan su propio colector. Los metros de tubo incluyen un "+fmt(S.uf.margin)+"% de margen." : "Notas: cada colector incluye ida y retorno. Cada circuito lleva 2 conexiones (ida y retorno): en el colector, 1 bicono completo; en el panel, 1 racor de tubo de panel a rosca 1/2\", 1 racor PEX con rosca 1/2\" y 1 casquillo. Manguito de unión: 1 por cada unión entre dos paneles del mismo circuito. Paneles "+brand().name+" "+brand().line+": "+seriesText().toLowerCase()+" Caudal de diseño "+fmt(brand().flow)+" l/min por circuito; acabado "+brand().finish[S.finish].n.toLowerCase()+", agua como máximo a "+brandTmax()+" °C. Los metros de PEX son una estimación con recorrido ortogonal, subida al techo de "+fmt(S.vert,1)+" m por tramo, descontando "+fmt(S.tail,1)+" m de tubo del propio panel por tramo, y "+fmt(S.margin)+"% de margen.";
+      var note=UFM ? "Notas: separación del tubo en plancha de tetones universal (múltiplos de 5 cm). Junto a ventanas y muros exteriores el tubo va más junto (zona periférica, UNE-EN 1264). Cada circuito tiene como máximo "+fmt(S.uf.maxLen)+" m contando la ida y vuelta al colector con recorrido ortogonal y "+fmt(S.uf.vert,1)+" m de bajada por tramo. Las estancias separadas por una escalera llevan su propio colector. Los metros de tubo incluyen un "+fmt(S.uf.margin)+"% de margen." : "Notas: cada colector incluye ida y retorno. Cada circuito lleva 2 conexiones (ida y retorno): en el colector, 1 bicono completo; en el panel, 1 racor de tubo de panel a rosca 1/2\", 1 racor PEX con rosca 1/2\" y 1 casquillo. Manguito de unión: 1 por cada unión entre dos paneles del mismo circuito. Paneles "+brand().name+" "+brand().line+": "+seriesText().toLowerCase()+" Caudal de diseño "+fmt(brand().flow)+" l/min por circuito; acabado "+brand().finish[S.finish].n.toLowerCase()+", agua como máximo a "+brandTmax()+" °C. Los metros de PEX son una estimación con recorrido ortogonal desde el colector, que va en un registro del techo, descontando "+fmt(S.tail,1)+" m de tubo del propio panel por tramo, y "+fmt(S.margin)+"% de margen.";
       if(BETA.th) note+=" Cálculo térmico orientativo: pérdidas por transmisión (U · superficie · diferencia de temperatura) por los muros exteriores y ventanas marcados, suelo y techo, más ventilación y un "+fmt(S.th.marg)+"% de margen. "+(UFM?"Emisión del suelo según UNE-EN 1264 con tubo "+(TH_TUBE[S.th.tube]||TH_TUBE["16x2"]).n+" y "+fmt(S.th.su)+" mm de mortero.":"Emisión de los paneles "+brand().name+" "+brand().line+" según su ficha: "+brand().emis+".")+" No sustituye al proyecto firmado por un técnico.";
       if(!UFM && S.t20) note+=" Salidas con te: "+teText();
       var nl=doc.splitTextToSize(note,PW-2*M); doc.text(nl,M,y); y+=nl.length*3.4+3;
@@ -4689,7 +4688,7 @@
   $("uPlate").innerHTML=Object.keys(PLATES).map(function(k){ return '<option value="'+k+'">'+PLATES[k]+'</option>'; }).join("");
   $("uPlate").value=S.uf.plate; $("uPlate").addEventListener("change",function(e){ S.uf.plate=e.target.value; renderTables(); });
   function bindNum(id,key){ var el=$(id); el.value=S[key]; el.addEventListener("input",function(){ var v=parseFloat(el.value); if(isFinite(v)){ S[key]=v; update(false);} }); }
-  bindNum("gMin","gMin"); bindNum("gMax","gMax"); bindNum("sClear","clear"); bindNum("sGap","gap"); bindNum("sStrip","strip"); bindNum("sVert","vert"); bindNum("sMargin","margin"); bindNum("sTail","tail"); bindNum("sSec","secCm"); bindNum("sPrim","primCm"); bindNum("sBar","bar"); bindNum("sHang","hang");
+  bindNum("gMin","gMin"); bindNum("gMax","gMax"); bindNum("sClear","clear"); bindNum("sGap","gap"); bindNum("sStrip","strip"); bindNum("sMargin","margin"); bindNum("sTail","tail"); bindNum("sSec","secCm"); bindNum("sPrim","primCm"); bindNum("sBar","bar"); bindNum("sHang","hang");
   $("sBoard").value=S.board; $("sBoard").addEventListener("change",function(e){ S.board=e.target.value; update(false); });
   function syncStructLegend(){ document.querySelectorAll(".struct-lg").forEach(function(x){ x.hidden=!S.showStruct; }); }
   $("showStruct").addEventListener("change",function(e){ S.showStruct=e.target.checked; syncStructLegend(); update(false); });
@@ -5325,7 +5324,7 @@
   $("companySave").addEventListener("click",function(){ saveCompanyToCloud(); });
 
   // ---- projects: what is saved, and putting it back
-  var CFG_TECHO=["brand","finish","panels","gMin","gMax","clear","gap","strip","vert","margin","tail","secCm","primCm","bar","hang","board"];
+  var CFG_TECHO=["brand","finish","panels","gMin","gMax","clear","gap","strip","margin","tail","secCm","primCm","bar","hang","board"];
   // lite: without the background images (the undo history keeps them once, in BGC, instead of in every step)
   function projSnapshot(lite){
     var cfg={th:S.th}; if(S.mode==="suelo") cfg.uf=S.uf; else CFG_TECHO.forEach(function(k){ cfg[k]=S[k]; });
@@ -5343,7 +5342,7 @@
     if(S.mode==="techo"){ if(!c.brand){ S.brand="sunthalpy"; S.finish="yeso"; }
       CFG_TECHO.forEach(function(k){ if(c[k]!=null) S[k]=c[k]; });
       brandFix();
-      [["gMin","gMin"],["gMax","gMax"],["sClear","clear"],["sGap","gap"],["sStrip","strip"],["sVert","vert"],["sMargin","margin"],["sTail","tail"],["sSec","secCm"],["sPrim","primCm"],["sBar","bar"],["sHang","hang"],["sBoard","board"]].forEach(function(p){ var el=$(p[0]); if(el) el.value=S[p[1]]; });
+      [["gMin","gMin"],["gMax","gMax"],["sClear","clear"],["sGap","gap"],["sStrip","strip"],["sMargin","margin"],["sTail","tail"],["sSec","secCm"],["sPrim","primCm"],["sBar","bar"],["sHang","hang"],["sBoard","board"]].forEach(function(p){ var el=$(p[0]); if(el) el.value=S[p[1]]; });
       renderBrand(); }
     var r0=S.rooms[0]; if(!keep || !S.rooms.some(function(r){ return r.id===S.sel; })) S.sel=r0?r0.id:null; S.moveId=null; S.placing=null; if(!keep) S.zoom=null;
     syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true);
@@ -5549,7 +5548,7 @@
       P.push({info:true,anim:"paneles",el:"#catalogCard",t:"Tus paneles",x:"<p>Los modelos del fabricante elegido, con su medida, cuántos van como máximo <b>en serie</b> en un circuito y su pérdida de carga. Desmarca los que no vayas a usar: se coloca siempre el más grande que quepa.</p>"});
       P.push({info:true,anim:"cobertura",el:"#coverCard",t:"Cobertura",x:"<p>Qué porcentaje del techo quieres cubrir con paneles.</p>"});
       P.push({info:true,anim:"pladur",el:"#pladurCard",t:"Techo de pladur",x:"<p>Placa, perfiles y cuelgues para calcular la estructura completa.</p>"});
-      P.push({info:true,anim:"salidas",el:"#collCard",t:"Colectores y tubería",x:"<p>Salidas de cada colector, subida al techo y margen de tubo. Aquí también se explica la regla del tubo de 20.</p>"});
+      P.push({info:true,anim:"salidas",el:"#collCard",t:"Colectores y tubería",x:"<p>Salidas de cada colector y margen de tubo. Aquí también se explica la regla del tubo de 20.</p>"});
     }
     P.push({info:true,anim:"termico",el:"#thermCard",t:"Cálculo térmico",x:"<p>Zona climática, aislamiento de la vivienda, temperatura y qué hay encima y debajo de cada planta. Con eso y las ventanas y muros exteriores marcados, se calculan las pérdidas de cada estancia.</p><p>Está en <b>beta</b> (triángulo amarillo): de momento es solo informativo. Con la casilla <b>Activar</b> lo muestras u ocultas.</p>"});
     P.push({info:true,el:"#thermRes",top:true,t:"Potencias y caudales",x:"<p>Potencia que necesita cada estancia y la que da "+(suelo?"el suelo":"el techo")+", la <b>temperatura de impulsión</b> de diseño (para elegir la aerotermia) y el <b>caudal de cada salida</b> en l/min para ajustar el caudalímetro del colector.</p><p>Si una estancia no llega, te dice por qué.</p>"});
