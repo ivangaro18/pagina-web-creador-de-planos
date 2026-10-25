@@ -343,8 +343,8 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   out.push("Marca de los paneles");
   p = await open("#planificador");
   const br = await p.evaluate(() => ({ opts: [...document.querySelectorAll("#sBrand option")].map(o => o.textContent), cat: [...document.querySelectorAll("#catalogBody tr")].map(t => t.innerText.replace(/\s+/g, " ").trim()), info: document.getElementById("brandInfo").innerText }));
-  ok("selector de marca con Sunthalpy y sus modelos A 40×150, B 60×150 y C 80×150 (3, 2 y 2 en serie)",
-    br.opts.length === 1 && /Sunthalpy/.test(br.opts[0]) && br.cat.length === 3 && /A 40 × 150 3 13/.test(br.cat[0]) && /B 60 × 150 2 18/.test(br.cat[1]) && /C 80 × 150 2 21,2/.test(br.cat[2]) && /1 l\/min/.test(br.info), JSON.stringify(br));
+  ok("selector de marca con Sunthalpy y sus modelos A 40×150, B 60×150 y C 80×150 (2 en serie)",
+    br.opts.length === 1 && /Sunthalpy/.test(br.opts[0]) && br.cat.length === 3 && /A 40 × 150 2 13/.test(br.cat[0]) && /B 60 × 150 2 18/.test(br.cat[1]) && /C 80 × 150 2 21,2/.test(br.cat[2]) && /1 l\/min/.test(br.info), JSON.stringify(br));
   const ser = await p.evaluate(() => {
     const D = window.__dbg, S = D.S, R = D.rectRoom, V = D.V; let seed = 777; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647, o = {};
     const inP = (r, pt, q) => { const a = D.toW(r, V(q.x, q.y)), b = D.toW(r, V(q.x + q.w, q.y + q.h)); return pt.x >= Math.min(a.x, b.x) - 1e-6 && pt.x <= Math.max(a.x, b.x) + 1e-6 && pt.y >= Math.min(a.y, b.y) - 1e-6 && pt.y <= Math.max(a.y, b.y) + 1e-6; };
@@ -358,10 +358,10 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
           for (let i = 1; i < c.join.length; i++) { const a = c.join[i - 1], e = c.join[i]; if (Math.abs(a.x - e.x) > 1e-6 && Math.abs(a.y - e.y) > 1e-6) st.diag++; } }); }
       o[only || "todos"] = st; }
     S.panels.forEach(q => q.on = true); return o; });
-  ok("solo paneles A: circuitos de hasta 3 en serie (" + ser.A.n3 + " de 3), nunca más", ser.A.max === 3 && ser.A.over === 0 && ser.A.n3 > 0, JSON.stringify(ser.A));
+  ok("solo paneles A: como máximo 2 en serie (la ficha permite 3, se deja en 2 por seguridad)", ser.A.max === 2 && ser.A.over === 0, JSON.stringify(ser.A));
   ok("solo paneles C: como máximo 2 en serie", ser.C.max === 2 && ser.C.over === 0, JSON.stringify(ser.C));
   ok("modelos mezclados: ningún circuito pasa del límite de sus paneles", ser.todos.over === 0, JSON.stringify(ser.todos));
-  ok("circuitos de 3: uniones en ángulo recto, extremos dentro de sus paneles y un manguito por unión", [ser.A, ser.todos].every(x => !x.diag && !x.fuera && x.mang === x.joints), JSON.stringify(ser));
+  ok("uniones en ángulo recto, extremos dentro de sus paneles y un manguito por unión", [ser.A, ser.todos].every(x => !x.diag && !x.fuera && x.mang === x.joints), JSON.stringify(ser));
   const thb = await p.evaluate(() => { const D = window.__dbg, S = D.S;
     S.floors = [{ id: D.nid(), name: "x", rooms: [D.rectRoom("Salón", 0, 0, 5, 4, {})], collectors: [{ id: D.nid(), name: "C", x: 1, y: 3.4, cap: 12 }] }]; S.fi = 0; S.floors[0].rooms[0].marks = { 0: "ventana", 1: "exterior" };
     S.th.vmaxT = 55; D.update(true); const T = D.TH, o = T.rows[0], r = D.results[o.room.id];

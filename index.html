@@ -1446,7 +1446,7 @@
   // design flow and pressure drop per panel, thermal output (W/m²K against water–room difference) and temperature limits.
   var BRANDS={
     sunthalpy:{name:"Sunthalpy",line:"sunthaldress",
-      models:[{key:"A",w:40,h:150,series:3,dp:13,wk:7.8},{key:"B",w:60,h:150,series:2,dp:18,wk:11.7},{key:"C",w:80,h:150,series:2,dp:21.2,wk:15.6}],
+      models:[{key:"A",w:40,h:150,series:2,sheet:3,dp:13,wk:7.8},{key:"B",w:60,h:150,series:2,dp:18,wk:11.7},{key:"C",w:80,h:150,series:2,dp:21.2,wk:15.6}],
       flow:1, kc:[[0,18.3],[1,17.2],[2,16.1],[3,15.1],[4,13.9],[5,12.9],[6,12.5],[7,12.3],[8,12.2],[10,12],[13,11.9],[17,11.8]],
       finish:{yeso:{n:"Juntas enyesadas y pintado",t:40},alic:{n:"Alicatado",t:60}}, tMin:5, bar:6, mm:15, kg:9, mod:40, tube:"PE-RT de 10 mm con conexión pushfit", t20:[3,4]}
   };
@@ -1458,7 +1458,9 @@
   function brandQ(dH){ return dH>0 ? brandK(dH)*dH : 0; }                                   // W per m² of panel
   function brandDH(q){ if(!(q>0)) return 0; var lo=0, hi=80; for(var i=0;i<50;i++){ var m=(lo+hi)/2; if(brandQ(m)<q) lo=m; else hi=m; } return (lo+hi)/2; }
   function brandTmax(){ var b=brand(), f=b.finish[S.finish]||b.finish[Object.keys(b.finish)[0]]; return f.t; }
-  function seriesText(){ return "En serie, como máximo "+brand().models.map(function(m){ return m.series+" del "+m.key; }).join(", ").replace(/, ([^,]*)$/," y $1")+" por circuito."; }
+  function seriesText(){ var ms=brand().models, same=ms.every(function(m){ return m.series===ms[0].series; }), sh=ms.filter(function(m){ return m.sheet && m.sheet>m.series; });
+    return "En serie, como máximo "+(same ? ms[0].series+" paneles" : ms.map(function(m){ return m.series+" del "+m.key; }).join(", ").replace(/, ([^,]*)$/," y $1"))+" por circuito"+
+      (sh.length ? " (la ficha permite "+sh.map(function(m){ return m.sheet+" del "+m.key; }).join(", ")+"; se deja en "+sh[0].series+" por seguridad)." : "."); }
   var S={
     brand:"sunthalpy", finish:"yeso", panels:brandPanels(BRANDS.sunthalpy,"sunthalpy"),
     t20:true,gMin:30,gMax:60,clear:10,gap:2,strip:30,vert:1.5,margin:10,tail:1,secCm:40,primCm:90,bar:3,hang:1.2,board:"1.2x2.5",showStruct:false,
@@ -1792,8 +1794,8 @@
       res.reg=(room._cko||[]).slice();
       if(res.removed) res.msgs.push({t:"ok",x:"Se han quitado "+res.removed+" panel"+(res.removed>1?"es":"")+" que caían encima de "+[CL&&(room.lights||[]).length?"los puntos de luz":"",res.reg.length?"el registro del colector":"",(room.obst||[]).length?"los obstáculos":""].filter(Boolean).join(", ").replace(/, ([^,]*)$/," o $1")+"."});
       // group neighbouring panels in series. The layout order snakes through the room, so each panel touches the next one: the
-      // circuits are runs of consecutive panels, as long as the maker allows for those models (Sunthalpy: 3 of the A, 2 of the B
-      // or C). Fewest circuits first, then the shortest joints. Any panels can be joined: the model only changes the area and the limit.
+      // circuits are runs of consecutive panels, as long as the maker allows for those models (Sunthalpy: 2 of any model;
+      // its sheet allows 3 of the A, kept at 2 to be safe). Fewest circuits first, then the shortest joints. Any panels can be joined: the model only changes the area and the limit.
       // With runs of at most two, swaps between pairs while they shorten the joints further.
       var pc=res.panels.map(function(p){ return V(p.x+p.w/2,p.y+p.h/2); }), np=pc.length, pairs=[], single=-1;
       var cap=res.panels.map(function(p){ return seriesOf(p.tw,p.th); }), mxs=Math.max.apply(null,cap.concat([1]));
