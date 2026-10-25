@@ -333,6 +333,7 @@
   .p-sub{font-family:"Archivo",system-ui,sans-serif;font-size:.17px;font-weight:500;fill:var(--muted);pointer-events:none;}
   .p-dim{stroke:var(--muted);stroke-width:.014;}
   .p-dimtext{font-family:"Archivo",system-ui,sans-serif;font-size:.2px;fill:var(--muted);}
+  .p-red{fill:#fff;stroke:var(--bridge);stroke-width:calc(var(--pu,.01px)*1.4);}
   .p-out20{fill:none;stroke:#0F2A3D;stroke-width:.025;stroke-dasharray:.09 .05;}
   .p-out20t{font-family:"Archivo",system-ui,sans-serif;font-weight:700;fill:#0F2A3D;paint-order:stroke;stroke:#fff;stroke-linejoin:round;pointer-events:none;}
   .p-ctext{font-family:"Archivo",system-ui,sans-serif;font-weight:700;fill:#fff;pointer-events:none;}
@@ -1172,7 +1173,7 @@
           <div class="field"><label class="lbl" for="sVert">Subida colector–techo (m)</label><input type="number" id="sVert" min="0" step="0.1"></div>
           <div class="field"><label class="lbl" for="sMargin">Margen de tubo (%)</label><input type="number" id="sMargin" min="0" step="1"></div>
         </div>
-        <p class="note only-techo" style="margin-top:0;"><b>Tubo de 20 mm:</b> dos circuitos de la misma estancia (3 o 4 paneles) comparten una salida del colector: tubo PEX de 20 hasta una te de latón en la ida y otra en el retorno, de donde salen los tubos de los paneles. Solo si el PEX de 20 no pasa de 20 m sumando ida y retorno (sin contar el tubo del panel) y las tes quedan al alcance del tubo propio de los paneles (hasta 3 m); se agrupan los circuitos más próximos entre sí. Lo que no se puede agrupar va con tubo de 16, como siempre.</p>
+        <p class="note only-techo" style="margin-top:0;"><b>Salidas con te:</b> <span id="teNote"></span></p>
         <div class="field only-techo"><label class="lbl" for="sTail">Tubo del panel aprovechado por tramo (m)</label><input type="number" id="sTail" min="0" max="3" step="0.1"></div>
         <p class="note only-techo" style="margin-top:0;">Los paneles traen un tramo de tubo propio (hasta 3 m). Esta medida se descuenta de cada tramo de ida y de retorno.</p>
         <p class="note only-techo">Indica las salidas de cada colector. Las estancias se asignan enteras al colector más cercano con salidas suficientes.</p>
@@ -1431,7 +1432,7 @@
     // a rounded bay window on the living room to show curved walls
     var sal=rooms[0]; sal.bulge[3]={u:0,v:0.9/4.8}; sal.tx=0.9;
     rooms.forEach(function(r,i){ if(i>0) r.tx+=0.9; });
-    return {id:nid(), name:"Planta baja", rooms:rooms, collectors:[{id:nid(),name:"Colector 1",x:3.9,y:5.35,cap:10},{id:nid(),name:"Colector 2",x:11.2,y:5.35,cap:8}]};
+    return {id:nid(), name:"Planta baja", rooms:rooms, collectors:[{id:nid(),name:"Colector 1",x:3.9,y:5.35,cap:16},{id:nid(),name:"Colector 2",x:11.2,y:5.35,cap:16}]};
   }
   function exampleFloorUF(){
     var f=exampleFloor(), R=f.rooms, M=function(i,o){ R[i].marks=o; };
@@ -1446,13 +1447,14 @@
   // design flow and pressure drop per panel, thermal output (W/m²K against water–room difference) and temperature limits.
   // Each entry, from the maker's own data sheet (src): models (w×h cm, series = most panels in series per circuit, sheet = what the
   // sheet allows when we keep a lower limit, dp = kPa per panel at the design flow, fl = l/h per panel), flow (l/min per circuit,
-  // fixed by the maker), emission as a curve kc [ΔT, W/m²K] or K·ΔT^n, water limits per finish, t20 = panels per shared outlet.
+  // fixed by the maker), emission as a curve kc [ΔT, W/m²K] or K·ΔT^n, water limits per finish, t20 = panels per shared outlet,
+  // te = the maker's rule for those shared outlets (Sunthalpy: PEX 16 for the first p16 m to the te, then 20; a collector with tes has at most maxOut outlets).
   // Systems fed in parallel (Tichelmann lines) are planned as one panel (or the allowed series) per circuit: on the safe side.
   var BRANDS={
     sunthalpy:{name:"Sunthalpy",line:"sunthaldress",
       models:[{key:"A",w:40,h:150,series:2,sheet:3,dp:13,wk:7.8},{key:"B",w:60,h:150,series:2,dp:18,wk:11.7},{key:"C",w:80,h:150,series:2,dp:21.2,wk:15.6}],
       flow:1, kc:[[0,18.3],[1,17.2],[2,16.1],[3,15.1],[4,13.9],[5,12.9],[6,12.5],[7,12.3],[8,12.2],[10,12],[13,11.9],[17,11.8]],
-      finish:{yeso:{n:"Juntas enyesadas y pintado",t:40},alic:{n:"Alicatado",t:60}}, tMin:5, bar:6, mm:15, kg:9, mod:40, tube:"PE-RT de 10 mm con conexión pushfit", t20:[3,4],
+      finish:{yeso:{n:"Juntas enyesadas y pintado",t:40},alic:{n:"Alicatado",t:60}}, tMin:5, bar:6, mm:15, kg:9, mod:40, tube:"PE-RT de 10 mm con conexión pushfit", t20:[3,4], te:{p16:7,maxOut:6},
       emis:"la curva medida de la ficha: de 18 W/m²K con poca diferencia a 12 W/m²K a partir de 10 K (A 7,8 W/K, B 11,7 y C 15,6 por panel)",
       src:[["Ficha técnico comercial sunthaldress (11/2023)",null]]},
     renovis:{name:"Uponor",line:"Renovis",
@@ -1491,6 +1493,9 @@
   function brandK(dH){ var b=brand(), c=b.kc, x=Math.max(0,dH); if(!c) return b.K*Math.pow(Math.max(0.5,x),b.n-1); for(var i=1;i<c.length;i++) if(x<=c[i][0]) return c[i-1][1]+(c[i][1]-c[i-1][1])*(x-c[i-1][0])/(c[i][0]-c[i-1][0]); return c[c.length-1][1]; }
   function brandQ(dH){ return dH>0 ? brandK(dH)*dH : 0; }                                   // W per m² of panel
   function brandDH(q){ if(!(q>0)) return 0; var lo=0, hi=80; for(var i=0;i<50;i++){ var m=(lo+hi)/2; if(brandQ(m)<q) lo=m; else hi=m; } return (lo+hi)/2; }
+  // how two circuits share an outlet with a te, for this brand (collector card, report notes)
+  function teText(){ var b=brand(), t=b.te, n=b.t20; if(t) return "Dos circuitos de la misma estancia ("+n[0]+" o "+n[1]+" paneles) pueden compartir una salida del colector con una te de latón en la ida y otra en el retorno. Del colector a la te va PEX de 16 hasta "+t.p16+" m; si el tramo es más largo, un manguito reducido 16–20 y el resto en PEX de 20. Un colector con tes es como máximo de "+t.maxOut+" salidas: si así no caben todos sus circuitos, se usa una salida por circuito, sin tes.";
+    return "Dos circuitos de la misma estancia ("+n[0]+" a "+n[1]+" paneles) comparten una salida del colector: tubo PEX de 20 hasta una te de latón en la ida y otra en el retorno, de donde salen los tubos de los paneles. Solo si el PEX de 20 no pasa de 20 m sumando ida y retorno y las tes quedan al alcance del tubo de los paneles."; }
   function brandTmax(){ var b=brand(), f=b.finish[S.finish]||b.finish[Object.keys(b.finish)[0]]; return f.t; }
   function seriesText(){ var ms=brand().models, same=ms.every(function(m){ return m.series===ms[0].series; }), sh=ms.filter(function(m){ return m.sheet && m.sheet>m.series; });
     if(same && ms[0].series===1) return "Un panel por circuito (van en paralelo).";
@@ -2020,25 +2025,31 @@
     return {na:na,nb:nb,path:path};
   }
   var PF={};   // routing fields of this update, one per collector
-  function runLen(col,a,b,via){ var tail=Math.max(0,Math.min(3,S.tail||0)), F=PF[col.id], d=function(p){ var l=null;
-      if(via && via.F){ var lv=via.F.lenTo(via.out); if(lv!=null) l=lv+len(sub(via.in,via.out))+manh(via.in,p); }
-      else if(!via && F) l=F.lenTo(p);
-      return l!=null?l:(via?manh(col,via.in)+manh(via.in,p):manh(col,p)); }; return Math.max(0,d(a)+S.vert-tail)+Math.max(0,d(b)+S.vert-tail); }
-  function outletsFor(cs,col,via){
-    var outs=[], used={}, near=[];
-    if(S.t20 && col){ var cand=[];
+  // PEX of one run (ida or retorno) from the collector to p, after the tube that comes on the panel
+  function runSide(col,p,via){ var tail=Math.max(0,Math.min(3,S.tail||0)), F=PF[col.id], l=null;
+    if(via && via.F){ var lv=via.F.lenTo(via.out); if(lv!=null) l=lv+len(sub(via.in,via.out))+manh(via.in,p); }
+    else if(!via && F) l=F.lenTo(p);
+    if(l==null) l=via?manh(col,via.in)+manh(via.in,p):manh(col,p); return Math.max(0,l+S.vert-tail); }
+  function runLen(col,a,b,via){ return runSide(col,a,via)+runSide(col,b,via); }
+  // noTe: one outlet per circuit (a Sunthalpy collector that does not take tes)
+  function outletsFor(cs,col,via,noTe){
+    var outs=[], used={}, near=[], TE=brand().te;
+    if(S.t20 && col && !noTe){ var cand=[];
       for(var x=0;x<cs.length;x++) for(var y=x+1;y<cs.length;y++){ var n=cs[x].n+cs[y].n, t20=brand().t20; if(n<t20[0]||n>t20[1]) continue;
         // each te is reached by the tube that comes on the panels (up to 3 m each side): the two circuits must be close
         var da=manh(cs[x].a,cs[y].a), db=manh(cs[x].b,cs[y].b); if(da>6 || db>6) continue;
-        var Ta=mul(add(cs[x].na,cs[y].na),0.5), Tb=mul(add(cs[x].nb,cs[y].nb),0.5), L=runLen(col,Ta,Tb,via); cand.push({x:x,y:y,L:L,Ta:Ta,Tb:Tb,sp:da+db}); }
+        var Ta=mul(add(cs[x].na,cs[y].na),0.5), Tb=mul(add(cs[x].nb,cs[y].nb),0.5), la=runSide(col,Ta,via), lb=runSide(col,Tb,via); cand.push({x:x,y:y,L:la+lb,la:la,lb:lb,Ta:Ta,Tb:Tb,sp:da+db}); }
       cand.sort(function(p,q){ return (p.sp-q.sp) || (p.L-q.L); });
-      cand.forEach(function(c){ if(used[c.x]||used[c.y]) return; if(c.L>20+1e-9){ near.push(c.L); return; } used[c.x]=used[c.y]=1;
-        outs.push({ci:[cs[c.x].i,cs[c.y].i],d:20,raw:c.L,a:c.Ta,b:c.Tb,n:cs[c.x].n+cs[c.y].n}); }); }
+      cand.forEach(function(c){ if(used[c.x]||used[c.y]) return; if(!TE && c.L>20+1e-9){ near.push(c.L); return; } used[c.x]=used[c.y]=1;
+        var o={ci:[cs[c.x].i,cs[c.y].i],d:20,raw:c.L,a:c.Ta,b:c.Tb,n:cs[c.x].n+cs[c.y].n};
+        // Sunthalpy: PEX 16 up to p16 m from the collector, then a 16–20 reducer and PEX 20 to the te (each run on its own)
+        if(TE){ o.la=c.la; o.lb=c.lb; o.s16=Math.min(c.la,TE.p16)+Math.min(c.lb,TE.p16); o.s20=Math.max(0,c.la-TE.p16)+Math.max(0,c.lb-TE.p16); o.red=(c.la>TE.p16?1:0)+(c.lb>TE.p16?1:0); }
+        outs.push(o); }); }
     cs.forEach(function(c,k){ if(used[k]) return; outs.push({ci:[c.i],d:16,raw:col?runLen(col,c.a,c.b,via):0,a:c.a,b:c.b,n:c.n}); });
     outs.sort(function(p,q){ return p.ci[0]-q.ci[0]; });
     var rest=outs.filter(function(o){ return o.d===16; }), canPair=false;
     for(var i=0;i<rest.length;i++) for(var j=i+1;j<rest.length;j++){ var nn=rest[i].n+rest[j].n; if(nn>=3&&nn<=4) canPair=true; }
-    outs.tooFar=S.t20 && col && canPair && near.length ? Math.min.apply(null,near) : 0;
+    outs.tooFar=S.t20 && col && !noTe && canPair && near.length ? Math.min.apply(null,near) : 0;
     return outs;
   }
   function computeFloor(fl){
@@ -2058,34 +2069,47 @@
       var res=results[r.id]; if(!res.circuits) return;
       var d=C.map(function(c){ return manh(c,res.ctr); }), ns=C.map(function(c){ return outletsFor(res.cs,c,null).length; });
       var order=C.map(function(c,ci){return ci;}).sort(function(a,b){return d[a]-d[b];});
-      items.push({r:r,n:res.circuits,ns:ns,d:d,order:order,dmin:d.length?Math.min.apply(null,d):0});
+      items.push({r:r,n:res.circuits,ns:ns,nn:res.cs.length,d:d,order:order,dmin:d.length?Math.min.apply(null,d):0});
     });
     items.sort(function(a,b){ return b.n-a.n || a.dmin-b.dmin; });
     var m=items.length, suf=new Array(m+1), lb=new Array(m+1); suf[m]=0; lb[m]=0;
     for(var q=m-1;q>=0;q--){ suf[q]=suf[q+1]+items[q].n; lb[q]=lb[q+1]+items[q].dmin*items[q].n; }
-    var capLeft=C.map(function(c){return c.cap||0;}), cur=new Array(m), best={a:-1,cost:Infinity,map:null}, nodes=0;
-    function rec(i,a,cost){
-      if(++nodes>400000) return;
-      if(a+suf[i]<best.a) return;
-      if(a+suf[i]===best.a && cost+lb[i]>=best.cost) return;
-      if(i===m){ if(a>best.a||(a===best.a&&cost<best.cost)) best={a:a,cost:cost,map:cur.slice()}; return; }
-      var it=items[i];
-      for(var z=0;z<it.order.length;z++){ var ci=it.order[z];
-        var no=it.ns[ci]; if(capLeft[ci]>=no){ capLeft[ci]-=no; cur[i]=ci; rec(i+1,a+it.n,cost+it.d[ci]*no); capLeft[ci]+=no; } }
-      cur[i]=-1; rec(i+1,a,cost);
-    }
-    if(m && C.length) rec(0,0,0);
+    // Sunthalpy with tes: a collector either takes tes (at most te.maxOut outlets in all) or gives one outlet per circuit. Every
+    // combination is tried: most circuits served first, then the most collectors with tes (smaller), then the shortest distances.
+    var TE=S.t20 && brand().te, masks=[0];
+    if(TE){ masks=[]; var nm=C.length<=3 ? 1<<C.length : 0; for(var mk=0;mk<nm;mk++) masks.push(mk); if(!nm) masks.push((1<<C.length)-1,0); }
+    var best={a:-1,cost:Infinity,map:null,te:-1,mask:0};
+    masks.forEach(function(mask){
+      var teOn=function(ci){ return !TE || !!(mask>>ci&1); }, nsOf=function(it,ci){ return teOn(ci) ? it.ns[ci] : it.nn; };
+      var capLeft=C.map(function(c,ci){ return TE && teOn(ci) ? Math.min(c.cap||0,TE.maxOut) : (c.cap||0); }), cur=new Array(m), bm={a:-1,cost:Infinity,map:null}, nodes=0;
+      function rec(i,a,cost){
+        if(++nodes>400000) return;
+        if(a+suf[i]<bm.a) return;
+        if(a+suf[i]===bm.a && cost+lb[i]>=bm.cost) return;
+        if(i===m){ if(a>bm.a||(a===bm.a&&cost<bm.cost)) bm={a:a,cost:cost,map:cur.slice()}; return; }
+        var it=items[i];
+        for(var z=0;z<it.order.length;z++){ var ci=it.order[z];
+          var no=nsOf(it,ci); if(capLeft[ci]>=no){ capLeft[ci]-=no; cur[i]=ci; rec(i+1,a+it.n,cost+it.d[ci]*no); capLeft[ci]+=no; } }
+        cur[i]=-1; rec(i+1,a,cost);
+      }
+      if(m && C.length) rec(0,0,0);
+      // collectors that really join circuits with a te in this combination
+      var te=0; if(TE && bm.map) C.forEach(function(c,ci){ if(teOn(ci) && items.some(function(it,i){ return bm.map[i]===ci && it.ns[ci]<it.nn; })) te++; });
+      if(bm.a>best.a || (bm.a===best.a && (te>best.te || (te===best.te && bm.cost<best.cost)))) best={a:bm.a,cost:bm.cost,map:bm.map,te:te,mask:mask};
+    });
+    C.forEach(function(c,ci){ c._te=!!(TE && (best.mask>>ci&1) && best.map && items.some(function(it,i){ return best.map[i]===ci && it.ns[ci]<it.nn; })); });
     items.forEach(function(it,i){ var ci=best.map?best.map[i]:-1;
-      if(ci!=null && ci>=0){ var c=C[ci], st=collStats[c.id], no=it.ns[ci]; results[it.r.id].col=c; st.n+=no; st.rooms.push({room:it.r,n:no,pex:0,d:it.d[ci]}); } });
+      if(ci!=null && ci>=0){ var c=C[ci], st=collStats[c.id], no=TE && !c._te ? it.nn : it.ns[ci]; results[it.r.id].col=c; st.n+=no; st.rooms.push({room:it.r,n:no,pex:0,d:it.d[ci]}); } });
     C.forEach(function(c){ collStats[c.id].rooms.sort(function(a,b){return a.d-b.d;}); });
     fl.rooms.forEach(function(r){
       var res=results[r.id], col=res.col, mg=1+S.margin/100;
       // each run (ida and retorno) starts with the tube that comes fitted on the panel: that part is not PEX
       res.cs.forEach(function(c){ res.circ[c.i]={a:c.a,b:c.b,col:col,len:0,n:c.n,d:16}; res.mang+=Math.max(0,c.n-1); });
-      res.outs=outletsFor(res.cs,col,null); res.outlets=res.outs.length;
+      res.outs=outletsFor(res.cs,col,null,!!(TE && col && !col._te)); res.outlets=res.outs.length; res.red=0; res.te16=0;
       res.outs.forEach(function(o){ var l=col?o.raw*mg:0; o.len=l; res.pex+=l;
         o.ci.forEach(function(i){ var c=res.circ[i]; c.len=l/o.ci.length; c.d=o.d; c.out=o; });
-        if(o.d===20){ res.g20++; res.pex20+=l; } else { res.pex16+=l; res.unions+=2; } });
+        if(o.d===20 && o.s16!=null){ res.g20++; res.pex16+=col?o.s16*mg:0; res.pex20+=col?o.s20*mg:0; res.red+=o.red; res.te16+=2-o.red; }
+        else if(o.d===20){ res.g20++; res.pex20+=l; } else { res.pex16+=l; res.unions+=2; } });
       res.circ=res.circ.filter(function(c){ return c; });
       if(res.circuits && !res.col) unas.push({room:r,n:items.filter(function(it){ return it.r===r; }).map(function(it){ return it.ns.length?Math.min.apply(null,it.ns):it.n; })[0]||res.circuits,res:res,floor:fl});
       if(res.col){ var st=collStats[res.col.id]; st.pex+=res.pex; st.rooms.forEach(function(x){ if(x.room===r) x.pex=res.pex; }); }
@@ -2170,7 +2194,7 @@
             if(e.single){ L.ends.push({p:e.na,O:O,cls:"ida"}); L.ends.push({p:e.nb,O:O,cls:"ret"}); } else L.bridges.push(e.path);
             if(o.d===20){ L.branches.push({pts:[o.a,V(e.na.x,o.a.y),e.na],O:O,cls:"ida"}); L.branches.push({pts:[o.b,V(e.nb.x,o.b.y),e.nb],O:O,cls:"ret"}); }
             else { rt.push({O:O,cls:"ida",p:e.na,d:16}); rt.push({O:O,cls:"ret",p:e.nb,d:16}); } });
-          if(o.d===20){ rt.push({O:O,cls:"ida",p:o.a,d:20}); rt.push({O:O,cls:"ret",p:o.b,d:20}); L.tees.push({p:o.a,O:O}); L.tees.push({p:o.b,O:O}); } });
+          if(o.d===20){ rt.push({O:O,cls:"ida",p:o.a,d:20,te:o.s16!=null}); rt.push({O:O,cls:"ret",p:o.b,d:20,te:o.s16!=null}); L.tees.push({p:o.a,O:O}); L.tees.push({p:o.b,O:O}); } });
         rt.forEach(function(tb){ tb.room=r; tubes.push(tb); });
       });
       if(!tubes.length) return;
@@ -2228,9 +2252,15 @@
   }
   function pipesSvg(fl){
     var L=pipeLayout(fl), o="", col=function(O){ return CC[((O.n||1)-1)%CC.length]; };
-    L.tubes.forEach(function(t){ o+='<polyline class="p-tcase'+(t.d===20?' w':'')+'" points="'+ptsStr(t.pts)+'"/>'; });
+    // Sunthalpy outlets with a te: PEX 16 for the first metres (the rise to the ceiling counts), then the reducer and PEX 20
+    var parts=function(t){ if(t.d!==20) return [[t.pts,false]]; if(!t.te) return [[t.pts,true]];
+      var lim=Math.max(0,brand().te.p16-S.vert), acc=0, P=t.pts;
+      for(var i=1;i<P.length;i++){ var dd=len(sub(P[i],P[i-1])); if(acc+dd>=lim && dd>0){ var q=add(P[i-1],mul(sub(P[i],P[i-1]),(lim-acc)/dd)); t.red=q; return [[P.slice(0,i).concat([q]),false],[[q].concat(P.slice(i)),true]]; } acc+=dd; }
+      return [[P,false]]; };
+    L.tubes.forEach(function(t){ t.parts=parts(t); t.parts.forEach(function(pp){ o+='<polyline class="p-tcase'+(pp[1]?' w':'')+'" points="'+ptsStr(pp[0])+'"/>'; }); });
     L.branches.forEach(function(b){ o+='<polyline class="p-tcase br" points="'+ptsStr(b.pts)+'"/>'; });
-    L.tubes.forEach(function(t){ o+='<polyline class="p-tube '+t.cls+(t.d===20?' w':'')+'" style="stroke:'+t.color+'" points="'+ptsStr(t.pts)+'"><title>Salida '+t.O.n+' · '+(t.cls==="ida"?"ida":"retorno")+(t.d===20?' · tubo 20':'')+' · '+esc(t.room.name)+'</title></polyline>'; });
+    L.tubes.forEach(function(t){ t.parts.forEach(function(pp){ o+='<polyline class="p-tube '+t.cls+(pp[1]?' w':'')+'" style="stroke:'+t.color+'" points="'+ptsStr(pp[0])+'"><title>Salida '+t.O.n+' · '+(t.cls==="ida"?"ida":"retorno")+(pp[1]?' · tubo 20':t.te?' · tubo 16 hasta la te':'')+' · '+esc(t.room.name)+'</title></polyline>'; });
+      if(t.red) o+='<circle class="p-red" cx="'+f3(t.red.x)+'" cy="'+f3(t.red.y)+'" r="0.07"><title>Manguito reducido 16–20</title></circle>'; });
     L.branches.forEach(function(b){ o+='<polyline class="p-tbr '+b.cls+'" style="stroke:'+col(b.O)+'" points="'+ptsStr(b.pts)+'"/>'; });
     L.bridges.forEach(function(b){ var e=b[b.length-1]; o+='<polyline class="p-bridge" points="'+ptsStr(b)+'"/><circle class="p-node" cx="'+f3(b[0].x)+'" cy="'+f3(b[0].y)+'" r="0.04"/><circle class="p-node" cx="'+f3(e.x)+'" cy="'+f3(e.y)+'" r="0.04"/>'; });
     L.ends.forEach(function(e){ o+='<circle class="p-node" style="stroke:'+col(e.O)+'" cx="'+f3(e.p.x)+'" cy="'+f3(e.p.y)+'" r="0.03"/>'; });
@@ -3280,7 +3310,7 @@
       if(S.mode==="suelo"){ o+=ufCollSvg(c); return; }
       var st=collStats[c.id]||{n:0};
       o+='<g class="coll-g" data-coll="'+c.id+'"><rect x="'+f3(c.x-0.45)+'" y="'+f3(c.y-0.25)+'" width="0.9" height="0.5" style="fill:transparent"/><rect class="p-coll" x="'+f3(c.x-0.28)+'" y="'+f3(c.y-0.1)+'" width="0.56" height="0.2" rx="0.03"><title>'+esc(c.name)+' · arrastra para mover</title></rect></g>';
-      o+='<text class="p-colltext" x="'+f3(c.x)+'" y="'+f3(c.y+0.33)+'" text-anchor="middle">'+esc(c.name)+' · '+st.n+'/'+(c.cap||0)+'</text>';
+      o+='<text class="p-colltext" x="'+f3(c.x)+'" y="'+f3(c.y+0.33)+'" text-anchor="middle">'+esc(c.name)+' · '+st.n+'/'+(c._te?Math.min(c.cap||0,brand().te.maxOut)+' con tes':(c.cap||0))+'</text>';
     });
     if(S.mode==="suelo" && !forExport) o+=recGhostSvg();
     var sel=rooms.filter(function(r){return r.id===S.sel;})[0];
@@ -3350,7 +3380,7 @@
       res.panels.forEach(function(p){ if(ou.ci.indexOf(p.circuit)<0) return; x0=Math.min(x0,p.x); y0=Math.min(y0,p.y); x1=Math.max(x1,p.x+p.w); y1=Math.max(y1,p.y+p.h); });
       if(!isFinite(x0)) return; var m=0.04, f=Math.min(0.15,fs*0.6);
       o+='<rect class="p-out20" x="'+f3(x0-m)+'" y="'+f3(y0-m)+'" width="'+f3(x1-x0+2*m)+'" height="'+f3(y1-y0+2*m)+'" rx="0.05"/>';
-      o+='<text class="p-out20t" font-size="'+f3(f)+'" stroke-width="'+f3(f*0.3)+'" x="'+f3(x0+0.02)+'" y="'+f3(y0-m-0.05)+'">S'+(k+1)+' · 20 mm</text>'; });
+      o+='<text class="p-out20t" font-size="'+f3(f)+'" stroke-width="'+f3(f*0.3)+'" x="'+f3(x0+0.02)+'" y="'+f3(y0-m-0.05)+'">S'+(k+1)+(ou.s16!=null?' · te'+(ou.s20>0?' · 16/20 mm':' · 16 mm'):' · 20 mm')+'</text>'; });
     res.leds.forEach(function(ln){ o+='<line class="p-led" x1="'+f3(ln[0].x)+'" y1="'+f3(ln[0].y)+'" x2="'+f3(ln[1].x)+'" y2="'+f3(ln[1].y)+'"/>'; });
     (res.keep||[]).forEach(function(z){ o+='<rect class="p-keep" x="'+f3(z.x0)+'" y="'+f3(z.y0)+'" width="'+f3(z.x1-z.x0)+'" height="'+f3(z.y1-z.y0)+'"/>'; });
     (res.reg||[]).forEach(function(z){ o+='<rect class="p-reg" x="'+f3(z.x0)+'" y="'+f3(z.y0)+'" width="'+f3(z.x1-z.x0)+'" height="'+f3(z.y1-z.y0)+'"/>'; });
@@ -3389,7 +3419,7 @@
     if(il.length) h+='<p class="layout-line">Iluminación: '+il.join(" y ")+' · <b>'+res.lights.length+' puntos</b>'+(res.leds.length?' · <b>'+fmt(res.ledLen,2)+' m de tira LED</b>':'')+'.</p>';
     if(res.st){ var sb=barsFor(res.st.secLens,S.bar), pb=barsFor(res.st.primLens,S.bar), ab=barsFor(res.st.ang,S.bar);
       h+='<p class="layout-line">Estructura'+(res.st.rot?' (rotada)':'')+': <b>'+fmt(sb.total,1)+' m de TC</b> ('+sb.bars+' barras) · <b>'+fmt(pb.total,1)+' m de primario</b> ('+pb.bars+') · <b>'+fmt(ab.total,1)+' m de angular</b> ('+ab.bars+') · <b>'+res.st.boards+' placas</b> para '+fmt(res.st.need,2)+' m² de techo sin paneles.'+(S.showStruct?'':' Activa «Estructura de pladur» para verla dibujada.')+'</p>'; }
-    if(res.outs && res.outs.length && (res.g20 || S.t20)) h+='<p class="layout-line">Salidas del colector: '+res.outs.map(function(o){ return '<b>'+o.ci.map(function(i){ return 'C'+(i+1); }).join('+')+'</b> '+(o.d===20?'tubo 20':'tubo 16')+(res.col?' · '+fmt(o.len,1)+' m':''); }).join(' · ')+'.'+(res.outs.tooFar?' <span style="color:var(--warn)">Los circuitos que quedan no se agrupan: con tubo de 20 pasarían de 20 m ('+fmt(res.outs.tooFar,1)+' m).</span>':'')+'</p>';
+    if(res.outs && res.outs.length && (res.g20 || S.t20)) h+='<p class="layout-line">Salidas del colector: '+res.outs.map(function(o){ return '<b>'+o.ci.map(function(i){ return 'C'+(i+1); }).join('+')+'</b> '+(o.s16!=null?'con te ('+(o.s20>0?fmt(o.s16*(1+S.margin/100),1)+' m de 16 + '+fmt(o.s20*(1+S.margin/100),1)+' m de 20':'todo en 16')+')':o.d===20?'tubo 20':'tubo 16')+(res.col?' · '+fmt(o.len,1)+' m':''); }).join(' · ')+'.'+(res.col && res.col._te===false && brand().te && S.t20 && res.cs.length>1 ? ' <span class="muted">'+esc(res.col.name)+' va sin tes: con tes no le caben todos sus circuitos en '+brand().te.maxOut+' salidas.</span>':'')+(res.outs.tooFar?' <span style="color:var(--warn)">Los circuitos que quedan no se agrupan: con tubo de 20 pasarían de 20 m ('+fmt(res.outs.tooFar,1)+' m).</span>':'')+'</p>';
     if(res.circ.length) h+='<p class="layout-line">Tubería: <b>'+fmt(res.pex,1)+' m de PEX</b>'+(res.g20?' ('+fmt(res.pex20,1)+' de 20 y '+fmt(res.pex16,1)+' de 16)':'')+' · '+res.mang+' manguito'+(res.mang===1?'':'s')+' · '+res.outlets+' salida'+(res.outlets===1?'':'s')+(res.col?' · va a <b>'+esc(res.col.name)+'</b>':' · <span style="color:var(--warn)">sin colector: '+esc(res.why||'')+'</span>')+'.</p>';
     out.innerHTML=h+thDetailHtml(room);
     var oc2=$("obstClear2"); if(oc2) oc2.addEventListener("click",function(){ room.obst=[]; update(false); });
@@ -3557,7 +3587,7 @@
     $("capSummary").innerHTML=(multi?esc(curFloor().name)+' · ':'')+'Salidas: <b>'+capTot+'</b> · circuitos: <b>'+floorC+'</b>'+(unassigned.length?' · <span style="color:var(--warn)">'+unassigned.length+' estancia'+(unassigned.length>1?'s':'')+' sin colector</span>':'');
     var rc="";
     allColls().forEach(function(c){ var st=collStats[c.id]||{n:0,pex:0,rooms:[]}, fl=floorOfColl(c);
-      st.rooms.forEach(function(x,i){ rc+='<tr><td>'+(i===0?'<b>'+esc(c.name)+'</b>'+(multi&&fl?' · '+esc(fl.name):'')+' <span class="muted">('+st.n+'/'+(c.cap||0)+' salidas)</span>':'')+'</td><td>'+esc(x.room.name)+'</td><td class="num">'+x.n+'</td><td class="num">'+fmt(x.pex,1)+'</td></tr>'; });
+      st.rooms.forEach(function(x,i){ rc+='<tr><td>'+(i===0?'<b>'+esc(c.name)+'</b>'+(multi&&fl?' · '+esc(fl.name):'')+' <span class="muted">('+st.n+'/'+(c._te?Math.min(c.cap||0,6):(c.cap||0))+' salidas'+(c._te?', con tes':'')+')</span>':'')+'</td><td>'+esc(x.room.name)+'</td><td class="num">'+x.n+'</td><td class="num">'+fmt(x.pex,1)+'</td></tr>'; });
       if(!st.rooms.length) rc+='<tr><td><b>'+esc(c.name)+'</b></td><td class="muted">Sin estancias</td><td class="num">0</td><td class="num">0</td></tr>'; });
     allUnassigned.forEach(function(u){ rc+='<tr><td style="color:var(--warn)"><b>Sin asignar</b></td><td>'+esc(u.room.name)+'</td><td class="num">'+u.n+'</td><td></td></tr>'; });
     $("reportColl").innerHTML=rc||'<tr><td colspan="4" class="muted">Sin colectores</td></tr>';
@@ -3580,12 +3610,12 @@
     if(HEAD_T.rooms==null){ HEAD_T.rooms=$("roomsHead").innerHTML; HEAD_T.coll=$("collHead").innerHTML; }
     if(S.mode==="suelo") return renderTablesUF();
     $("roomsHead").innerHTML=HEAD_T.rooms; $("collHead").innerHTML=HEAD_T.coll;
-    var tb="", tot={area:0,cov:0,n:0,c:0,pex:0,mang:0,uni:0,g20:0,pex20:0,pex16:0,out:0}, mat={}, matOrder=[], multi=S.floors.length>1;
+    var tb="", tot={area:0,cov:0,n:0,c:0,pex:0,mang:0,uni:0,g20:0,pex20:0,pex16:0,out:0,red:0,te16:0}, mat={}, matOrder=[], multi=S.floors.length>1;
     S.floors.forEach(function(fl){
       if(multi && fl.rooms.length) tb+='<tr class="floor-row"><td colspan="8">'+esc(fl.name)+'</td></tr>';
       fl.rooms.forEach(function(r){
         var res=results[r.id];
-        tot.area+=res.area; tot.cov+=res.covered; tot.n+=res.panels.length; tot.c+=res.circuits; tot.pex+=res.pex; tot.mang+=res.mang; tot.uni+=res.unions; tot.g20+=res.g20||0; tot.pex20+=res.pex20||0; tot.pex16+=res.pex16||0; tot.out+=res.outlets||0;
+        tot.area+=res.area; tot.cov+=res.covered; tot.n+=res.panels.length; tot.c+=res.circuits; tot.pex+=res.pex; tot.mang+=res.mang; tot.uni+=res.unions; tot.g20+=res.g20||0; tot.pex20+=res.pex20||0; tot.red+=res.red||0; tot.te16+=res.te16||0; tot.pex16+=res.pex16||0; tot.out+=res.outlets||0;
         var warn=res.msgs.some(function(m){return m.t==="warn";});
         tb+='<tr class="clickable'+(r.id===S.sel?' sel':'')+'" data-room="'+r.id+'"><td>'+esc(r.name)+(warn?' <span style="color:var(--warn)" title="Revisar">●</span>':'')+'</td><td class="num">'+fmt(res.area,2)+'</td><td class="num">'+(r.active?fmt(res.pct,1)+'%':'—')+'</td><td class="num">'+res.panels.length+'</td><td class="num"><b>'+res.circuits+'</b>'+(res.g20?'<span class="kit-note">'+res.outlets+' salidas</span>':'')+'</td><td class="num">'+(res.pex?fmt(res.pex,1):'—')+'</td><td class="num">'+res.mang+'</td><td class="num">'+(res.unions+4*(res.g20||0))+'</td></tr>';
         res.panels.forEach(function(p){ if(!mat[p.typeId]){ mat[p.typeId]={name:p.name,tw:p.tw,th:p.th,n:0}; matOrder.push(p.typeId); } mat[p.typeId].n++; });
@@ -3602,7 +3632,7 @@
     $("capSummary").innerHTML=(multi?esc(curFloor().name)+' · ':'')+'Salidas: <b>'+capTot+'</b> · circuitos: <b>'+floorC+'</b>'+(floorO!==floorC&&S.t20?' en <b>'+floorO+'</b> salidas':'')+(unassigned.length?' · <span style="color:var(--warn)">'+unassigned.length+' estancia'+(unassigned.length>1?'s':'')+' sin colector</span>':'');
     var rc="";
     allColls().forEach(function(c){ var st=collStats[c.id]||{n:0,pex:0,rooms:[]}, fl=floorOfColl(c);
-      st.rooms.forEach(function(x,i){ rc+='<tr><td>'+(i===0?'<b>'+esc(c.name)+'</b>'+(multi&&fl?' · '+esc(fl.name):'')+' <span class="muted">('+st.n+'/'+(c.cap||0)+' salidas)</span>':'')+'</td><td>'+esc(x.room.name)+'</td><td class="num">'+x.n+'</td><td class="num">'+fmt(x.pex,1)+'</td></tr>'; });
+      st.rooms.forEach(function(x,i){ rc+='<tr><td>'+(i===0?'<b>'+esc(c.name)+'</b>'+(multi&&fl?' · '+esc(fl.name):'')+' <span class="muted">('+st.n+'/'+(c._te?Math.min(c.cap||0,6):(c.cap||0))+' salidas'+(c._te?', con tes':'')+')</span>':'')+'</td><td>'+esc(x.room.name)+'</td><td class="num">'+x.n+'</td><td class="num">'+fmt(x.pex,1)+'</td></tr>'; });
       if(!st.rooms.length) rc+='<tr><td><b>'+esc(c.name)+'</b></td><td class="muted">Sin estancias</td><td class="num">0</td><td class="num">0</td></tr>'; });
     allUnassigned.forEach(function(u){ rc+='<tr><td style="color:var(--warn)"><b>Sin asignar</b></td><td>'+esc(u.room.name)+'</td><td class="num">'+u.n+'</td><td></td></tr>'; });
     $("reportColl").innerHTML=rc||'<tr><td colspan="4" class="muted">Sin colectores</td></tr>';
@@ -3611,8 +3641,10 @@
     $("chips").innerHTML=(multi?'<span class="chip">Plantas <b>'+S.floors.length+'</b></span>':'')+'<span class="chip">Estancias <b>'+active+'/'+AR.length+'</b></span><span class="chip">Paneles <b>'+tot.n+'</b></span><span class="chip">Circuitos <b>'+tot.c+'</b></span><span class="chip">Colectores <b>'+allColls().length+'</b>'+(allUnassigned.length?' <span class="pill warn">'+allUnassigned.length+' sin asignar</span>':'')+'</span><span class="chip">PEX <b>'+fmt(Math.ceil(tot.pex))+'</b> m</span>';
     reportRows=[];
     matOrder.forEach(function(id){ var m=mat[id]; reportRows.push({key:"panel_"+id,label:m.name,note:fmt(m.tw)+"×"+fmt(m.th)+" cm",qty:m.n,unit:"ud."}); });
-    var bySize={}; allColls().forEach(function(c){ var k=c.cap||0; bySize[k]=(bySize[k]||0)+1; });
+    // a collector with tes (Sunthalpy) is only as big as the outlets it uses, at most 6
+    var bySize={}, teSize={}; allColls().forEach(function(c){ if(c._te){ var u=Math.max(2,(collStats[c.id]||{}).n||0); teSize[u]=(teSize[u]||0)+1; } else { var k=c.cap||0; bySize[k]=(bySize[k]||0)+1; } });
     Object.keys(bySize).map(Number).sort(function(a,b){return a-b;}).forEach(function(k){ reportRows.push({key:"coll_"+k,label:"Colector de "+k+" salidas",note:"Conjunto completo de ida y retorno",qty:bySize[k],unit:"ud."}); });
+    Object.keys(teSize).map(Number).sort(function(a,b){return a-b;}).forEach(function(k){ reportRows.push({key:"collte_"+k,label:"Colector de "+k+" salidas",note:"Con salidas agrupadas con te: como máximo 6 salidas",qty:teSize[k],unit:"ud."}); });
     var nPts=0, ledM=0; allRooms().forEach(function(r){ var res=results[r.id]; nPts+=res.lights.length; ledM+=res.ledLen; });
     if(nPts) reportRows.push({key:"luz",label:"Punto de luz",note:"Posiciones sugeridas en el techo",qty:nPts,unit:"ud."});
     if(ledM) reportRows.push({key:"led",label:"Tira LED",note:"Longitud aproximada en el techo",qty:Math.ceil(ledM*2)/2,unit:"m"});
@@ -3629,20 +3661,30 @@
       reportRows.push({key:"cuelgue",label:"Cuelgue (varilla + pieza)",note:"En los primarios, cada "+fmt(S.hang,1)+" m",qty:hang,unit:"ud."});
       reportRows.push({key:"placa",label:"Placa de pladur "+Math.round(bdm.S*1000)+" × "+Math.round(bdm.L*1000)+" mm",note:fmt(need,1)+" m² de techo sin paneles; con recortes se aprovecha el "+fmt(boards?need/(boards*bdm.L*bdm.S)*100:0,0)+"%",qty:boards,unit:"ud."});
     }
-    if(tot.g20){
+    var TER=brand().te;
+    if(tot.g20 && TER){
+      reportRows.push({key:"pex",label:"Tubo PEX 16 mm",note:"Ida y retorno de las salidas de un circuito y los "+TER.p16+" primeros metros de las salidas con te, descontando "+fmt(S.tail,1)+" m de tubo del panel por tramo, con "+fmt(S.margin)+"% de margen",qty:Math.ceil(tot.pex16),unit:"m"});
+      if(tot.pex20>0) reportRows.push({key:"pex20",label:"Tubo PEX 20 mm",note:"En las salidas con te, de los "+TER.p16+" m a la te cuando el tramo es más largo, con "+fmt(S.margin)+"% de margen",qty:Math.ceil(tot.pex20),unit:"m"});
+      if(tot.red) reportRows.push({key:"red1620",label:"Manguito reducido 16–20",note:"Uno en cada tramo de más de "+TER.p16+" m hasta la te (ida y retorno por separado)",qty:tot.red,unit:"ud."});
+    } else if(tot.g20){
       reportRows.push({key:"pex",label:"Tubo PEX 16 mm",note:"Ida y retorno de los circuitos de una salida, descontando "+fmt(S.tail,1)+" m de tubo del panel por tramo, con "+fmt(S.margin)+"% de margen",qty:Math.ceil(tot.pex16),unit:"m"});
       reportRows.push({key:"pex20",label:"Tubo PEX 20 mm",note:"Del colector a las tes de las salidas agrupadas (ida y retorno), con "+fmt(S.margin)+"% de margen",qty:Math.ceil(tot.pex20),unit:"m"});
     } else reportRows.push({key:"pex",label:"Tubo PEX",note:"Ida y retorno de todos los circuitos, descontando "+fmt(S.tail,1)+" m de tubo del panel por tramo, con "+fmt(S.margin)+"% de margen",qty:Math.ceil(tot.pex),unit:"m"});
     reportRows.push({key:"mang",label:"Manguito de unión entre paneles",note:"1 por cada unión entre dos paneles del mismo circuito",qty:tot.mang,unit:"ud."});
-    if(tot.uni) reportRows.push({key:"bicono",label:"Bicono para PEX"+(tot.g20?" 16":""),note:"2 por salida de tubo de 16, en el colector (ida y retorno). Incluye casquillo",qty:tot.uni,unit:"ud."});
-    if(tot.g20){
+    if(TER && tot.g20) reportRows.push({key:"bicono",label:"Bicono para PEX 16",note:"2 por salida, en el colector (ida y retorno); las salidas con te también salen en 16. Incluye casquillo",qty:tot.uni+2*tot.g20,unit:"ud."});
+    else if(tot.uni) reportRows.push({key:"bicono",label:"Bicono para PEX"+(tot.g20?" 16":""),note:"2 por salida de tubo de 16, en el colector (ida y retorno). Incluye casquillo",qty:tot.uni,unit:"ud."});
+    if(TER && tot.g20){
+      reportRows.push({key:"te20",label:"Te de latón",note:"2 por salida agrupada (ida y retorno)",qty:2*tot.g20,unit:"ud."});
+      if(tot.red) reportRows.push({key:"mc20",label:"Racor de multicapa 20 mm",note:"En el centro de la te cuando llega tubo de 20",qty:tot.red,unit:"ud."});
+    } else if(tot.g20){
       reportRows.push({key:"bicono20",label:"Bicono para PEX 20",note:"2 por salida agrupada, en el colector (ida y retorno)",qty:2*tot.g20,unit:"ud."});
       reportRows.push({key:"te20",label:"Te de latón",note:"2 por salida agrupada (ida y retorno), al final del tubo de 20",qty:2*tot.g20,unit:"ud."});
       reportRows.push({key:"mc20",label:"Racor de multicapa 20 mm",note:"En el centro de cada te, para el PEX de 20",qty:2*tot.g20,unit:"ud."});
     }
     reportRows.push({key:"rpanel",label:"Racor tubo de panel a rosca 1/2\"",note:tot.g20?"2 por circuito de 16 (ida y retorno) y 2 en los extremos de cada te":"2 por circuito (ida y retorno)",qty:tot.uni+4*tot.g20,unit:"ud."});
-    if(tot.uni){ reportRows.push({key:"rpex",label:"Racor PEX con rosca 1/2\"",note:"2 por circuito de tubo de 16 (ida y retorno)",qty:tot.uni,unit:"ud."});
-      reportRows.push({key:"casq",label:"Casquillo PEX",note:"2 por circuito de tubo de 16 (ida y retorno)",qty:tot.uni,unit:"ud."}); }
+    var r16=tot.uni+(TER?tot.te16:0);
+    if(r16){ reportRows.push({key:"rpex",label:"Racor PEX con rosca 1/2\"",note:"2 por circuito de tubo de 16 (ida y retorno)"+(TER&&tot.te16?" y 1 en cada te a la que llega tubo de 16":""),qty:r16,unit:"ud."});
+      reportRows.push({key:"casq",label:"Casquillo PEX",note:"Uno por cada racor PEX",qty:r16,unit:"ud."}); }
     ctrlRows(allRooms().reduce(function(t,r){ return t+((results[r.id]||{}).outs||[]).length; },0)); renderReport();
   }
   // zone control: the client decides how many zones, so the quantities are typed in (never worked out); left at 0 they stay out of the report
@@ -3813,7 +3855,7 @@
       doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor.apply(doc,MUT);
       var note=UFM ? "Notas: separación del tubo en plancha de tetones universal (múltiplos de 5 cm). Junto a ventanas y muros exteriores el tubo va más junto (zona periférica, UNE-EN 1264). Cada circuito tiene como máximo "+fmt(S.uf.maxLen)+" m contando la ida y vuelta al colector con recorrido ortogonal y "+fmt(S.uf.vert,1)+" m de bajada por tramo. Las estancias separadas por una escalera llevan su propio colector. Los metros de tubo incluyen un "+fmt(S.uf.margin)+"% de margen." : "Notas: cada colector incluye ida y retorno. Cada circuito lleva 2 conexiones (ida y retorno): en el colector, 1 bicono completo; en el panel, 1 racor de tubo de panel a rosca 1/2\", 1 racor PEX con rosca 1/2\" y 1 casquillo. Manguito de unión: 1 por cada unión entre dos paneles del mismo circuito. Paneles "+brand().name+" "+brand().line+": "+seriesText().toLowerCase()+" Caudal de diseño "+fmt(brand().flow)+" l/min por circuito; acabado "+brand().finish[S.finish].n.toLowerCase()+", agua como máximo a "+brandTmax()+" °C. Los metros de PEX son una estimación con recorrido ortogonal, subida al techo de "+fmt(S.vert,1)+" m por tramo, descontando "+fmt(S.tail,1)+" m de tubo del propio panel por tramo, y "+fmt(S.margin)+"% de margen.";
       if(BETA.th) note+=" Cálculo térmico orientativo: pérdidas por transmisión (U · superficie · diferencia de temperatura) por los muros exteriores y ventanas marcados, suelo y techo, más ventilación y un "+fmt(S.th.marg)+"% de margen. "+(UFM?"Emisión del suelo según UNE-EN 1264 con tubo "+(TH_TUBE[S.th.tube]||TH_TUBE["16x2"]).n+" y "+fmt(S.th.su)+" mm de mortero.":"Emisión de los paneles "+brand().name+" "+brand().line+" según su ficha: "+brand().emis+".")+" No sustituye al proyecto firmado por un técnico.";
-      if(!UFM && S.t20) note+=" Con tubo de 20 mm, dos circuitos de la misma estancia (3 o 4 paneles) comparten una salida: bicono de 20 en el colector y una te de latón en la ida y otra en el retorno, con racores de tubo de panel en los extremos y racor de multicapa de 20 en el centro. El PEX de 20 no pasa de 20 m sumando ida y retorno.";
+      if(!UFM && S.t20) note+=" Salidas con te: "+teText();
       var nl=doc.splitTextToSize(note,PW-2*M); doc.text(nl,M,y); y+=nl.length*3.4+3;
       if(company.foot){ var fl2=doc.splitTextToSize(company.foot,PW-2*M); if(y+fl2.length*3.6>283){ doc.addPage(); y=18; } doc.setTextColor.apply(doc,INK); doc.setFontSize(8); doc.text(fl2,M,y); }
       var pages=doc.getNumberOfPages();
@@ -4074,7 +4116,7 @@
     $("brandInfo").innerHTML=[b.mm?'Placa de <b>'+fmt(b.mm)+' mm</b>'+(b.kg?' y <b>'+fmt(b.kg,b.kg%1?1:0)+' kg/m²</b>':'')+(b.mod?', sobre perfilería cada <b>'+b.mod+' cm</b>':'')+'.':'', b.tube?'Tubo '+esc(b.tube)+'.':'',
       b.flow?'Caudal de diseño <b>'+fmt(b.flow)+' l/min</b> por circuito.':'', 'Agua entre '+b.tMin+' y '+brandTmax()+' °C'+(b.bar?', máx. '+b.bar+' bar':'')+'.', esc(seriesText()), b.rules?esc(b.rules):'', src?'Fuente: '+src+'.':''].filter(Boolean).join(' ');
     $("thBrandNote").innerHTML='Emisión de los paneles '+esc(b.name+' '+b.line)+' según su ficha: '+esc(b.emis)+'. '+(b.flow?'Caudal de '+fmt(b.flow)+' l/min por circuito. ':b.models.some(function(m){ return m.fl; })?'Caudal por panel de la ficha. ':'El caudal sale del salto ida–retorno. ')+'La impulsión no pasa de '+brandTmax()+' °C con el acabado elegido.';
-    $("thVmaxT").max=brandTmax();
+    $("thVmaxT").max=brandTmax(); $("teNote").textContent=teText();
     renderCatalog(); }
   // projects saved before the brands (free panel sizes) or with an unknown brand: the brand's panels
   function brandFix(){ if(!BRANDS[S.brand]) S.brand="sunthalpy"; var b=brand(); if(!b.finish[S.finish]) S.finish=Object.keys(b.finish)[0];
@@ -4754,7 +4796,7 @@
       else { var pd=[], ga=[], ta=0, fc=function(i){ return circFlow(res,i,ta?o.flow*(ga[i]||0)/ta:0); };   // pressure drop of the panels of each circuit at the design flow (data sheet), plus the PEX
         res.panels.forEach(function(p){ var m=modelOf(p.tw,p.th); pd[p.circuit]=(pd[p.circuit]||0)+(m&&m.dp?m.dp:0); ga[p.circuit]=(ga[p.circuit]||0)+p.w*p.h; ta+=p.w*p.h; });
         var cdp=function(i){ return pd[i]||0; };
-        if(res.outs && res.outs.length) res.outs.forEach(function(ou){ var f=ou.ci.reduce(function(t,i){ return t+fc(i); },0), dp=thDp(f,ou.len||0,ou.d===20?"20x2":"16x2")+Math.max.apply(null,ou.ci.map(cdp));
+        if(res.outs && res.outs.length) res.outs.forEach(function(ou){ var f=ou.ci.reduce(function(t,i){ return t+fc(i); },0), dp=(ou.s16!=null ? thDp(f,ou.s16*(1+S.margin/100),"16x2")+thDp(f,ou.s20*(1+S.margin/100),"20x2") : thDp(f,ou.len||0,ou.d===20?"20x2":"16x2"))+Math.max.apply(null,ou.ci.map(cdp));
             o.circ.push({name:ou.ci.map(function(i){ return "C"+(i+1); }).join("+")+(ou.d===20?" (tubo 20)":""),col:res.col,len:ou.len||0,flow:f,n:ou.n,dp:dp});
             if(dp>dpMax){ dpMax=dp; dpO={o:o,name:ou.ci.map(function(i){ return "C"+(i+1); }).join("+")}; } });
         else for(var ci2=0;ci2<res.circuits;ci2++){ var dp2=thDp(fc(ci2),res.circ[ci2]?res.circ[ci2].len:0,"16x2")+cdp(ci2); o.circ.push({name:"C"+(ci2+1),col:res.col,len:res.circ[ci2]?res.circ[ci2].len:0,flow:fc(ci2),n:res.circ[ci2]?res.circ[ci2].n:0,dp:dp2}); } }
@@ -5481,7 +5523,7 @@
           : (suelo?"<p>Mantén pulsado el <b>Colector</b> y arrástralo hasta una pared del <b>Salón</b>. Suéltalo cerca de la pared y se pegará solo.</p><p>En cuanto lo sueltes, verás aparecer los circuitos. Si solo lo pulsas, se coloca solo en la pared recomendada.</p>"
                   :"<p>Arrastra el <b>Colector</b> dentro del <b>Salón</b> (o simplemente púlsalo). Las estancias se asignan solas al colector más cercano con salidas libres.</p><p>Alrededor del colector se reserva su <b>registro</b>: ahí no se ponen paneles.</p>"); }}]});
     if(suelo) P.push({info:true,anim:"recomendada",el:".coll-bar",t:"Ubicación recomendada",x:"<p>Al pulsar el colector, se coloca solo en la pared donde menos tubo hace falta. Si después cambias estancias o puertas y hay un sitio mejor, aquí aparece el aviso <b>Ubicación recomendada</b>: lo ves en el plano y decides <b>Colocar aquí</b> o <b>Descartar</b>.</p>"});
-    else P.push({info:true,el:"#planWrap",t:"Salidas con tubo de 20",x:"<p>Dos circuitos de la misma estancia (3 o 4 paneles) comparten una salida del colector con <b>tubo de 20</b> hasta una te de latón, siempre que el PEX de 20 no pase de 20 m (ida + retorno). Se hace solo.</p><p>Con «Colorear por circuito» los paneles de una misma salida salen del mismo color; en la ficha llevan el contorno <b>S1 · 20 mm</b>. Lo que no se puede agrupar va con tubo de 16.</p>"});
+    else P.push({info:true,el:"#planWrap",t:"Salidas con te",x:"<p>Dos circuitos de la misma estancia pueden compartir una salida del colector con una <b>te</b>. Con Sunthalpy, hasta la te va PEX de 16 si el tramo no pasa de 7 m; si es más largo, un manguito reducido y el resto en PEX de 20. Un colector con tes es como máximo de <b>6 salidas</b>: si así no caben todos los circuitos, se usa una salida por circuito. Se hace solo.</p><p>Con «Colorear por circuito» los paneles de una misma salida salen del mismo color; en la ficha llevan el contorno <b>S1 · te</b>.</p>"});
     P.push({mission:true,anim:"ficha",t:"Abre la ficha de una estancia",badge:"Ficha consultada",
       done:function(T){ return S.sel===T.salon && !S.moveId; },
       skip:function(T){ if(T.salon) select(T.salon); },

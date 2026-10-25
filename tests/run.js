@@ -370,6 +370,24 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("emisión según la curva de Sunthalpy (≈ 64 W/m² a 5 K, 120 a 10 K, 236 a 20 K)", Math.abs(thb.q5 - 64.5) < 1 && Math.abs(thb.q10 - 120) < 1 && Math.abs(thb.q20 - 236) < 2, JSON.stringify(thb));
   ok("acabado enyesado: el agua no pasa de 40 °C aunque se pidan 55 (y lo avisa)", thb.vmax === 40 && thb.warn, JSON.stringify(thb));
   ok("caudal de 1 l/min por circuito y pérdida de carga con los kPa de los paneles", Math.abs(thb.flow - 60 * thb.circ) < 1e-6 && thb.dpMin >= 13, JSON.stringify(thb));
+  // Sunthalpy con tes: hasta 7 m de PEX 16 hasta la te y el resto en 20 (manguito reducido); colector con tes de 6 salidas como máximo,
+  // y si no caben todos los circuitos así, una salida por circuito
+  const te = await p.evaluate(() => { const D = window.__dbg, S = D.S, o = {};
+    const run = (rooms, coll) => { S.floors = [{ id: D.nid(), name: "x", rooms, collectors: [Object.assign({ id: D.nid(), name: "C" }, coll)] }]; S.fi = 0; D.update(true);
+      const c = S.collectors[0], outs = [].concat(...S.rooms.map(r => D.results[r.id].outs || [])), rows = {}; window.__dbg.S; 
+      document.querySelectorAll("#reportBody tr").forEach(tr => { const td = tr.querySelectorAll("td"); rows[td[0].firstChild.textContent.trim()] = td[1].innerText.trim(); });
+      return { te: !!c._te, outs: outs.length, g: outs.filter(x => x.d === 20).length, circ: S.rooms.reduce((t, r) => t + D.results[r.id].circuits, 0), red: outs.reduce((t, x) => t + (x.red || 0), 0),
+        bad16: outs.filter(x => x.d === 20 && (Math.abs(x.s16 - Math.min(x.la, 7) - Math.min(x.lb, 7)) > 1e-6 || Math.abs(x.s20 - Math.max(0, x.la - 7) - Math.max(0, x.lb - 7)) > 1e-6)).length,
+        un: S.rooms.filter(r => D.results[r.id].circuits && !D.results[r.id].col).length, rows }; };
+    o.cerca = run([D.rectRoom("Salón", 0, 0, 6, 4.5, {})], { x: 0.8, y: 3.9, cap: 12 });
+    o.lejos = run([D.rectRoom("Salón", 0, 0, 6, 4.5, {}), D.rectRoom("Paso", 6, 0, 9, 1.2, { active: false })], { x: 14.5, y: 0.6, cap: 12 });
+    o.lleno = run([0, 1, 2, 3].map(i => D.rectRoom("E" + i, i * 6, 0, 6, 4.5, {})), { x: 12, y: 4.2, cap: 40 });
+    return o; });
+  ok("con tes y tramos cortos: colector de 6 salidas como máximo, todo en PEX 16, sin manguitos reducidos",
+    te.cerca.te && te.cerca.g > 0 && te.cerca.outs <= 6 && te.cerca.outs < te.cerca.circ && te.cerca.red === 0 && !te.cerca.rows["Tubo PEX 20 mm"] && !te.cerca.rows["Manguito reducido 16–20"] && /Colector de [2-6] salidas/.test(Object.keys(te.cerca.rows).join("|")), JSON.stringify(te.cerca));
+  ok("con tes y tramos de más de 7 m: 7 m de PEX 16 y el resto de 20, con un manguito reducido por tramo",
+    te.lejos.te && te.lejos.red > 0 && !te.lejos.bad16 && te.lejos.rows["Manguito reducido 16–20"] === te.lejos.red + " ud." && !!te.lejos.rows["Tubo PEX 20 mm"], JSON.stringify(te.lejos));
+  ok("si con tes no caben todos los circuitos en 6 salidas: una salida por circuito, sin tes", !te.lleno.te && te.lleno.g === 0 && te.lleno.outs === te.lleno.circ && !te.lleno.un && !!te.lleno.rows["Colector de 40 salidas"], JSON.stringify({ te: te.lleno.te, g: te.lleno.g, outs: te.lleno.outs, circ: te.lleno.circ, un: te.lleno.un }));
   // las demás marcas: cada una con sus paneles, su límite en serie y su emisión según la ficha
   const otras = await p.evaluate(() => { const D = window.__dbg, S = D.S, out = {}, sel = document.getElementById("sBrand");
     const want = { renovis: [15, 55], nic: [16, 162 / 2.4], gkc: [15, 68], gkcs: [15, 77] };
@@ -411,7 +429,7 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
     const need = ["¿Tienes un plano de la vivienda?", "Deshacer y rehacer", "Paredes curvas", "Control por zonas"], miss = need.filter(t => !seen.includes(t));
     ok("tutorial de " + nm + ": llega al final (" + seen.length + " pasos) con los pasos nuevos", /Fin/.test(seen[seen.length - 1] || "") && !miss.length, "faltan: " + miss.join(", ") + " · último: " + seen[seen.length - 1]);
     // every step that asks to do something shows its animation (recorded with tutorial/grabar.js); only the purely informative ones do not
-    const INFO = ["Aprende haciéndolo", "Salidas con tubo de 20", "La ficha de la estancia", "Potencias y caudales", "Resumen de circuitos"];
+    const INFO = ["Aprende haciéndolo", "Salidas con te", "La ficha de la estancia", "Potencias y caudales", "Resumen de circuitos"];
     const noAnim = anims.slice(0, -1).filter(s => !s.anim && !INFO.includes(s.t)).map(s => s.t), uniq = [...new Set(anims.filter(s => s.anim).map(s => s.anim))];
     const noFile = uniq.filter(a => !fs.existsSync(path.join(ROOT, a + ".mp4")) || !fs.existsSync(path.join(ROOT, a + ".webm")));
     ok("tutorial de " + nm + ": " + uniq.length + " animaciones, todas con vídeo, y se reproducen", !noAnim.length && !noFile.length && played, "sin animación: " + noAnim.join(", ") + " · sin vídeo: " + noFile.join(", ") + " · se reproduce: " + played);
