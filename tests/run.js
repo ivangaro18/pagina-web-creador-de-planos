@@ -64,6 +64,8 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
     ok("lista de materiales del ejemplo", mats >= 5, String(mats));
     const tells = await p.evaluate(() => document.querySelectorAll(".kicker, .cta-band, .s-thermo").length + [...document.querySelectorAll("#siteView button, #siteView a, #pricingView button, #chooseView .ch-go")].filter(e => /[→←]/.test(e.textContent)).length);
     ok("sin etiquetas en píldora, franjas con degradado ni flechas en los botones", tells === 0, String(tells));
+    const ch = await p.evaluate(() => { document.querySelector('[data-go="choose"]').click(); return [...document.querySelectorAll("#chooseView .ch-fig")].map(f => { const v = f.querySelector("svg"); return v ? v.querySelectorAll(".room-g").length : 0; }); });
+    ok("elegir sistema: cada opción muestra la vivienda de ejemplo calculada (9 estancias)", ch.length === 2 && ch.every(n => n === 9), JSON.stringify(ch));
     await p.close(); }
   { const p = await open("#planificador"); await p.click("#loadExample"); await p.waitForTimeout(900);
     const up = await p.evaluate(() => [...document.querySelectorAll("#appView .section-title, #appView th, #appView .stat .k, #appView .eyebrow, #appView .chip")].filter(e => getComputedStyle(e).textTransform === "uppercase").length);

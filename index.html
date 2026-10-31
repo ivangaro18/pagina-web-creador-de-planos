@@ -186,15 +186,20 @@
   .ch-main{max-width:1040px;width:100%;margin:0 auto;padding:40px 20px 56px;flex:1;}
   .ch-main h1{font-size:clamp(1.9rem,4.4vw,3rem);line-height:1.05;margin:0 0 12px;}
   .ch-main .lead{color:var(--s-muted);font-size:1.04rem;line-height:1.55;margin:0 0 32px;max-width:36em;}
-  .ch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:24px;}
+  .ch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:24px;}
   .ch-card{display:flex;flex-direction:column;text-align:left;background:#fff;border:1.5px solid var(--trace);padding:0;cursor:pointer;font:inherit;color:inherit;}
   .ch-card:hover{border-color:var(--s-ink);}
-  .ch-card:hover .ch-go{text-decoration:underline;}
-  .ch-art{display:block;width:100%;aspect-ratio:16/10;background:#fff;border-bottom:1px solid var(--trace);}
-  .ch-body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:6px;}
-  .ch-body h2{margin:0;font-size:1.4rem;line-height:1.1;}
-  .ch-body p{margin:0;color:var(--s-muted);font-size:.96rem;line-height:1.5;}
-  .ch-go{margin-top:12px;font-weight:600;color:var(--ret);font-size:.96rem;text-underline-offset:3px;}
+  .ch-head{display:block;padding:20px 20px 16px;}
+  .ch-name{display:block;font-size:1.7rem;font-weight:700;font-stretch:118%;line-height:1.05;letter-spacing:-.01em;}
+  .ch-sub{display:block;margin-top:6px;color:var(--s-muted);font-size:.98rem;line-height:1.4;}
+  .ch-fig{display:block;border-block:1px solid var(--trace);padding:10px;min-height:120px;}
+  .ch-fig svg{display:block;width:100%;height:auto;pointer-events:none;}
+  .ch-calc{display:grid;grid-template-columns:1fr 1fr;}
+  .ch-calc span{padding:9px 20px;border-bottom:1px solid var(--rule);font-size:.9rem;line-height:1.35;}
+  .ch-calc span:nth-child(odd){border-right:1px solid var(--rule);}
+  .ch-go{display:block;margin:auto 20px 20px;margin-top:18px;padding:12px 16px;background:var(--s-ink);color:#fff;border-radius:4px;font-weight:600;font-size:.98rem;text-align:center;}
+  .ch-card:hover .ch-go{background:#0C2233;}
+  @media (max-width:420px){ .ch-calc span{padding:8px 12px;font-size:.84rem;} .ch-head{padding:16px 16px 12px;} .ch-go{margin:16px;} }
   .ch-note{margin-top:18px;min-height:1.4em;color:var(--s-muted);font-size:.92rem;}
 
   h1,h2,h3{font-weight:600;text-wrap:balance;margin:0;}
@@ -985,37 +990,19 @@
   <div class="ch-top"><button class="linkbtn" data-go="site">Volver a la web</button><span class="user-box auth-only" hidden><span class="user-email"></span><button class="linkbtn logout-btn" type="button">Salir</button></span></div>
   <main class="ch-main">
     <h1>¿Qué sistema vas a calcular?</h1>
-    <p class="lead">Elige el tipo de instalación. Cada planificador tiene sus propias reglas de distribución, circuitos y materiales.</p>
+    <p class="lead">Cada planificador tiene sus propias reglas de reparto, circuitos y materiales. Debajo, la misma vivienda calculada con cada uno.</p>
     <div class="ch-grid">
-      <button class="ch-card" data-go="app-techo" type="button"><svg class="ch-art" viewBox="0 0 320 200" aria-hidden="true">
-  <rect x="20" y="22" width="280" height="10" fill="#1E3A4F"/>
-  <g fill="#86C3D9" stroke="#fff" stroke-width="1">
-    <rect x="34" y="32" width="58" height="12" rx="1.5"/><rect x="94" y="32" width="58" height="12" rx="1.5"/><rect x="168" y="32" width="58" height="12" rx="1.5"/><rect x="228" y="32" width="58" height="12" rx="1.5"/>
-  </g>
-  <g fill="none" stroke-width="1.6" stroke-linecap="round">
-    <path d="M40 38 H86" stroke="#D9452F"/><path d="M100 38 H146" stroke="#2563C9"/><path d="M174 38 H220" stroke="#D9452F"/><path d="M234 38 H280" stroke="#2563C9"/>
-  </g>
-  <rect x="152" y="33" width="16" height="4" fill="#F6E7C6"/><circle cx="160" cy="40" r="3" fill="#F2B53A"/>
-  <g fill="none" stroke="#D9452F" stroke-width="2" stroke-linecap="round" opacity=".55">
-    <path d="M52 62 q6 8 0 16 q-6 8 0 16"/><path d="M112 62 q6 8 0 16 q-6 8 0 16"/><path d="M200 62 q6 8 0 16 q-6 8 0 16"/><path d="M260 62 q6 8 0 16 q-6 8 0 16"/>
-  </g>
-  <g fill="none" stroke="#557085" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M70 168 v-26 a6 6 0 0 1 6 -6 h44 a6 6 0 0 1 6 6 v26"/><path d="M64 150 h68"/><path d="M190 168 v-34 h50 v34"/><path d="M182 134 h66"/>
-  </g>
-  <rect x="20" y="168" width="280" height="6" fill="#C9D7E1"/>
-  <rect x="20" y="22" width="6" height="152" fill="#1E3A4F"/><rect x="294" y="22" width="6" height="152" fill="#1E3A4F"/>
-</svg>
-        <span class="ch-body"><h2>Techo radiante</h2><p>Paneles en el techo, circuitos de 2 paneles, colectores, tubería PEX, estructura de pladur e informe de materiales.</p><span class="ch-go">Abrir el planificador de techo</span></span>
+      <button class="ch-card" data-go="app-techo" type="button">
+        <span class="ch-head"><span class="ch-name">Techo radiante</span><span class="ch-sub">Paneles en el techo, sobre estructura de pladur</span></span>
+        <span class="ch-fig" data-chfig="techo"></span>
+        <span class="ch-calc"><span>Paneles de cualquier fabricante</span><span>Circuitos de 2 paneles</span><span>Colectores y metros de PEX</span><span>Perfiles, cuelgues y placas</span><span>Luz entre paneles</span><span>Informe con tus precios</span></span>
+        <span class="ch-go">Abrir el planificador de techo</span>
       </button>
-      <button class="ch-card floor" data-go="app-suelo" type="button"><svg class="ch-art" viewBox="0 0 320 200" aria-hidden="true">
-  <rect x="20" y="20" width="280" height="160" rx="4" fill="#FFFDFB" stroke="#1E3A4F" stroke-width="5"/>
-  <g fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M44 172 V40 H276 V156 H64 V60 H256 V136 H84 V80 H236 V116 H104 V100 H200" stroke="#D9452F"/>
-    <path d="M54 172 V50 H266 V146 H74 V70 H246 V126 H94 V90 H226 V108 H200" stroke="#2563C9" opacity=".9"/>
-  </g>
-  <rect x="34" y="166" width="34" height="12" rx="2" fill="#0B7FAB"/>
-</svg>
-        <span class="ch-body"><h2>Suelo radiante</h2><p>Circuitos de tubo por estancia con máximo de 120 m, franjas junto a ventanas y muros exteriores, escaleras, colectores en pared e informe de materiales.</p><span class="ch-go">Abrir el planificador de suelo</span></span>
+      <button class="ch-card" data-go="app-suelo" type="button">
+        <span class="ch-head"><span class="ch-name">Suelo radiante</span><span class="ch-sub">Tubo sobre plancha de tetones, por estancias</span></span>
+        <span class="ch-fig" data-chfig="suelo"></span>
+        <span class="ch-calc"><span>Circuitos de hasta 120 m</span><span>Tubo más junto en ventanas</span><span>Colector en la mejor pared</span><span>Puertas y escaleras</span><span>Plancha, banda y tubo</span><span>Informe con tus precios</span></span>
+        <span class="ch-go">Abrir el planificador de suelo</span>
       </button>
     </div>
     <p class="ch-note" id="chNote" role="status"></p>
@@ -3276,7 +3263,7 @@
   // line weight of the ceiling piping: --pu is one screen pixel in plan units, times √zoom (thin at full view, firmer when zoomed)
   function pipeScale(svg,k){ var m=svg&&svg.getScreenCTM&&svg.getScreenCTM(); if(m&&m.a>0) svg.style.setProperty("--pu",(Math.sqrt(k||1)/m.a)+"px"); }
   window.addEventListener("resize",function(){ pipeScale(document.querySelector("#planWrap svg"),S.zoom?S.zoom.k:1); heroScale(); });
-  function heroScale(){ Array.prototype.forEach.call(document.querySelectorAll("#siteView svg[viewBox]"),function(v){ pipeScale(v,1); }); }
+  function heroScale(){ Array.prototype.forEach.call(document.querySelectorAll("#siteView svg[viewBox], #chooseView .ch-fig svg"),function(v){ pipeScale(v,1); }); }
 
   // ---------------- room detail ----------------
   function sideLabelsSvg(r,fs){
@@ -5207,7 +5194,7 @@
     $("authView").hidden=true;
     $("siteView").hidden = v!=="site"; $("pricingView").hidden = v!=="pricing"; $("appView").hidden = v!=="app"; $("chooseView").hidden = v!=="choose"; $("chNote").textContent="";
     window.scrollTo(0,0);
-    if(v==="site") heroScale();
+    if(v==="site"||v==="choose") heroScale();
     if(v==="app"){ update(false); cloudOpenLast(); }
   }
   document.addEventListener("click",function(e){ var b=e.target.closest && e.target.closest("[data-go]"); if(!b) return; e.preventDefault(); var g=b.getAttribute("data-go"); showView(g); if(g.indexOf("app-")===0 && !$("appView").hidden) tourOffer(g.slice(4)); });
@@ -5233,6 +5220,7 @@
       Array.prototype.forEach.call(document.querySelectorAll(".cj-sys button"),function(b){ b.setAttribute("aria-pressed",String(b.getAttribute("data-sys")===m)); }); heroScale(); }
     document.querySelector(".cj-sys").addEventListener("click",function(e){ var b=e.target.closest("button[data-sys]"); if(b) sys(b.getAttribute("data-sys")); });
     sys("techo");
+    Array.prototype.forEach.call(document.querySelectorAll("[data-chfig]"),function(f){ f.innerHTML=HP[f.getAttribute("data-chfig")].svg.replace(/aria-label="[^"]*"/,'aria-hidden="true"'); });
     S.mode=keep.mode; S.floors=keep.floors; S.fi=keep.fi; S.sel=keep.sel; S.showPipes=keep.pipes; S.showStruct=keep.str;
     update(true);
   })();
