@@ -781,6 +781,13 @@
   .tt-zoom video{border-radius:0;}
   .tour-toast{border-radius:4px;background:var(--ink);}
   .tour-tip .tt-min{border-radius:4px;}
+  /* press feedback on touch-down, not on release; reduced motion keeps the colour change but not the movement */
+  .btn,.s-btn,.mk-btn,.tab,.coll-chip,.zoom-ctl button,.cj-sys button,.pr-period button,.cat-list button,.ch-card,.btn-google{transition:transform 90ms ease-out,background-color 90ms ease-out;-webkit-tap-highlight-color:transparent;}
+  .btn:active:not(:disabled),.s-btn:active,.mk-btn:active,.tab:active,.coll-chip:active,.zoom-ctl button:active,.cj-sys button:active,.pr-period button:active,.btn-google:active{transform:scale(.96);}
+  .ch-card:active{transform:scale(.985);}
+  .cat-list button:active{background:var(--line);}
+  .zoom-ctl button:active{background:var(--surface-2);}
+  @media (prefers-reduced-motion:reduce){ .btn,.s-btn,.mk-btn,.tab,.coll-chip,.zoom-ctl button,.cj-sys button,.pr-period button,.ch-card,.btn-google{transition:background-color 90ms ease-out;} .btn:active:not(:disabled),.s-btn:active,.mk-btn:active,.tab:active,.coll-chip:active,.zoom-ctl button:active,.cj-sys button:active,.pr-period button:active,.btn-google:active,.ch-card:active{transform:none;filter:brightness(.92);} }
 </style>
 
 <div id="siteView" class="site">
@@ -4074,7 +4081,8 @@
       return;
     }
     var cg=e.target.closest && e.target.closest("[data-coll]");
-    if(cg){ e.preventDefault(); S.drag={coll:+cg.getAttribute("data-coll"),moved:false}; S.frozenVB=S.lastVB; document.body.classList.add("dragging"); return; }
+    if(cg){ e.preventDefault(); var cc=S.collectors.filter(function(k){ return k.id===+cg.getAttribute("data-coll"); })[0], cq=svgPointRaw(e.clientX,e.clientY);
+      S.drag={coll:+cg.getAttribute("data-coll"),moved:false,sx:e.clientX,sy:e.clientY,off:cc&&cq?V(cc.x-cq.x,cc.y-cq.y):V(0,0)}; S.frozenVB=S.lastVB; document.body.classList.add("dragging"); return; }
     var g=e.target.closest && e.target.closest("[data-room]"); if(!g) return;
     var room=S.rooms.filter(function(r){return r.id===+g.getAttribute("data-room");})[0]; if(!room || room.id!==S.moveId) return;
     var q=svgPointRaw(e.clientX,e.clientY); if(!q) return;
@@ -4090,7 +4098,8 @@
   window.addEventListener("pointermove",function(e){
     var d=S.drag; if(!d) return;
     if(d.isNew){ ghost.style.left=e.clientX+"px"; ghost.style.top=e.clientY+"px"; return; }
-    if(d.coll!=null){ var c=S.collectors.filter(function(k){return k.id===d.coll;})[0]; var q=svgPoint(e.clientX,e.clientY); if(c&&q&&(q.x!==c.x||q.y!==c.y)){
+    if(d.coll!=null){ if(!d.moved && Math.abs(e.clientX-d.sx)<4 && Math.abs(e.clientY-d.sy)<4) return;   // it stays where it was grabbed, not centred on the finger
+      var c=S.collectors.filter(function(k){return k.id===d.coll;})[0], q0=svgPointRaw(e.clientX,e.clientY), q=q0?V(Math.round((q0.x+d.off.x)*20)/20,Math.round((q0.y+d.off.y)*20)/20):null; if(c&&q&&(q.x!==c.x||q.y!==c.y)){
         if(S.mode==="suelo"){ c.room=null; var sn0=ufSnapColl(q,c); S.snapHint=sn0?{a:sn0.A,b:sn0.B}:null; }
         c.x=q.x; c.y=q.y; d.moved=true; scheduleUpdate(); } return; }
     if(d.room){
@@ -4116,7 +4125,9 @@
     renderCollectors(); update(false);
   }
   $("addColl").addEventListener("click",function(){ addCollector(); $("planWrap").scrollIntoView({behavior:"smooth",block:"center"}); });
-  window.addEventListener("pointerup",function(e){
+  window.addEventListener("pointercancel",function(e){ if(S.drag) dragUp(e); });
+  window.addEventListener("pointerup",dragUp);
+  function dragUp(e){
     var d=S.drag; if(!d) return; S.drag=null; S.frozenVB=null; document.body.classList.remove("dragging");
     if(d.isNew){ if(ghost){ ghost.remove(); ghost=null; }
       if(overPlan(e.clientX,e.clientY) && S.rooms.length){ var q=svgPoint(e.clientX,e.clientY); addCollector(q.x,q.y); }
@@ -4132,7 +4143,7 @@
     if(d.coll!=null && d.moved && S.mode==="suelo"){ var cc=S.collectors.filter(function(k){ return k.id===d.coll; })[0], sn=cc&&ufSnapColl(V(cc.x,cc.y),cc); S.snapHint=null;
       if(sn){ cc.room=sn.room; cc.edge=sn.edge; cc.off=sn.off; var tr=roomById(sn.room); hint('<b>'+esc(cc.name)+'</b> colocado en la pared '+LETTER(sn.edge)+' de <b>'+esc(tr?tr.name:"")+'</b>.'); } }
     if(d.moved){ suppressClick=true; update(false); }
-  });
+  }
   window.addEventListener("pointermove",function(e){
     if(!S.obstDraft) return; var q=svgPointRaw(e.clientX,e.clientY); if(!q) return; S.obstDraft.b=snapPt(V(q.x,q.y));
     if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); });
@@ -4301,42 +4312,122 @@
     return best;
   }
 
-  // ---- plan zoom ----
-  function zoomTo(k,cx,cy){
-    k=Math.max(1,Math.min(10,k));
-    if(k<=1.001){ S.zoom=null; } else S.zoom={k:k,cx:cx,cy:cy};
-    renderPlan();
-  }
+  // ---- plan zoom and pan ----
+  // While panning or zooming only the viewBox changes (the drawing does not depend on it), so a frame costs well under a millisecond.
+  // Zoom moves on a critically damped spring from wherever it is now, so a new wheel step, button or touch takes over mid-way; a pan
+  // that is let go keeps the finger's speed and slows down like a scroll; two fingers pinch about the point between them.
+  var ZM={raf:0,last:0,lk:0,v:0,cx:0,cy:0,vx:0,vy:0,tk:0,tx:0,ty:0,anchor:null,decay:false};
+  var RED=window.matchMedia?window.matchMedia("(prefers-reduced-motion: reduce)"):{matches:false};
   function zoomCenter(){ var b=S.baseVB||[0,0,1,1]; return S.zoom?V(S.zoom.cx,S.zoom.cy):V(b[0]+b[2]/2,b[1]+b[3]/2); }
+  function viewApply(){ var svg=$("planWrap").querySelector("svg"), b=S.baseVB;
+    if(!svg || !b || S.frozenVB){ renderPlan(); return; }
+    var vb=b.slice(); if(S.zoom){ var zw=b[2]/S.zoom.k, zh=b[3]/S.zoom.k; vb=[S.zoom.cx-zw/2,S.zoom.cy-zh/2,zw,zh]; }
+    S.lastVB=vb; svg.setAttribute("viewBox",vb.map(f3).join(" ")); pipeScale(svg,S.zoom?S.zoom.k:1); }
+  function zoomSet(k,cx,cy){ k=Math.max(1,Math.min(10,k)); var b=S.baseVB||[0,0,1,1];
+    // pan no further than the plan's own frame
+    cx=Math.max(b[0],Math.min(b[0]+b[2],cx)); cy=Math.max(b[1],Math.min(b[1]+b[3],cy));
+    S.zoom={k:k,cx:cx,cy:cy}; }
+  function zoomStop(){ if(ZM.raf) cancelAnimationFrame(ZM.raf); ZM.raf=0; ZM.anchor=null; ZM.decay=false; }
+  function zoomEnd(){ if(S.zoom && S.zoom.k<=1.001){ var b=S.baseVB||[0,0,1,1]; if(Math.abs(S.zoom.cx-(b[0]+b[2]/2))<1e-3 && Math.abs(S.zoom.cy-(b[1]+b[3]/2))<1e-3) S.zoom=null; } }
+  // spring with Apple's damping ratio 1 and response 0,32 s; each part (log zoom, x, y) on its own spring
+  var SPR_K=Math.pow(2*Math.PI/0.32,2), SPR_C=4*Math.PI/0.32;
+  function zoomStep(t){
+    if(!planHas() || !S.baseVB || ZM.base!==S.baseVB.map(f3).join()){ ZM.raf=0; ZM.anchor=null; ZM.decay=false; return; }   // another floor or project meanwhile
+    var dt=Math.min(1/30,Math.max(0.001,(t-(ZM.last||t))/1000)); ZM.last=t; var z=S.zoom||{k:1,cx:zoomCenter().x,cy:zoomCenter().y}, done;
+    if(ZM.decay){   // momentum after a pan: the speed fades like a scroll (0,998 a millisecond)
+      var f=Math.pow(0.998,dt*1000), nx, ny, sv=$("planWrap").querySelector("svg"); ZM.vx*=f; ZM.vy*=f; nx=z.cx+ZM.vx*dt; ny=z.cy+ZM.vy*dt; zoomSet(z.k,nx,ny);
+      if(S.zoom.cx!==nx) ZM.vx=0; if(S.zoom.cy!==ny) ZM.vy=0;   // stops at the edge of the plan's frame
+      var px=S.lastVB&&sv?S.lastVB[2]/sv.getBoundingClientRect().width:0.01;
+      done=Math.hypot(ZM.vx,ZM.vy)/px<8;
+    } else {
+      var a=-SPR_K*(ZM.lk-ZM.tk)-SPR_C*ZM.v; ZM.v+=a*dt; ZM.lk+=ZM.v*dt; var k=Math.exp(ZM.lk), cx, cy;
+      if(ZM.anchor){ var A=ZM.anchor; cx=A.x-(A.x-A.cx)*A.k/k; cy=A.y-(A.y-A.cy)*A.k/k; }
+      else { var ax=-SPR_K*(ZM.cx-ZM.tx)-SPR_C*ZM.vx, ay=-SPR_K*(ZM.cy-ZM.ty)-SPR_C*ZM.vy; ZM.vx+=ax*dt; ZM.vy+=ay*dt; ZM.cx+=ZM.vx*dt; ZM.cy+=ZM.vy*dt; cx=ZM.cx; cy=ZM.cy; }
+      zoomSet(k,cx,cy);
+      done=Math.abs(ZM.lk-ZM.tk)<1e-4 && Math.abs(ZM.v)<1e-3 && (ZM.anchor || (Math.abs(ZM.cx-ZM.tx)<1e-4 && Math.abs(ZM.vy)+Math.abs(ZM.vx)<1e-3));
+      if(done){ var T=ZM.anchor; k=Math.exp(ZM.tk); zoomSet(k,T?T.x-(T.x-T.cx)*T.k/k:ZM.tx,T?T.y-(T.y-T.cy)*T.k/k:ZM.ty); }
+    }
+    if(done){ ZM.raf=0; ZM.anchor=null; ZM.decay=false; zoomEnd(); viewApply(); return; }
+    viewApply(); ZM.raf=requestAnimationFrame(zoomStep);
+  }
+  function zoomRun(){ ZM.base=(S.baseVB||[]).map(f3).join(); if(!ZM.raf){ ZM.last=0; ZM.raf=requestAnimationFrame(zoomStep); } }
+  // zoom to k keeping the plan point q where it is on screen (q missing: about the centre); fit: the whole plan
+  function zoomTo(k,q,fit){
+    if(!planHas()) return; k=Math.max(1,Math.min(10,k)); var c=zoomCenter(), k0=S.zoom?S.zoom.k:1, b=S.baseVB||[0,0,1,1];
+    var tx=fit?b[0]+b[2]/2:q?q.x-(q.x-c.x)*k0/k:c.x, ty=fit?b[1]+b[3]/2:q?q.y-(q.y-c.y)*k0/k:c.y;
+    if(RED.matches){ zoomStop(); zoomSet(k,tx,ty); zoomEnd(); viewApply(); return; }
+    if(!ZM.raf || ZM.decay){ ZM.lk=Math.log(k0); ZM.v=0; }
+    if(!ZM.raf || ZM.decay || ZM.anchor){ ZM.cx=c.x; ZM.cy=c.y; ZM.vx=0; ZM.vy=0; }   // the centre spring starts from where the plan is now
+    ZM.decay=false; ZM.tk=Math.log(k); ZM.tx=tx; ZM.ty=ty;
+    // a zoom about a point keeps that point still all the way, not only at the end
+    ZM.anchor=(!fit && Math.abs(k-k0)>1e-6) ? {x:(tx*k-c.x*k0)/(k-k0),y:(ty*k-c.y*k0)/(k-k0),k:k0,cx:c.x,cy:c.y} : null;
+    zoomRun();
+  }
   $("zoomCtl").addEventListener("click",function(e){
     var b=e.target.closest("[data-zoom]"); if(!b) return;
-    var a=b.getAttribute("data-zoom"), c=zoomCenter(), k=S.zoom?S.zoom.k:1;
-    if(a==="fit") zoomTo(1,0,0); else zoomTo(a==="in"?k*1.4:k/1.4,c.x,c.y);
+    var a=b.getAttribute("data-zoom"), k=ZM.raf&&!ZM.decay?Math.exp(ZM.tk):(S.zoom?S.zoom.k:1);
+    if(a==="fit") zoomTo(1,null,true); else zoomTo(a==="in"?k*1.4:k/1.4);
   });
   $("planWrap").addEventListener("wheel",function(e){
     if(!planHas()) return;
     var q=svgPointRaw(e.clientX,e.clientY); if(!q) return;
     e.preventDefault();
-    var k=S.zoom?S.zoom.k:1, nk=Math.max(1,Math.min(10,k*(e.deltaY<0?1.2:1/1.2))), c=zoomCenter();
-    // keep the point under the cursor in place
-    zoomTo(nk, q.x-(q.x-c.x)*k/nk, q.y-(q.y-c.y)*k/nk);
+    var k=ZM.raf&&!ZM.decay?Math.exp(ZM.tk):(S.zoom?S.zoom.k:1), f=Math.pow(1.2,Math.max(-3,Math.min(3,-e.deltaY/(e.deltaMode?1:100))));
+    zoomTo(k*f,V(q.x,q.y));
   },{passive:false});
-  // pan by dragging anywhere on the plan (rooms too); only the room selected with a double click and collectors are dragged instead
+  // pan by dragging anywhere on the plan (rooms too); only the room selected with a double click and collectors are dragged instead.
+  // Two fingers on the plan pinch to zoom, about the point between them, and pan with it.
+  var PT={};   // pointers down on the plan
+  function ptN(){ return Object.keys(PT).length; }
+  function pinchStart(){ var ids=Object.keys(PT), a=PT[ids[0]], c=PT[ids[1]], svg=$("planWrap").querySelector("svg"); if(!svg) return;
+    if(!S.zoom){ var z=zoomCenter(); S.zoom={k:1,cx:z.x,cy:z.y}; }
+    var m=V((a.x+c.x)/2,(a.y+c.y)/2), r=svg.getBoundingClientRect(), q=svgPointRaw(m.x,m.y);
+    S.pinch={d0:Math.max(10,Math.hypot(a.x-c.x,a.y-c.y)),k0:S.zoom.k,q:V(q.x,q.y),sc:V(r.left+r.width/2,r.top+r.height/2),a0:svg.getScreenCTM().a};
+    if(S.pan){ S.pan=null; $("planWrap").classList.remove("panning"); } suppressClick=true; }
+  $("planWrap").addEventListener("pointerdown",function(e){
+    if(e.pointerType==="mouse") return;
+    PT[e.pointerId]={x:e.clientX,y:e.clientY};
+    if(ptN()===2 && !(S.drag && S.drag.moved) && !S.bgDrag && !(S.curve&&S.curve.drawing) && planHas()){
+      e.preventDefault(); e.stopImmediatePropagation(); zoomStop(); if(S.drag){ S.drag=null; S.frozenVB=null; document.body.classList.remove("dragging"); } pinchStart(); }
+  },true);
+  window.addEventListener("pointermove",function(e){
+    if(!PT[e.pointerId]) return; PT[e.pointerId]={x:e.clientX,y:e.clientY};
+    var P=S.pinch; if(!P || ptN()<2) return;
+    var ids=Object.keys(PT), a=PT[ids[0]], c=PT[ids[1]], m=V((a.x+c.x)/2,(a.y+c.y)/2), k=Math.max(1,Math.min(10,P.k0*Math.hypot(a.x-c.x,a.y-c.y)/P.d0)), s=1/(P.a0*k/P.k0);
+    zoomSet(k,P.q.x-(m.x-P.sc.x)*s,P.q.y-(m.y-P.sc.y)*s);
+    if(!raf) raf=requestAnimationFrame(function(){ raf=0; viewApply(); });
+  });
+  function ptUp(e){ if(!PT[e.pointerId]) return; delete PT[e.pointerId];
+    if(S.pinch && ptN()<2){ S.pinch=null; zoomEnd(); viewApply(); suppressClick=true;
+      // the finger left on the plan goes on panning from where it is
+      var id=Object.keys(PT)[0], svg=$("planWrap").querySelector("svg");
+      if(id && svg && S.zoom) S.pan={sx:PT[id].x,sy:PT[id].y,cx:S.zoom.cx,cy:S.zoom.cy,scale:S.lastVB[2]/svg.getBoundingClientRect().width,moved:true,hist:[]}; } }
+  window.addEventListener("pointerup",ptUp); window.addEventListener("pointercancel",ptUp);
   $("planWrap").addEventListener("pointerdown",function(e){
     if(e.button!==undefined && e.button!==0) return;
-    if(S.drag || S.bgDrag || !planHas()) return;
+    zoomStop();   // a touch catches the plan where it is, even mid-animation
+    if(S.drag || S.bgDrag || S.pinch || !planHas()) return;
     if(e.target.closest && e.target.closest("[data-coll]")) return;
     var svg=$("planWrap").querySelector("svg"); if(!svg || !S.lastVB) return;
     if(!S.zoom){ var c=zoomCenter(); S.zoom={k:1,cx:c.x,cy:c.y}; }
-    S.pan={sx:e.clientX,sy:e.clientY,cx:S.zoom.cx,cy:S.zoom.cy,scale:(S.lastVB[2])/svg.getBoundingClientRect().width,moved:false};
+    S.pan={sx:e.clientX,sy:e.clientY,cx:S.zoom.cx,cy:S.zoom.cy,scale:(S.lastVB[2])/svg.getBoundingClientRect().width,moved:false,hist:[]};
   });
   window.addEventListener("pointermove",function(e){
-    if(!S.pan) return;
+    if(!S.pan || S.pinch) return;
     if(!S.pan.moved){ if(Math.abs(e.clientX-S.pan.sx)<4&&Math.abs(e.clientY-S.pan.sy)<4) return; S.pan.moved=true; $("planWrap").classList.add("panning"); }
-    S.zoom.cx=S.pan.cx-(e.clientX-S.pan.sx)*S.pan.scale; S.zoom.cy=S.pan.cy-(e.clientY-S.pan.sy)*S.pan.scale;
-    if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); });
+    zoomSet(S.zoom.k,S.pan.cx-(e.clientX-S.pan.sx)*S.pan.scale,S.pan.cy-(e.clientY-S.pan.sy)*S.pan.scale);
+    var h=S.pan.hist, now=performance.now(); h.push({t:now,x:e.clientX,y:e.clientY}); while(h.length>2 && now-h[0].t>100) h.shift();
+    if(!raf) raf=requestAnimationFrame(function(){ raf=0; viewApply(); });
   });
-  window.addEventListener("pointerup",function(){ if(S.pan){ if(S.pan.moved) suppressClick=true; else if(S.zoom&&S.zoom.k<=1.001&&Math.abs(S.zoom.cx-zoomCenter().x)<1e-9) S.zoom=null; S.pan=null; $("planWrap").classList.remove("panning"); } });
+  function panEnd(e,cancel){ if(!S.pan || S.pinch) return; var P=S.pan; S.pan=null; $("planWrap").classList.remove("panning");
+    if(!P.moved){ zoomEnd(); return; } suppressClick=true;
+    // let go with speed: the plan carries on and slows down (not with reduced motion, nor after holding still)
+    var h=P.hist, n=h.length, now=performance.now();
+    if(!cancel && !RED.matches && n>=2 && now-h[n-1].t<60){ var dt=(h[n-1].t-h[0].t)/1000;
+      if(dt>0.005){ var vx=(h[n-1].x-h[0].x)/dt, vy=(h[n-1].y-h[0].y)/dt; if(Math.hypot(vx,vy)>250){ ZM.vx=-vx*P.scale; ZM.vy=-vy*P.scale; ZM.decay=true; ZM.anchor=null; zoomRun(); return; } } }
+    zoomEnd(); }
+  window.addEventListener("pointerup",function(e){ panEnd(e); });
+  window.addEventListener("pointercancel",function(e){ panEnd(e,true); });
 
   // ---------------- background plan: import a PDF or a picture, set its scale, trace the rooms over it ----------------
   // fl.bg={id,src,pw,ph,x,y,s,op,show,cal}: the image (JPEG data URL) of pw×ph pixels, its top left corner at x,y (m), s metres per pixel.

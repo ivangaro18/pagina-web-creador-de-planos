@@ -303,6 +303,30 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("guarda la referencia catastral, el uso, la superficie y el año, y rellena la dirección de la obra", !!cat && cat.cat.rc === "1234567VK1213S" && cat.cat.ant === 1978 && cat.cat.sfc === 142 && cat.cat.uso === "Residencial" && /Calle Mayor 5/.test(cat.addr), JSON.stringify(cat && cat.cat));
   await p.close();
 
+  // 6c. mover el plano: zoom con muelle, inercia al soltar, pellizco con dos dedos y solo la vista cambia (sin redibujar)
+  out.push("Mover el plano");
+  { const ctx = await browser.newContext({ viewport: { width: 1200, height: 900 }, hasTouch: true }), q = await ctx.newPage();
+    q.on("pageerror", e => errors.push("gestos: " + e.message)); await q.goto(URL + "#planificador"); await q.waitForTimeout(700);
+    await q.click("#loadExample"); await q.waitForTimeout(900);
+    const vb = () => q.evaluate(() => document.querySelector("#planWrap svg").getAttribute("viewBox").split(" ").map(Number));
+    const w0 = (await vb())[2];
+    await q.evaluate(() => { window.__svgEl = document.querySelector("#planWrap svg"); });
+    await q.click('#zoomCtl [data-zoom="in"]'); await q.waitForTimeout(60); const wm = (await vb())[2]; await q.waitForTimeout(900); const w1 = (await vb())[2];
+    ok("el zoom va suave hasta su sitio (×1,4) en vez de saltar", wm < w0 - 0.01 && wm > w0 / 1.4 + 0.05 && Math.abs(w1 - w0 / 1.4) < 0.01, [w0, wm, w1].map(x => x.toFixed(3)).join(" → "));
+    ok("al mover o ampliar no se redibuja el plano, solo cambia la vista", await q.evaluate(() => document.querySelector("#planWrap svg") === window.__svgEl));
+    const box = await (await q.$("#planWrap svg")).boundingBox(), cx = box.x + box.width / 2, cy = box.y + box.height / 2;
+    await q.mouse.move(cx, cy); await q.mouse.down(); for (let i = 1; i <= 6; i++) { await q.mouse.move(cx - i * 30, cy); await q.waitForTimeout(16); } await q.mouse.up();
+    const xa = (await vb())[0]; await q.waitForTimeout(600); const xb = (await vb())[0];
+    ok("al soltar el plano con velocidad sigue un poco y frena", xb > xa + 0.3, xa.toFixed(2) + " → " + xb.toFixed(2));
+    await q.click('#zoomCtl [data-zoom="fit"]'); await q.waitForTimeout(1000);
+    const cdp = await ctx.newCDPSession(q), tp = d => [{ x: cx - d, y: cy, id: 1 }, { x: cx + d, y: cy, id: 2 }], p0 = (await vb())[2];
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: tp(40) });
+    for (let d = 50; d <= 160; d += 10) { await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: tp(d) }); await q.waitForTimeout(16); }
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }); await q.waitForTimeout(300);
+    const p1 = (await vb())[2];
+    ok("pellizcar con dos dedos amplía lo que se separan los dedos (×4)", Math.abs(p0 / p1 - 4) < 0.05, (p0 / p1).toFixed(3));
+    await ctx.close(); }
+
   // 7a. puerta de acceso: se dibuja con el ancho de una puerta donde se pulsa, no a lo largo de toda la pared
   out.push("Puerta de acceso");
   p = await open("#planificador");
