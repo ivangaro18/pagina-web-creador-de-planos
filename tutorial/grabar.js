@@ -4,6 +4,7 @@
 //
 //   node tutorial/grabar.js                 graba todas
 //   node tutorial/grabar.js estancia ventana graba solo esas (para techo y suelo)
+//   SISTEMA=techo node tutorial/grabar.js    solo las de techo (o suelo)
 //
 // Hay que volver a grabarlas cuando cambie el aspecto de la herramienta. Necesita Playwright, Chromium y ffmpeg.
 "use strict";
@@ -169,6 +170,14 @@ const SCENES = {
     await r.click("#undoBtn"); await p.waitForTimeout(300); await r.hold(0.6); await r.press(); await p.waitForTimeout(300); await r.hold(0.8);
     await r.click("#redoBtn"); await p.waitForTimeout(300); await r.hold(2);
   },
+  async borrador(r, p, mode) {
+    await setFloor(p, mode, TWO.map((q, i) => i ? Object.assign({}, q, { o: {} }) : Object.assign({}, q, { marks: { 0: "ventana" } })));
+    await p.evaluate(() => { const S = window.__dbg.S, d = S.rooms[1]; d.obst = [{ x0: 0.2, y0: 0.2, x1: 1.2, y1: 0.8 }, { x0: 1.6, y0: 3, x1: 2.8, y1: 3.7 }]; window.__dbg.update(true); window.__dbg.histReset(); });
+    await view(r, p, "#markBar", ["#markBar", "#planWrap"], 1000, 10);
+    await r.click("#eraseBtn"); await r.hold(0.4); await r.moveW(5.7, 0.5, 0.8); await r.press(); await p.waitForTimeout(400); await r.hold(0.8);
+    await r.moveW(2.5, 0.05, 0.8); await r.press(); await p.waitForTimeout(400); await r.hold(0.8);
+    await r.click("#eraseBtn"); await r.hold(1.8);
+  },
   async curvo(r, p, mode) {
     await setFloor(p, mode, TWO); await view(r, p, "#markBar", ["#bgBar", "#planWrap"], 1000, 10, [0.6, 0.85]);
     await r.click('#bgBar [data-bg="curve"]'); await r.hold(0.3); await r.moveW(5, 2.6); await r.press(); await r.hold(0.4);
@@ -200,7 +209,8 @@ const SCENES = {
   },
   async paso(r, p, mode) {
     await setFloor(p, mode, TWO, COLL(mode), { pipes: true }); await view(r, p, "#markBar", ["#markBar", "#planWrap"], 1000, 10);
-    await r.hold(0.4); await r.click("#viaBtn"); await r.moveW(4.97, 0.7, 0.8); await r.press(); await p.waitForTimeout(400); await r.hold(0.4);
+    await r.hold(0.4); await r.click("#viaBtn"); await r.moveW(4.97, 0.7, 0.8); await r.press(); await p.waitForTimeout(400); await r.hold(0.6);
+    await r.moveW(3.6, 1.6, 0.7); await r.press(); await p.waitForTimeout(500); await r.hold(0.8);
     await r.click("#viaBtn"); await r.hold(2);
   },
   async tuberia(r, p, mode) {
@@ -244,10 +254,16 @@ const SCENES = {
     await setFloor(p, mode, TWO, COLL(mode)); await view(r, p, "#collCard", ["#collCard", "#tablesCard"], 1000, 20);
     await field(r, "#collList .coll-row input[type=number]", "6"); await p.waitForTimeout(500); await r.hold(2);
   },
+  async marca(r, p, mode) {
+    await setFloor(p, mode, TWO); await view(r, p, "#brandCard", ["#brandCard", "#catalogCard"], 900, 20);
+    await r.pick("#sBrand", 2); await r.hold(1.6); await r.pick("#sBrand", 1); await r.hold(1.6); await r.pick("#sBrand", 0); await r.hold(0.8);
+    await r.pick("#sFinish", 1); await r.hold(1.2); await r.pick("#sFinish", 0); await r.hold(1.8);
+  },
   async paneles(r, p, mode) {
-    await setFloor(p, mode, TWO); await view(r, p, "#catalogCard", ["#catalogCard", "#detailSvg"], 1000, 20);
-    await r.click("#addPanel"); await p.waitForTimeout(300); await r.hold(0.5);
-    const row = "#catalogBody tr:last-child input"; await field(r, row + " >> nth=0", "Panel XL"); await field(r, row + " >> nth=1", "120"); await field(r, row + " >> nth=2", "200"); await p.waitForTimeout(400); await r.hold(2);
+    await setFloor(p, mode, TWO); await view(r, p, "#detailCard", ["#catalogCard", "#detailSvg"], 1000, 20);
+    await r.click("#catalogBody tr:nth-child(3) input"); await p.waitForTimeout(400); await r.hold(1.4);
+    await r.click("#catalogBody tr:nth-child(2) input"); await p.waitForTimeout(400); await r.hold(1.4);
+    await r.click("#catalogBody tr:nth-child(3) input"); await r.click("#catalogBody tr:nth-child(2) input"); await p.waitForTimeout(400); await r.hold(1.8);
   },
   async cobertura(r, p, mode) {
     await setFloor(p, mode, TWO); await view(r, p, "#coverCard", ["#coverCard", "#detailSvg"], 1000, 20);
@@ -285,7 +301,7 @@ const SCENES = {
   },
 };
 // steps that only exist in one system
-const ONLY = { puerta: "suelo", recomendada: "suelo", reglas: "suelo", obstaculo: "techo", acceso: "techo", paso: "techo", tuberia: "techo", luz: "techo", cotas: "techo", paneles: "techo", cobertura: "techo", pladur: "techo" };
+const ONLY = { marca: "techo", puerta: "suelo", recomendada: "suelo", reglas: "suelo", obstaculo: "techo", acceso: "techo", paso: "techo", tuberia: "techo", luz: "techo", cotas: "techo", paneles: "techo", cobertura: "techo", pladur: "techo" };
 
 (async () => {
   const want = process.argv.slice(2), names = want.length ? want : Object.keys(SCENES);
@@ -293,7 +309,7 @@ const ONLY = { puerta: "suelo", recomendada: "suelo", reglas: "suelo", obstaculo
   const URL = "http://127.0.0.1:" + server.address().port + "/";
   const exe = fs.existsSync("/opt/pw-browsers/chromium") ? "/opt/pw-browsers/chromium" : undefined;
   const browser = await chromium.launch(exe ? { executablePath: exe } : {});
-  for (const name of names) for (const mode of ["techo", "suelo"]) { if (ONLY[name] && ONLY[name] !== mode) continue;
+  for (const name of names) for (const mode of ["techo", "suelo"]) { if ((ONLY[name] && ONLY[name] !== mode) || (process.env.SISTEMA && process.env.SISTEMA !== mode)) continue;
     const p = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
     await p.goto(URL + (mode === "suelo" ? "#suelo" : "#planificador")); await p.waitForTimeout(900); await p.evaluate(CURSOR);
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "grab-")), r = new Rec(p, dir);

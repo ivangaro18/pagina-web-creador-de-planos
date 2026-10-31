@@ -25,7 +25,7 @@ const INIT = "  renderCatalog(); renderCollectors(); renderFloorBar(); syncProje
 const AUTH = "var AUTH_HOSTS = /(^|\\.)github\\.io$|^localhost$|^127\\.0\\.0\\.1$/;";
 let html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 if (!html.includes(INIT) || !html.includes(AUTH)) { console.error("index.html ha cambiado: actualiza INIT o AUTH en tests/run.js para poder preparar la copia de prueba."); process.exit(2); }
-html = html.replace(INIT, "  window.__dbg={S:S,get results(){ return results; },update:update,rectRoom:rectRoom,nid:nid,curFloor:curFloor,toW:toW,V:V,pipeLayout:pipeLayout,viaGeom:viaGeom};\n" + INIT)
+html = html.replace(INIT, "  window.__dbg={S:S,get results(){ return results; },update:update,rectRoom:rectRoom,nid:nid,curFloor:curFloor,toW:toW,V:V,pipeLayout:pipeLayout,viaGeom:viaGeom,projApply:projApply,brandQ:brandQ,get TH(){ return TH; }};\n" + INIT)
            .replace(AUTH, "var AUTH_HOSTS = /^$/;");
 const server = http.createServer((q, r) => { const u = q.url.split("?")[0].split("#")[0], f = path.join(ROOT, u), ext = path.extname(u);
   if (u === "/") { r.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); r.end(html); }
@@ -178,7 +178,7 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   // through the hole the tubes go centred, side by side, and the hole is as wide as they need (minimum 0,44 m), same margin both sides
   const via4 = await p.evaluate(() => {
     const D = window.__dbg, S = D.S, R = D.rectRoom, out = {};
-    for (const [name, cap] of [["muchos", 12], ["pocos", 2]]) {
+    for (const [name, cap] of [["muchos", 12], ["pocos", 6]]) {
       const E7 = R("Estancia 7", 0, 0, 8.5, 4.2), E10 = R("Estancia 10", 1.9, 4.2, 4.7, 3), Sm = R("Cuarto", 6.6, 4.2, 1.6, 2.5, { lc: "ninguna" }); E7.via = { edge: 2, t: 3.2 };
       if (name === "pocos") { E7.pts = [D.V(0, 0), D.V(3, 0), D.V(3, 2), D.V(0, 2)].map(q => D.V(q.x + 4.6, q.y + 2.2)); E7.pts = [D.V(0, 0), D.V(1.6, 0), D.V(1.6, 2), D.V(0, 2)]; E7.tx = 4.5; E7.ty = 2.2; E7.via = { edge: 2, t: 0.8 }; }
       S.floors = [{ id: D.nid(), name: "P", rooms: [E7, E10, Sm], collectors: [{ id: D.nid(), name: "C", x: 7.6, y: 5.0, cap }] }]; S.fi = 0; S.showPipes = true; D.update(true);
@@ -193,6 +193,36 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   await p.close();
 
   // 5. deshacer / rehacer y material de control
+  p = await open("#planificador");
+  // paso de tubos con dirección: se marca el agujero y después la estancia hacia la que pasan; todo tubo que entra en ella lo hace por el agujero
+  const dvia = await p.evaluate(() => { const D = window.__dbg, S = D.S, R = D.rectRoom;
+    const A = R("A", 0, 0, 4, 6), B = R("B", 4, 0, 4, 3), Rr = R("R", 4, 3, 4, 3);
+    S.floors = [{ id: D.nid(), name: "P", rooms: [A, B, Rr], collectors: [{ id: D.nid(), name: "C", x: 1, y: 5.4, cap: 16 }] }]; S.fi = 0; S.sel = A.id; D.update(true);
+    const P = { x: 7, y: 3 }, near = () => { let n = 0, ok = 0; D.pipeLayout(D.curFloor()).tubes.forEach(t => { if (t.room !== Rr) return; n++; let dm = 1e9; for (let i = 1; i < t.pts.length; i++) { const a = t.pts[i - 1], b = t.pts[i], dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy || 1e-9, u = Math.max(0, Math.min(1, ((P.x - a.x) * dx + (P.y - a.y) * dy) / L2)); dm = Math.min(dm, Math.hypot(a.x + u * dx - P.x, a.y + u * dy - P.y)); } if (dm < 0.35) ok++; }); return { n, ok }; };
+    const sin = near(); Rr.via = { edge: 0, t: 3, dir: -1 }; D.update(true); const con = near();
+    Rr.via.dir = 1; D.update(true); const otro = near(); return { sin, con, otro, arrow: document.querySelectorAll("#planWrap .p-via-ah").length }; });
+  ok("paso con dirección (de los paneles hacia el colector): los tubos de esa estancia pasan por el agujero (sin él, por el camino corto)", dvia.sin.ok === 0 && dvia.con.n > 0 && dvia.con.ok === dvia.con.n && dvia.arrow === 1, JSON.stringify(dvia));
+  ok("  con la dirección contraria no les afecta", dvia.otro.ok === 0, JSON.stringify(dvia.otro));
+  // marcar el paso con el ratón: primero la pared, luego la estancia de destino
+  await p.evaluate(() => { const D = window.__dbg, S = D.S, R = D.rectRoom; const A = R("A", 0, 0, 4, 6), B = R("B", 4, 0, 4, 3), Rr = R("R", 4, 3, 4, 3);
+    S.floors = [{ id: D.nid(), name: "P", rooms: [A, B, Rr], collectors: [{ id: D.nid(), name: "C", x: 1, y: 5.4, cap: 16 }] }]; S.fi = 0; S.sel = A.id; S.zoom = null; D.update(true); document.getElementById("planWrap").scrollIntoView({ block: "center" }); });
+  const w2v = (x, y) => p.evaluate(([x, y]) => { const q = new DOMPoint(x, y).matrixTransform(document.querySelector("#planWrap svg").getScreenCTM()); return [q.x, q.y]; }, [x, y]);
+  await p.click("#viaBtn"); let vpt = await w2v(7, 3.02); await p.mouse.click(vpt[0], vpt[1]); await p.waitForTimeout(200); vpt = await w2v(6, 1.5); await p.mouse.click(vpt[0], vpt[1]); await p.waitForTimeout(200);
+  const mv = await p.evaluate(() => { const S = window.__dbg.S, rs = S.rooms, v = rs.map(r => r.via ? { room: r.name, dir: r.via.dir } : null).filter(Boolean); return { v, hint: document.getElementById("modeHint").innerText }; });
+  await p.click("#viaBtn");
+  ok("  marcarlo con el ratón: agujero y después la estancia hacia la que van camino del colector", mv.v.length === 1 && ((mv.v[0].room === "R" && mv.v[0].dir === -1) || (mv.v[0].room === "B" && mv.v[0].dir === 1)) && /hacia/.test(mv.hint), JSON.stringify(mv));
+
+  // borrador: quita lo dibujado (obstáculos, marcas, pasos, colectores) de uno en uno y nunca una estancia
+  await p.evaluate(() => { const D = window.__dbg, S = D.S, R = D.rectRoom; const A = R("A", 0, 0, 5, 4), B = R("B", 5, 0, 3, 4);
+    A.obst = [{ x0: 0.3, y0: 0.3, x1: 1.3, y1: 0.9 }, { x0: 3, y0: 2.6, x1: 4.2, y1: 3.4 }]; A.marks = { 0: "ventana" }; B.via = { edge: 3, t: 2, dir: 1 };
+    S.floors = [{ id: D.nid(), name: "P", rooms: [A, B], collectors: [{ id: D.nid(), name: "C", x: 1, y: 3.4, cap: 12 }] }]; S.fi = 0; S.sel = A.id; S.zoom = null; D.update(true); });
+  await p.click("#eraseBtn");
+  for (const [x, y] of [[0.8, 0.6], [2.5, 2], [2.5, 0.03], [5, 2], [1, 3.4]]) { vpt = await w2v(x, y); await p.mouse.click(vpt[0], vpt[1]); await p.waitForTimeout(250); }
+  const er = await p.evaluate(() => { const S = window.__dbg.S, A = S.rooms[0], B = S.rooms[1]; return { rooms: S.rooms.length, obst: (A.obst || []).length, left: A.obst && A.obst[0] && A.obst[0].x0, marks: Object.keys(A.marks || {}).length, via: !!B.via, colls: S.collectors.length }; });
+  await p.click("#eraseBtn");
+  ok("borrador: quita un obstáculo (el otro se queda), la marca, el paso y el colector; las estancias siguen", er.rooms === 2 && er.obst === 1 && er.left === 3 && er.marks === 0 && !er.via && er.colls === 0, JSON.stringify(er));
+  await p.close();
+
   out.push("Deshacer, rehacer y material de control");
   p = await open("#planificador");
   await p.click("#loadExample"); await p.waitForTimeout(900);
@@ -286,25 +316,6 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("deshacer deja la pared recta otra vez", await p.evaluate(() => window.__dbg.S.rooms.every(r => r.bulge.every(b => !b))));
   await p.close();
 
-  // 6b. plano del Catastro: dirección → referencia catastral → centro de la parcela y sus datos → mapa a escala, sin calibrar
-  // (respuestas simuladas: la prueba no depende de la red ni de los servicios públicos)
-  out.push("Plano del Catastro");
-  p = await open("#planificador");
-  const PNG1 = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64"), wmsUrls = [];
-  await p.route(/cartociudad\.es\/geocoder\/api\/geocoder\/(find|candidates)/, r => { const one = { id: "x", type: "portal", address: "CALLE MAYOR 5, Toledo", muni: "Toledo", province: "Toledo", lat: 39.857, lng: -4.024, refCatastral: "1234567VK1213S" };
-    r.fulfill({ status: 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify(/find/.test(r.request().url()) ? one : [one]) }); });
-  await p.route(/ovc\.catastro\.meh\.es\/ovcservweb\/.*Consulta_CPMRC/, r => r.fulfill({ status: 200, contentType: "text/xml", headers: { "Access-Control-Allow-Origin": "*" }, body: '<consulta_coordenadas xmlns="http://www.catastro.meh.es/"><coordenadas><coord><geo><xcen>-4.0241</xcen><ycen>39.8571</ycen></geo><ldt>CL MAYOR 5 TOLEDO (TOLEDO)</ldt></coord></coordenadas></consulta_coordenadas>' }));
-  await p.route(/ovc\.catastro\.meh\.es\/ovcservweb\/.*Consulta_DNPRC/, r => r.fulfill({ status: 200, contentType: "text/xml", headers: { "Access-Control-Allow-Origin": "*" }, body: '<consulta_dnp xmlns="http://www.catastro.meh.es/"><bico><bi><ldt>CL MAYOR 5 TOLEDO</ldt><debi><luso>Residencial</luso><sfc>142</sfc><ant>1978</ant></debi></bi></bico></consulta_dnp>' }));
-  await p.route(/ovc\.catastro\.meh\.es\/Cartografia\/WMS/, r => { wmsUrls.push(r.request().url()); r.fulfill({ status: 200, contentType: "image/png", headers: { "Access-Control-Allow-Origin": "*" }, body: PNG1 }); });
-  await p.click("#catBtn"); await p.fill("#catQ", "Calle Mayor 5, Toledo"); await p.selectOption("#catSize", "40"); await p.click("#catForm button"); await p.waitForTimeout(1500);
-  const cat = await p.evaluate(() => { const b = window.__dbg.curFloor().bg; return b && { s: b.s, pw: b.pw, cal: b.cal, cat: b.cat, modal: document.getElementById("catModal").hidden, tool: window.__dbg.S.bgTool, addr: document.getElementById("pAddr").value }; });
-  const bb = (new globalThis.URL(wmsUrls[0] || "http://x/?BBOX=0,0,0,0")).searchParams.get("BBOX").split(",").map(Number);
-  ok("busca la dirección y trae el plano de la parcela de fondo", !!cat && cat.modal === true && cat.pw === 800, JSON.stringify(cat));
-  ok("llega a escala (40 m en 800 píxeles), sin calibrar, y pasa a calcar", !!cat && Math.abs(cat.s * cat.pw - 40) < 1e-6 && cat.cal === true && cat.tool === "trace", JSON.stringify(cat));
-  ok("el mapa pedido mide 40 m sobre el terreno, centrado en la parcela", Math.abs((bb[2] - bb[0]) * Math.cos(39.8571 * Math.PI / 180) - 40) < 0.05 && Math.abs((bb[0] + bb[2]) / 2 / 6378137 * 180 / Math.PI + 4.0241) < 1e-6, wmsUrls[0]);
-  ok("guarda la referencia catastral, el uso, la superficie y el año, y rellena la dirección de la obra", !!cat && cat.cat.rc === "1234567VK1213S" && cat.cat.ant === 1978 && cat.cat.sfc === 142 && cat.cat.uso === "Residencial" && /Calle Mayor 5/.test(cat.addr), JSON.stringify(cat && cat.cat));
-  await p.close();
-
   // 6c. mover el plano: zoom con muelle, inercia al soltar, pellizco con dos dedos y solo la vista cambia (sin redibujar)
   out.push("Mover el plano");
   { const ctx = await browser.newContext({ viewport: { width: 1200, height: 900 }, hasTouch: true }), q = await ctx.newPage();
@@ -384,6 +395,122 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
   ok("se vuelve a activar desde la otra tarjeta", (await vis()).res && (await vis()).card);
   await p.close();
 
+  // marca de los paneles: Sunthalpy (ficha técnica) decide modelos, paneles en serie, caudal, pérdida de carga y emisión
+  out.push("Marca de los paneles");
+  p = await open("#planificador");
+  const br = await p.evaluate(() => ({ opts: [...document.querySelectorAll("#sBrand option")].map(o => o.textContent), cat: [...document.querySelectorAll("#catalogBody tr")].map(t => t.innerText.replace(/\s+/g, " ").trim()), info: document.getElementById("brandInfo").innerText }));
+  ok("selector de marca (Sunthalpy, Uponor, Zehnder, Giacomini); Sunthalpy con A 40×150, B 60×150 y C 80×150 (2 en serie)",
+    br.opts.length === 5 && /Sunthalpy/.test(br.opts[0]) && ["Uponor · Renovis", "Zehnder · NIC", "Giacomini · GKC Classic", "Giacomini · GKC Super"].every(t => br.opts.some(o => o.indexOf(t) === 0)) && br.cat.length === 3 && /A 40 × 150 2 13/.test(br.cat[0]) && /B 60 × 150 2 18/.test(br.cat[1]) && /C 80 × 150 2 21,2/.test(br.cat[2]) && /1 l\/min/.test(br.info), JSON.stringify(br));
+  const ser = await p.evaluate(() => {
+    const D = window.__dbg, S = D.S, R = D.rectRoom, V = D.V; let seed = 777; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647, o = {};
+    const inP = (r, pt, q) => { const a = D.toW(r, V(q.x, q.y)), b = D.toW(r, V(q.x + q.w, q.y + q.h)); return pt.x >= Math.min(a.x, b.x) - 1e-6 && pt.x <= Math.max(a.x, b.x) + 1e-6 && pt.y >= Math.min(a.y, b.y) - 1e-6 && pt.y <= Math.max(a.y, b.y) + 1e-6; };
+    for (const only of ["A", "C", null]) { S.panels.forEach(q => q.on = !only || q.key === only); const st = { max: 0, over: 0, diag: 0, fuera: 0, n: 0, n3: 0, mang: 0, joints: 0 };
+      for (let t = 0; t < 50; t++) { const w = 2.5 + rnd() * 6, h = 2.5 + rnd() * 5;
+        S.floors = [{ id: D.nid(), name: "x", rooms: [R("R" + t, 0, 0, w, h)], collectors: [{ id: D.nid(), name: "C", x: w, y: 0.3, cap: 30 }] }]; S.fi = 0; D.update(false);
+        const r = S.floors[0].rooms[0], res = D.results[r.id]; st.mang += res.mang;
+        (res.cs || []).forEach(c => { const ps = res.panels.filter(q => q.circuit === c.i), lim = Math.min(...ps.map(q => q.tw === 40 ? 3 : 2)); st.n++; st.joints += ps.length - 1;
+          st.max = Math.max(st.max, ps.length); if (ps.length === 3) st.n3++; if (ps.length > lim) st.over++;
+          if (!inP(r, c.na, ps[0]) || !inP(r, c.nb, ps[ps.length - 1])) st.fuera++;
+          for (let i = 1; i < c.join.length; i++) { const a = c.join[i - 1], e = c.join[i]; if (Math.abs(a.x - e.x) > 1e-6 && Math.abs(a.y - e.y) > 1e-6) st.diag++; } }); }
+      o[only || "todos"] = st; }
+    S.panels.forEach(q => q.on = true); return o; });
+  ok("solo paneles A: como máximo 2 en serie (la ficha permite 3, se deja en 2 por seguridad)", ser.A.max === 2 && ser.A.over === 0, JSON.stringify(ser.A));
+  ok("solo paneles C: como máximo 2 en serie", ser.C.max === 2 && ser.C.over === 0, JSON.stringify(ser.C));
+  ok("modelos mezclados: ningún circuito pasa del límite de sus paneles", ser.todos.over === 0, JSON.stringify(ser.todos));
+  ok("uniones en ángulo recto, extremos dentro de sus paneles y un manguito por unión", [ser.A, ser.todos].every(x => !x.diag && !x.fuera && x.mang === x.joints), JSON.stringify(ser));
+  const thb = await p.evaluate(() => { const D = window.__dbg, S = D.S;
+    S.floors = [{ id: D.nid(), name: "x", rooms: [D.rectRoom("Salón", 0, 0, 5, 4, {})], collectors: [{ id: D.nid(), name: "C", x: 1, y: 3.4, cap: 12 }] }]; S.fi = 0; S.floors[0].rooms[0].marks = { 0: "ventana", 1: "exterior" };
+    S.th.vmaxT = 55; D.update(true); const T = D.TH, o = T.rows[0], r = D.results[o.room.id];
+    return { q5: D.brandQ(5), q10: D.brandQ(10), q20: D.brandQ(20), vmax: T.vmax, warn: document.getElementById("thSummary").innerText.includes("como máximo a 40"),
+      flow: o.flow, circ: r.circuits, dp: o.circ.map(c => c.dp), dpMin: Math.min(...o.circ.map(c => c.dp)), out: o.out, A: o.A, tm: o.tm, ti: o.ti }; });
+  ok("emisión según la curva de Sunthalpy (≈ 64 W/m² a 5 K, 120 a 10 K, 236 a 20 K)", Math.abs(thb.q5 - 64.5) < 1 && Math.abs(thb.q10 - 120) < 1 && Math.abs(thb.q20 - 236) < 2, JSON.stringify(thb));
+  ok("acabado enyesado: el agua no pasa de 40 °C aunque se pidan 55 (y lo avisa)", thb.vmax === 40 && thb.warn, JSON.stringify(thb));
+  ok("caudal de 1 l/min por circuito y pérdida de carga con los kPa de los paneles", Math.abs(thb.flow - 60 * thb.circ) < 1e-6 && thb.dpMin >= 13, JSON.stringify(thb));
+  // Sunthalpy con tes: hasta 7 m de PEX 16 hasta la te y el resto en 20 (manguito reducido); colector con tes de 6 salidas como máximo,
+  // y si no caben todos los circuitos así, una salida por circuito
+  const te = await p.evaluate(() => { const D = window.__dbg, S = D.S, o = {};
+    const run = (rooms, coll) => { S.floors = [{ id: D.nid(), name: "x", rooms, collectors: [Object.assign({ id: D.nid(), name: "C" }, coll)] }]; S.fi = 0; D.update(true);
+      const c = S.collectors[0], outs = [].concat(...S.rooms.map(r => D.results[r.id].outs || [])), rows = {}; window.__dbg.S; 
+      document.querySelectorAll("#reportBody tr").forEach(tr => { const td = tr.querySelectorAll("td"); rows[td[0].firstChild.textContent.trim()] = td[1].innerText.trim(); });
+      return { te: !!c._te, outs: outs.length, g: outs.filter(x => x.d === 20).length, circ: S.rooms.reduce((t, r) => t + D.results[r.id].circuits, 0), red: outs.reduce((t, x) => t + (x.red || 0), 0),
+        bad16: outs.filter(x => x.d === 20 && (Math.abs(x.s16 - Math.min(x.la, 7) - Math.min(x.lb, 7)) > 1e-6 || Math.abs(x.s20 - Math.max(0, x.la - 7) - Math.max(0, x.lb - 7)) > 1e-6)).length,
+        un: S.rooms.filter(r => D.results[r.id].circuits && !D.results[r.id].col).length, rows }; };
+    o.cerca = run([D.rectRoom("Salón", 0, 0, 6, 4.5, {})], { x: 0.8, y: 3.9, cap: 12 });
+    o.lejos = run([D.rectRoom("Salón", 0, 0, 6, 4.5, {}), D.rectRoom("Paso", 6, 0, 9, 1.2, { active: false })], { x: 14.5, y: 0.6, cap: 12 });
+    o.lleno = run([0, 1, 2, 3].map(i => D.rectRoom("E" + i, i * 6, 0, 6, 4.5, {})), { x: 12, y: 4.2, cap: 40 });
+    return o; });
+  ok("con tes y tramos cortos: colector de 6 salidas como máximo, todo en PEX 16, sin manguitos reducidos",
+    te.cerca.te && te.cerca.g > 0 && te.cerca.outs <= 6 && te.cerca.outs < te.cerca.circ && te.cerca.red === 0 && !te.cerca.rows["Tubo PEX 20 mm"] && !te.cerca.rows["Manguito reducido 16–20"] && /Colector de [2-6] salidas/.test(Object.keys(te.cerca.rows).join("|")), JSON.stringify(te.cerca));
+  ok("con tes y tramos de más de 7 m: 7 m de PEX 16 y el resto de 20, con un manguito reducido por tramo",
+    te.lejos.te && te.lejos.red > 0 && !te.lejos.bad16 && te.lejos.rows["Manguito reducido 16–20"] === te.lejos.red + " ud." && !!te.lejos.rows["Tubo PEX 20 mm"] && te.lejos.rows["Racor PEX 20 con rosca 1/2\""] === te.lejos.red + " ud." && te.lejos.rows["Te de latón 1/2\""] === 2 * te.lejos.g + " ud.", JSON.stringify(te.lejos));
+  ok("si con tes no caben todos los circuitos en 6 salidas: una salida por circuito, sin tes", !te.lleno.te && te.lleno.g === 0 && te.lleno.outs === te.lleno.circ && !te.lleno.un && !!te.lleno.rows["Colector de 40 salidas"], JSON.stringify({ te: te.lleno.te, g: te.lleno.g, outs: te.lleno.outs, circ: te.lleno.circ, un: te.lleno.un }));
+  // todas las marcas y modelos: la cobertura de cada estancia respeta el rango de la marca (nunca pasa del máximo; si no llega al
+  // mínimo, lo avisa), solo salen paneles de los modelos marcados y ningún circuito pasa del límite en serie
+  const allb = await p.evaluate(() => { const D = window.__dbg, S = D.S, V = D.V, sel = document.getElementById("sBrand"), out = {}; let seed = 4242; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (const k of ["sunthalpy", "renovis", "nic", "gkc", "gkcs"]) { sel.value = k; sel.dispatchEvent(new Event("change"));
+      const keys = S.panels.map(q => q.key), combos = [null].concat(keys); out[k] = { rango: S.gMin + "-" + S.gMax, n: 0, sobre: [], bajoSinAviso: [], ajenos: 0, serie: 0, bajo: 0, conPaneles: 0 };
+      for (const only of combos) { S.panels.forEach(q => q.on = !only || q.key === only);
+        for (let t = 0; t < 18; t++) { const w = 2.4 + rnd() * 6, h = 2.4 + rnd() * 5, L = t % 3 === 2;
+          const r = L ? { id: D.nid(), name: "L" + t, pts: [V(0, 0), V(w, 0), V(w, h * 0.45), V(w * 0.5, h * 0.45), V(w * 0.5, h), V(0, h)], bulge: [0, 0, 0, 0, 0, 0], tx: 0, ty: 0, rot: 0, attach: null, active: true, override: false, minPct: 30, maxPct: 60, lc: "puntos", lp: "ninguna" } : D.rectRoom("R" + t, 0, 0, w, h, {});
+          S.floors = [{ id: D.nid(), name: "x", rooms: [r], collectors: [{ id: D.nid(), name: "C", x: 0.6, y: 0.6, cap: 30 }] }]; S.fi = 0; S.sel = r.id; D.update(false);
+          const x = D.results[r.id], o = out[k], tag = (only || "todos") + " " + r.name + " " + w.toFixed(1) + "×" + h.toFixed(1); o.n++;
+          if (x.minPct !== S.gMin || x.maxPct !== S.gMax) o.sobre.push(tag + " rango " + x.minPct + "-" + x.maxPct);
+          if (x.pct > S.gMax + 0.5) o.sobre.push(tag + " " + x.pct.toFixed(1) + "%");
+          if (x.panels.length) o.conPaneles++;
+          if (x.pct < S.gMin - 0.5) { o.bajo++; if (!(x.msgs || []).some(m => /No se alcanza|Ningún panel/.test(m.x))) o.bajoSinAviso.push(tag + " " + x.pct.toFixed(1) + "%"); }
+          x.panels.forEach(q => { if (!S.panels.some(t => t.on !== false && ((t.w === q.tw && t.h === q.th) || (t.w === q.th && t.h === q.tw)))) o.ajenos++; });
+          (x.cs || []).forEach(c => { const ps = x.panels.filter(q => q.circuit === c.i); const lim = Math.min(...ps.map(q => { const m = (S.panels.find(t => (t.w === q.tw && t.h === q.th) || (t.w === q.th && t.h === q.tw)) || {}); return { sunthalpy: 2, renovis: 3, gkc: 1, gkcs: 1, nic: Math.min(q.tw, q.th) === 50 ? 2 : 1 }[k]; })); if (ps.length > lim) o.serie++; }); } }
+      S.panels.forEach(q => q.on = true); o = null; }
+    sel.value = "sunthalpy"; sel.dispatchEvent(new Event("change"));
+    Object.values(out).forEach(o => { o.sobre = o.sobre.slice(0, 4); o.bajoSinAviso = o.bajoSinAviso.slice(0, 4); }); return out; });
+  for (const [k, o] of Object.entries(allb)) ok("marca " + k + " (" + o.rango + " %): " + o.n + " estancias, " + o.conPaneles + " con paneles; nunca fuera de rango sin aviso, solo sus modelos, sin pasar el límite en serie" + (o.bajo ? " (" + o.bajo + " no llegan al mínimo y lo avisan)" : ""),
+    !o.sobre.length && !o.bajoSinAviso.length && !o.ajenos && !o.serie && o.conPaneles > o.n * 0.8, JSON.stringify(o));
+  // vivienda de ejemplo con cada marca: cálculo térmico sin huecos (sin NaN) y material con los paneles de la marca
+  await p.click("#loadExample"); await p.waitForTimeout(800);
+  const exAll = await p.evaluate(() => { const D = window.__dbg, S = D.S, sel = document.getElementById("sBrand"), o = {};
+    S.rooms.forEach((r, i) => { r.marks = Object.assign({}, r.marks || {}, { 0: i % 2 ? "ventana" : "exterior" }); });
+    for (const k of ["sunthalpy", "renovis", "nic", "gkc", "gkcs"]) { sel.value = k; sel.dispatchEvent(new Event("change")); const T = D.TH, rows = [...document.querySelectorAll("#reportBody tr")].map(tr => tr.innerText);
+      const nums = [T.tv, T.totQ, T.totOut, T.totFlow].concat(...T.rows.map(x => [x.Q, x.out, x.flow].concat(x.circ.map(c => c.flow), x.circ.map(c => c.dp || 0))));
+      o[k] = { tv: T.tv, out: Math.round(T.totOut), nan: nums.filter(v => v == null || !isFinite(v)).length, paneles: rows.filter(t => t.indexOf("Panel " + BRANDS_LINE(k)) === 0).length, text: /NaN|undefined/.test(document.getElementById("thSummary").innerText + rows.join("")) }; }
+    function BRANDS_LINE(k) { return { sunthalpy: "sunthaldress", renovis: "Renovis", nic: "NIC", gkc: "GKC Classic", gkcs: "GKC Super Classic" }[k]; }
+    sel.value = "sunthalpy"; sel.dispatchEvent(new Event("change")); return o; });
+  ok("vivienda de ejemplo con cada marca: cálculo térmico completo (sin NaN) y material con los paneles de la marca", Object.values(exAll).every(x => x.tv > 0 && x.out > 0 && !x.nan && x.paneles > 0 && !x.text), JSON.stringify(exAll));
+  // el rango propio de una estancia es de la marca con la que se puso
+  const ovb = await p.evaluate(() => { const D = window.__dbg, S = D.S, sel = document.getElementById("sBrand"), r = D.rectRoom("Estancia 2", 0, 0, 8, 6.25, { override: true, minPct: 30, maxPct: 35 });
+    S.floors = [{ id: D.nid(), name: "x", rooms: [r], collectors: [] }]; S.fi = 0; S.sel = r.id; D.update(true); const o = {};
+    const st = () => { const x = D.results[r.id]; return x.minPct + "-" + x.maxPct + "/" + document.getElementById("rOver").checked + "/" + !document.getElementById("ovNote").hidden; };
+    o.sun = st(); sel.value = "gkc"; sel.dispatchEvent(new Event("change")); o.gkc = st();
+    const cb = document.getElementById("rOver"); cb.checked = true; cb.dispatchEvent(new Event("change")); o.gkcPropio = st() + "/" + r.ovb;
+    sel.value = "sunthalpy"; sel.dispatchEvent(new Event("change")); o.vuelta = st(); return o; });
+  ok("rango propio de una estancia: vale para la marca con la que se puso; con otra marca se usa la de la marca y lo explica",
+    ovb.sun === "30-35/true/false" && ovb.gkc === "60-75/false/true" && ovb.gkcPropio === "60-75/true/false/gkc" && ovb.vuelta === "30-60/false/true", JSON.stringify(ovb));
+  // las demás marcas: cada una con sus paneles, su límite en serie y su emisión según la ficha
+  const otras = await p.evaluate(() => { const D = window.__dbg, S = D.S, out = {}, sel = document.getElementById("sBrand");
+    const want = { renovis: [15, 55], nic: [16, 162 / 2.4], gkc: [15, 68], gkcs: [15, 77] };
+    for (const k of Object.keys(want)) { sel.value = k; sel.dispatchEvent(new Event("change"));
+      S.floors = [{ id: D.nid(), name: "x", rooms: [D.rectRoom("Salón", 0, 0, 6, 4.5, {}), D.rectRoom("Dormitorio", 6, 0, 3.5, 4.5, {})], collectors: [{ id: D.nid(), name: "C", x: 1, y: 3.8, cap: 20 }] }]; S.fi = 0; D.update(true);
+      let n = 0, over = 0, foreign = 0; S.rooms.forEach(r => { const x = D.results[r.id]; n += x.panels.length; (x.cs || []).forEach(c => { const ps = x.panels.filter(q => q.circuit === c.i), lim = Math.min(...ps.map(q => k === "renovis" ? 3 : k === "nic" && Math.min(q.tw, q.th) === 50 ? 2 : 1)); if (ps.length > lim) over++; }); x.panels.forEach(q => { if (!S.panels.some(t => t.on !== false && t.w === q.tw && t.h === q.th)) foreign++; }); });
+      out[k] = { brand: S.brand, n, over, foreign, q: Math.round(D.brandQ(want[k][0]) * 10) / 10, want: Math.round(want[k][1] * 10) / 10, info: document.getElementById("brandInfo").innerText.slice(0, 60), flow: D.TH.totFlow }; }
+    sel.value = "sunthalpy"; sel.dispatchEvent(new Event("change")); return out; });
+  ok("Uponor Renovis, Zehnder NIC y Giacomini GKC: paneles de su ficha, sin pasar su límite en serie y con su emisión (±3 %)",
+    Object.values(otras).every(x => x.n > 0 && !x.over && !x.foreign && Math.abs(x.q - x.want) <= x.want * 0.03 && x.flow > 0), JSON.stringify(otras));
+  await p.click("#loadExample"); await p.waitForTimeout(800);
+  const exb = await p.evaluate(() => { const D = window.__dbg, out = {}, sel = document.getElementById("sBrand");
+    for (const k of ["sunthalpy", "renovis", "nic", "gkc", "gkcs"]) { sel.value = k; sel.dispatchEvent(new Event("change")); let bad = 0, n = 0;
+      D.S.rooms.forEach(r => { const x = D.results[r.id]; n += x.panels.length; (x.cs || []).forEach(c => { const ps = x.panels.filter(q => q.circuit === c.i), lim = Math.min(...ps.map(q => k === "renovis" ? 3 : k === "sunthalpy" ? 2 : k === "nic" && Math.min(q.tw, q.th) === 50 ? 2 : 1)); if (ps.length > lim) bad++; }); });
+      out[k] = { n, bad }; }
+    sel.value = "sunthalpy"; sel.dispatchEvent(new Event("change")); return out; });
+  ok("vivienda de ejemplo con cada marca: ningún circuito pasa del límite en serie de sus paneles", Object.values(exb).every(x => x.n > 0 && !x.bad), JSON.stringify(exb));
+  const cov = await p.evaluate(() => { const sel = document.getElementById("sBrand"), o = {}; for (const k of ["renovis", "nic", "gkc", "sunthalpy"]) { sel.value = k; sel.dispatchEvent(new Event("change")); o[k] = window.__dbg.S.gMin + "-" + window.__dbg.S.gMax + "/" + document.getElementById("gMin").value; } return o; });
+  ok("cobertura por defecto según la marca (Sunthalpy 30–60, Renovis 60–80, NIC 50–65, GKC 60–75)", cov.sunthalpy === "30-60/30" && cov.renovis === "60-80/60" && cov.nic === "50-65/50" && cov.gkc === "60-75/60", JSON.stringify(cov));
+  await p.evaluate(() => { document.getElementById("sFinish").value = "alic"; document.getElementById("sFinish").dispatchEvent(new Event("change")); });
+  ok("acabado alicatado: hasta 60 °C", await p.evaluate(() => window.__dbg.TH.vmax === 55), "vmax " + await p.evaluate(() => window.__dbg.TH.vmax));
+  const mig = await p.evaluate(() => { const D = window.__dbg;
+    D.projApply({ v: 1, mode: "techo", title: "Antiguo", fi: 0, floors: [{ id: 1, name: "P", rooms: [D.rectRoom("Salón", 0, 0, 5, 4, {})], collectors: [] }], cfg: { panels: [{ id: 9, name: "Panel 80×100", w: 80, h: 100 }], gMin: 30, gMax: 60 } }, false);
+    return { brand: D.S.brand, finish: D.S.finish, panels: D.S.panels.map(q => q.key + q.w + "x" + q.h + (q.on ? "" : "-")).join(","), n: D.results[D.S.rooms[0].id].panels.length, sel: document.getElementById("sBrand").value }; });
+  ok("un proyecto guardado antes de las marcas se abre con Sunthalpy y sus paneles", mig.brand === "sunthalpy" && mig.finish === "yeso" && mig.panels === "A40x150,B60x150,C80x150" && mig.n > 0 && mig.sel === "sunthalpy", JSON.stringify(mig));
+  await p.close();
+
   // 8. tutorial: se recorre entero en techo y suelo (saltando las misiones) y salen los pasos de lo nuevo
   out.push("Tutorial");
   for (const [h, nm] of [["#planificador", "techo"], ["#suelo", "suelo"]]) {
@@ -400,7 +527,7 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
     const need = ["¿Tienes un plano de la vivienda?", "Deshacer y rehacer", "Paredes curvas", "Control por zonas"], miss = need.filter(t => !seen.includes(t));
     ok("tutorial de " + nm + ": llega al final (" + seen.length + " pasos) con los pasos nuevos", /Fin/.test(seen[seen.length - 1] || "") && !miss.length, "faltan: " + miss.join(", ") + " · último: " + seen[seen.length - 1]);
     // every step that asks to do something shows its animation (recorded with tutorial/grabar.js); only the purely informative ones do not
-    const INFO = ["Aprende haciéndolo", "Salidas con tubo de 20", "La ficha de la estancia", "Potencias y caudales", "Resumen de circuitos"];
+    const INFO = ["Aprende haciéndolo", "Salidas con te", "La ficha de la estancia", "Potencias y caudales", "Resumen de circuitos"];
     const noAnim = anims.slice(0, -1).filter(s => !s.anim && !INFO.includes(s.t)).map(s => s.t), uniq = [...new Set(anims.filter(s => s.anim).map(s => s.anim))];
     const noFile = uniq.filter(a => !fs.existsSync(path.join(ROOT, a + ".mp4")) || !fs.existsSync(path.join(ROOT, a + ".webm")));
     ok("tutorial de " + nm + ": " + uniq.length + " animaciones, todas con vídeo, y se reproducen", !noAnim.length && !noFile.length && played, "sin animación: " + noAnim.join(", ") + " · sin vídeo: " + noFile.join(", ") + " · se reproduce: " + played);

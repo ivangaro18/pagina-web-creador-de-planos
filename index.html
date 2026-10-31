@@ -338,6 +338,7 @@
   .p-sub{font-family:"Archivo",system-ui,sans-serif;font-size:.17px;font-weight:500;fill:var(--muted);pointer-events:none;}
   .p-dim{stroke:var(--muted);stroke-width:.014;}
   .p-dimtext{font-family:"Archivo",system-ui,sans-serif;font-size:.2px;fill:var(--muted);}
+  .p-red{fill:#fff;stroke:var(--bridge);stroke-width:calc(var(--pu,.01px)*1.4);}
   .p-out20{fill:none;stroke:#0F2A3D;stroke-width:.025;stroke-dasharray:.09 .05;}
   .p-out20t{font-family:"Archivo",system-ui,sans-serif;font-weight:700;fill:#0F2A3D;paint-order:stroke;stroke:#fff;stroke-linejoin:round;pointer-events:none;}
   .p-ctext{font-family:"Archivo",system-ui,sans-serif;font-weight:700;fill:#fff;pointer-events:none;}
@@ -345,6 +346,8 @@
   .p-coll{fill:var(--accent);stroke:var(--wall);stroke-width:.02;}
   .p-colltext{font-family:"Archivo",system-ui,sans-serif;font-size:.17px;font-weight:600;fill:var(--accent);paint-order:stroke;stroke:var(--room-fill);stroke-width:.07px;stroke-linejoin:round;pointer-events:none;}
   .p-via{stroke:#7A4F00;stroke-width:.09;stroke-linecap:round;pointer-events:none;}
+  .p-via-ar{stroke:#7A4F00;stroke-width:.035;pointer-events:none;}
+  .p-via-ah{fill:#7A4F00;pointer-events:none;}
   .p-via-j{stroke:#7A4F00;stroke-width:.04;stroke-linecap:round;pointer-events:none;}
   .p-reg{fill:rgba(11,127,171,.07);stroke:var(--accent);stroke-width:.014;stroke-dasharray:.06 .04;}
   /* ceiling piping: widths in screen pixels times --pu (set by pipeScale: one pixel, grown with the square root of the zoom),
@@ -404,6 +407,10 @@
   .logo-box img{max-height:56px;max-width:180px;background:#fff;border-radius:4px;padding:3px;}
   .logo-empty{font-size:.8rem;color:var(--muted);}
   .file-btn{position:relative;overflow:hidden;}
+  .brand-info{font-size:.78rem;color:var(--muted);margin:2px 0 8px;line-height:1.5;}
+  .brand-info b{color:var(--ink);font-weight:600;}
+  table.catalog td.chk{width:34px;text-align:center;}
+  table.catalog tr.off td{opacity:.5;}
   /* ---------- background plan (import, calibrate, trace) ---------- */
   .bg-bar{border-top:1px dashed var(--line);padding-top:8px;}
   .bg-bar .bg-t{font-weight:600;color:var(--ink);}
@@ -688,15 +695,6 @@
   .auth-or{color:var(--s-muted);}
   .auth-or::before,.auth-or::after{background:var(--rule);}
   .auth-note{color:var(--s-muted);font-size:.82rem;}
-  /* ---------- cadastre search ---------- */
-  #catModal .modal-card{max-width:560px;margin-top:8vh;}
-  .cat-form{display:flex;gap:8px;}
-  .cat-form input{flex:1;min-width:0;}
-  .cat-list{list-style:none;padding:0;margin:14px 0 0;}
-  .cat-list:not(:empty){border-top:1px solid var(--line);}
-  .cat-list button{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 6px;font:inherit;font-size:.92rem;color:var(--ink);cursor:pointer;}
-  .cat-list button:hover,.cat-list button:focus-visible{background:var(--surface-2);}
-  .cat-list small{display:block;color:var(--muted);font-size:.78rem;margin-top:2px;}
   /* ---------- planner on the project-sheet look (same as the site): ink frames, square sheets, sentence-case labels ---------- */
   .app-back{max-width:1240px;margin:0 auto;padding:0;height:56px;border-bottom:1.5px solid var(--ink);font-size:.9rem;color:var(--muted);}
   .app-brand{display:flex;align-items:center;gap:10px;min-width:0;font-weight:700;font-stretch:118%;color:var(--ink);font-size:1rem;}
@@ -828,9 +826,9 @@
     <div class="s-wrap">
       <div class="s-head"><h2>Lo que el planificador calcula por ti</h2><p>Cada imagen es un trozo del mismo plano de ejemplo, tal como lo dibuja la herramienta.</p></div>
       <div class="feat">
-        <div class="feat-row"><figure class="feat-fig" data-crop="forma"></figure><div><h3>Estancias de cualquier forma</h3><p>Dibuja sobre una cuadrícula de puntos, curva las paredes que quieras y escribe las medidas. Cada estancia nueva se pega a un lado de otra. También puedes calcar encima de un PDF o una foto del plano, o del plano de la parcela que traes del Catastro con solo escribir la dirección.</p></div></div>
-        <div class="feat-row"><figure class="feat-fig" data-crop="paneles"></figure><div><h3>Paneles colocados solos</h3><p>Eliges qué parte del techo cubrir y el planificador pone el panel más grande que cabe, centrado, a 10 cm de las paredes y con hueco para la iluminación. Como máximo, dos paneles por circuito.</p></div></div>
-        <div class="feat-row"><figure class="feat-fig" data-crop="tubos"></figure><div><h3>Colectores y metros de PEX</h3><p>Arrastras los colectores al plano y cada estancia va entera al más cercano con salidas libres. Los metros de tubo cuentan la ida, el retorno, la subida al techo y el tubo que ya traen los paneles.</p></div></div>
+        <div class="feat-row"><figure class="feat-fig" data-crop="forma"></figure><div><h3>Estancias de cualquier forma</h3><p>Dibuja sobre una cuadrícula de puntos, curva las paredes que quieras y escribe las medidas. Cada estancia nueva se pega a un lado de otra. También puedes calcar encima de un PDF o una foto del plano.</p></div></div>
+        <div class="feat-row"><figure class="feat-fig" data-crop="paneles"></figure><div><h3>Paneles colocados solos</h3><p>Eliges qué parte del techo cubrir y el planificador pone el panel más grande que cabe, centrado, a 10 cm de las paredes y con hueco para la iluminación. Eliges la marca de los paneles y se aplican sus medidas y sus normas: cuántos paneles van en serie, caudal, pérdida de carga y emisión.</p></div></div>
+        <div class="feat-row"><figure class="feat-fig" data-crop="tubos"></figure><div><h3>Colectores y metros de PEX</h3><p>Arrastras los colectores al plano y cada estancia va entera al más cercano con salidas libres. Los metros de tubo cuentan la ida, el retorno y el tubo que ya traen los paneles.</p></div></div>
         <div class="feat-row"><figure class="feat-fig" data-crop="pladur"></figure><div><h3>Estructura de pladur</h3><p>Angular, perfiles primarios y TC secundarios alineados con los paneles, con sus cuelgues. Puedes girar la estructura y comparar cuántas barras y placas salen.</p></div></div>
         <div class="feat-row"><figure class="feat-fig" data-crop="suelo"></figure><div><h3>Suelo radiante por circuitos</h3><p>En suelo, el tubo se reparte por estancias en circuitos de 120 m como máximo, más cerrado junto a ventanas y muros exteriores. El planificador también te dice en qué pared conviene el colector.</p></div></div>
       </div>
@@ -995,7 +993,7 @@
       <button class="ch-card" data-go="app-techo" type="button">
         <span class="ch-head"><span class="ch-name">Techo radiante</span><span class="ch-sub">Paneles en el techo, sobre estructura de pladur</span></span>
         <span class="ch-fig" data-chfig="techo"></span>
-        <span class="ch-calc"><span>Paneles de cualquier fabricante</span><span>Circuitos de 2 paneles</span><span>Colectores y metros de PEX</span><span>Perfiles, cuelgues y placas</span><span>Luz entre paneles</span><span>Informe con tus precios</span></span>
+        <span class="ch-calc"><span>Paneles de cualquier fabricante</span><span>Circuitos según el fabricante</span><span>Colectores y metros de PEX</span><span>Perfiles, cuelgues y placas</span><span>Luz entre paneles</span><span>Informe con tus precios</span></span>
         <span class="ch-go">Abrir el planificador de techo</span>
       </button>
       <button class="ch-card" data-go="app-suelo" type="button">
@@ -1055,12 +1053,12 @@
       <button class="mk-btn only-suelo" type="button" id="doorBtn"><i style="border-top:3px solid var(--wall);width:14px;border-radius:0 0 8px 0;height:8px;border-right:2px solid var(--wall)"></i>Marcar puerta</button>
       <button class="mk-btn only-techo" type="button" id="viaBtn"><i style="border:none;width:14px;height:4px;background:repeating-linear-gradient(90deg,#C0392B 0 4px,#1F6FB2 4px 8px);border-radius:2px"></i>Marcar paso de tubos</button>
       <button class="mk-btn" type="button" id="obstBtn"><i style="border:none;width:14px;height:10px;background:repeating-linear-gradient(45deg,#8C9BA7 0 2px,#E6ECF0 2px 4px);border:1px solid #6B7B88"></i>Añadir obstáculo</button>
+      <button class="mk-btn" type="button" id="eraseBtn" title="Borra obstáculos, marcas de pared, puertas, pasos de tubos y colectores (nunca las estancias)"><i style="border:none;width:14px;height:10px;background:linear-gradient(90deg,#E8A0A0 0 45%,#F4F1EA 45%);border:1px solid #6B7B88;border-radius:2px"></i>Borrador</button>
       <span>Pulsa un botón y luego la pared en el plano. Otra pulsación en la pared la desmarca.<span class="only-techo"> Se usan para el cálculo térmico.</span></span>
     </div>
     <div class="mark-bar bg-bar" id="bgBar">
       <span class="bg-t">Plano de fondo</span>
       <span class="mk-btn file-btn" id="bgImport"><span id="bgImportT">Importar plano (PDF o imagen)</span><input type="file" id="bgFile" accept="application/pdf,image/png,image/jpeg,image/webp" aria-label="Importar plano de fondo"></span>
-      <button class="mk-btn" type="button" id="catBtn">Buscar en el Catastro</button>
       <button class="mk-btn" type="button" data-bg="cal" hidden>1. Calibrar escala</button>
       <button class="mk-btn" type="button" data-bg="trace" hidden>2. Calcar estancias</button>
       <button class="mk-btn" type="button" data-bg="curve" hidden>Marcar borde curvo</button>
@@ -1107,11 +1105,17 @@
 
   <div class="layout">
     <aside class="stack">
+      <div class="card only-techo" id="brandCard">
+        <span class="section-title">Marca de los paneles</span>
+        <div class="field"><label class="lbl" for="sBrand">Fabricante</label><select id="sBrand"></select></div>
+        <div class="field"><label class="lbl" for="sFinish">Acabado del techo</label><select id="sFinish"></select></div>
+        <div id="brandInfo" class="brand-info"></div>
+        <p class="note" style="margin-top:0;">Las medidas de los paneles, cuántos van en serie, el caudal, la pérdida de carga y la emisión del cálculo térmico salen de la ficha técnica del fabricante.</p>
+      </div>
       <div class="card only-techo" id="catalogCard">
-        <span class="section-title">Catálogo de paneles</span>
-        <table class="catalog"><thead><tr><th>Modelo</th><th class="num">Ancho cm</th><th class="num">Largo cm</th><th></th></tr></thead><tbody id="catalogBody"></tbody></table>
-        <button class="btn ghost small" id="addPanel" style="margin-top:8px;">+ Añadir modelo</button>
-        <p class="note">Introduce las medidas de los paneles que vayas a usar, de cualquier fabricante.</p>
+        <span class="section-title">Paneles <span id="catBrand"></span></span>
+        <table class="catalog"><thead><tr><th>Usar</th><th>Modelo</th><th class="num">Medida cm</th><th class="num">En serie</th><th class="num">kPa</th></tr></thead><tbody id="catalogBody"></tbody></table>
+        <p class="note">Medidas estándar del fabricante. Desmarca las que no vayas a usar: se coloca siempre el panel más grande que quepa. «En serie»: paneles como máximo por circuito; «kPa»: pérdida de carga de cada panel al caudal de diseño.</p>
       </div>
       <div class="card only-techo" id="coverCard">
         <span class="section-title">Cobertura por defecto</span>
@@ -1119,7 +1123,7 @@
           <div class="field"><label class="lbl" for="gMin">% mínimo</label><input type="number" id="gMin" min="0" max="100" step="1"></div>
           <div class="field"><label class="lbl" for="gMax">% máximo</label><input type="number" id="gMax" min="0" max="100" step="1"></div>
         </div>
-        <p class="note" style="margin-top:0;">Se aplica a las estancias que no tienen un rango propio.</p>
+        <p class="note" style="margin-top:0;">Se aplica a las estancias que no tienen un rango propio. Al elegir la marca se pone la suya por defecto.</p>
       </div>
       <div class="card only-techo">
         <span class="section-title">Reglas de instalación</span>
@@ -1128,7 +1132,7 @@
           <div class="field"><label class="lbl" for="sGap">Junta entre paneles (mm)</label><input type="number" id="sGap" min="0" step="1"></div>
         </div>
         <div class="field"><label class="lbl" for="sStrip">Ancho franja de luz (cm)</label><input type="number" id="sStrip" min="10" step="1"></div>
-        <p class="note">El tipo de iluminación se elige en cada estancia. Máx. 2 paneles por circuito y siempre el panel más grande posible. En estancias que no son rectangulares, los paneles se colocan en las zonas rectangulares más grandes.</p>
+        <p class="note">El tipo de iluminación se elige en cada estancia. <span id="seriesNote"></span> Siempre el panel más grande posible. En estancias que no son rectangulares, los paneles se colocan en las zonas rectangulares más grandes.</p>
       </div>
       <div class="card only-techo" id="pladurCard">
         <span class="section-title">Techo de pladur</span>
@@ -1163,10 +1167,9 @@
         <button class="btn ghost small" id="addColl" style="margin-bottom:8px;">+ Añadir colector</button>
         <p class="note" id="capSummary" style="margin:0 0 12px;"></p>
         <div class="grid2 only-techo">
-          <div class="field"><label class="lbl" for="sVert">Subida colector–techo (m)</label><input type="number" id="sVert" min="0" step="0.1"></div>
           <div class="field"><label class="lbl" for="sMargin">Margen de tubo (%)</label><input type="number" id="sMargin" min="0" step="1"></div>
         </div>
-        <p class="note only-techo" style="margin-top:0;"><b>Tubo de 20 mm:</b> dos circuitos de la misma estancia (3 o 4 paneles) comparten una salida del colector: tubo PEX de 20 hasta una te de latón en la ida y otra en el retorno, de donde salen los tubos de los paneles. Solo si el PEX de 20 no pasa de 20 m sumando ida y retorno (sin contar el tubo del panel) y las tes quedan al alcance del tubo propio de los paneles (hasta 3 m); se agrupan los circuitos más próximos entre sí. Lo que no se puede agrupar va con tubo de 16, como siempre.</p>
+        <p class="note only-techo" style="margin-top:0;"><b>Salidas con te:</b> <span id="teNote"></span></p>
         <div class="field only-techo"><label class="lbl" for="sTail">Tubo del panel aprovechado por tramo (m)</label><input type="number" id="sTail" min="0" max="3" step="0.1"></div>
         <p class="note only-techo" style="margin-top:0;">Los paneles traen un tramo de tubo propio (hasta 3 m). Esta medida se descuenta de cada tramo de ida y de retorno.</p>
         <p class="note only-techo">Indica las salidas de cada colector. Las estancias se asignan enteras al colector más cercano con salidas suficientes.</p>
@@ -1198,13 +1201,11 @@
           <div class="field only-suelo"><label class="lbl" for="thPav">Pavimento general</label><select id="thPav"></select></div>
           <div class="field only-suelo"><label class="lbl" for="thTube">Tubo</label><select id="thTube"></select></div>
           <div class="field only-suelo"><label class="lbl" for="thSu">Mortero sobre el tubo (mm)</label><input type="number" id="thSu" step="5" min="15" max="100"></div>
-          <div class="field only-techo"><label class="lbl" for="thKp">Panel (W/m²K)</label><input type="number" id="thKp" step="0.5" min="1" max="30"></div>
           <div class="field only-techo"><label class="lbl" for="thVmaxT">Impulsión máxima (°C)</label><input type="number" id="thVmaxT" step="1" min="25" max="55"></div>
         </div>
         <div id="thFloors"></div>
         <p class="note">Marca en el plano las ventanas y los muros exteriores de cada estancia: con ellos se calculan las pérdidas. Los baños van a 24 °C; cualquier estancia puede tener su propia temperatura. Es un cálculo orientativo: el proyecto lo firma un técnico.</p>
-        <p class="note only-techo" style="margin-top:0;">Potencia del panel: la ficha de Sunthalpy da unos 12 W/m² de panel por cada °C entre el agua y el ambiente (180 W un panel S con el agua a 30 °C y la sala a 20 °C). Pon el dato de tu fabricante.</p>
-        <p class="note only-suelo" style="margin-top:0;">Emisión según UNE-EN 1264: depende de la separación del tubo, del pavimento y del mortero. El suelo no pasa de 29 °C (33 °C en baños).</p>
+        <p class="note only-techo" style="margin-top:0;" id="thBrandNote"></p>        <p class="note only-suelo" style="margin-top:0;">Emisión según UNE-EN 1264: depende de la separación del tubo, del pavimento y del mortero. El suelo no pasa de 29 °C (33 °C en baños).</p>
       </div>
     </aside>
 
@@ -1284,17 +1285,6 @@
     <h2 id="finTitle">Finalizar el proyecto</h2>
     <div id="finBody"></div>
     <div class="modal-actions"><button class="btn ghost" id="finNo" type="button">Seguir editando</button><button class="btn" id="finYes" type="button">Finalizar proyecto</button></div>
-  </div>
-</div>
-<div class="modal" id="catModal" hidden role="dialog" aria-modal="true" aria-labelledby="catTitle">
-  <div class="modal-card">
-    <h2 id="catTitle">Buscar la parcela en el Catastro</h2>
-    <p class="note" style="margin:0 0 14px;">Escribe la dirección con el número, por ejemplo «Calle Mayor 5, Toledo», o la referencia catastral. El plano de la parcela llega ya a escala para calcar encima las estancias. El Catastro no tiene la distribución interior: solo el contorno de los edificios.</p>
-    <form class="cat-form" id="catForm" autocomplete="off"><input type="text" id="catQ" aria-label="Dirección o referencia catastral" placeholder="Calle, número y localidad, o referencia catastral"><button class="btn" type="submit">Buscar</button></form>
-    <div class="field" style="margin-top:12px;max-width:260px;"><label class="lbl" for="catSize">Zona que se descarga</label><select id="catSize"><option value="40">40 × 40 m</option><option value="60" selected>60 × 60 m</option><option value="120">120 × 120 m</option></select></div>
-    <p class="note" id="catMsg" role="status" aria-live="polite"></p>
-    <ul class="cat-list" id="catList" aria-label="Resultados"></ul>
-    <div class="modal-actions"><button class="btn ghost" id="catClose" type="button">Cancelar</button></div>
   </div>
 </div>
 <div class="modal" id="projModal" hidden role="dialog" aria-modal="true" aria-labelledby="projListTitle">
@@ -1438,7 +1428,7 @@
     // a rounded bay window on the living room to show curved walls
     var sal=rooms[0]; sal.bulge[3]={u:0,v:0.9/4.8}; sal.tx=0.9;
     rooms.forEach(function(r,i){ if(i>0) r.tx+=0.9; });
-    return {id:nid(), name:"Planta baja", rooms:rooms, collectors:[{id:nid(),name:"Colector 1",x:3.9,y:5.35,cap:10},{id:nid(),name:"Colector 2",x:11.2,y:5.35,cap:8}]};
+    return {id:nid(), name:"Planta baja", rooms:rooms, collectors:[{id:nid(),name:"Colector 1",x:3.9,y:5.35,cap:16},{id:nid(),name:"Colector 2",x:11.2,y:5.35,cap:16}]};
   }
   function exampleFloorUF(){
     var f=exampleFloor(), R=f.rooms, M=function(i,o){ R[i].marks=o; };
@@ -1448,8 +1438,75 @@
     return f;
   }
   function emptyFloor(name){ return {id:nid(), name:name||"Planta baja", rooms:[], collectors:[]}; }
+  // ---------------- panel brands ----------------
+  // What changes with the manufacturer of the ceiling panels (data sheet): sizes, how many go in series per circuit,
+  // design flow and pressure drop per panel, thermal output (W/m²K against water–room difference) and temperature limits.
+  // Each entry, from the maker's own data sheet (src): models (w×h cm, series = most panels in series per circuit, sheet = what the
+  // sheet allows when we keep a lower limit, dp = kPa per panel at the design flow, fl = l/h per panel), flow (l/min per circuit,
+  // fixed by the maker), emission as a curve kc [ΔT, W/m²K] or K·ΔT^n, water limits per finish, t20 = panels per shared outlet,
+  // te = the maker's rule for those shared outlets (Sunthalpy: PEX 16 for the first p16 m to the te, then 20; a collector with tes has at most maxOut outlets).
+  // Systems fed in parallel (Tichelmann lines) are planned as one panel (or the allowed series) per circuit: on the safe side.
+  var BRANDS={
+    sunthalpy:{name:"Sunthalpy",line:"sunthaldress",
+      models:[{key:"A",w:40,h:150,series:2,sheet:3,dp:13,wk:7.8},{key:"B",w:60,h:150,series:2,dp:18,wk:11.7},{key:"C",w:80,h:150,series:2,dp:21.2,wk:15.6}],
+      flow:1, kc:[[0,18.3],[1,17.2],[2,16.1],[3,15.1],[4,13.9],[5,12.9],[6,12.5],[7,12.3],[8,12.2],[10,12],[13,11.9],[17,11.8]],
+      finish:{yeso:{n:"Juntas enyesadas y pintado",t:40},alic:{n:"Alicatado",t:60}}, tMin:5, bar:6, mm:15, kg:9, mod:40, tube:"PE-RT de 10 mm con conexión pushfit", t20:[3,4], te:{p16:7,maxOut:6},
+      cover:[30,60], coverSrc:"criterio de instalación de Sunthalpy",
+      emis:"la curva medida de la ficha: de 18 W/m²K con poca diferencia a 12 W/m²K a partir de 10 K (A 7,8 W/K, B 11,7 y C 15,6 por panel)",
+      src:[["Ficha técnico comercial sunthaldress (11/2023)",null]]},
+    renovis:{name:"Uponor",line:"Renovis",
+      models:[{key:"2000",w:62.5,h:200,series:3},{key:"1200",w:62.5,h:120,series:3},{key:"800",w:62.5,h:80,series:3}],
+      kc:[[10,3.7],[15,3.67],[25,3.67]],
+      finish:{enl:{n:"Placa con enlucido de 4 mm",t:50}}, tMin:15, bar:6, mm:15, kg:12.1, mod:40, tube:"PE-Xa 9,9×1,1 mm a 50 mm, conexión Q&E; líneas de 20×2 en retorno invertido", t20:[2,6],
+      cover:[60,80], coverSrc:"guía técnica de techos radiantes (no viene en la ficha de Uponor)",
+      emis:"EN 1264-5 en techo: 55 W/m² a 15 K (unos 37 W/m² a 10 K, leído del gráfico); la superficie no pasa de 29 °C",
+      rules:"Perfiles CD 60/27 cada 40 cm y cuelgues cada 90 cm como máximo; 10 mm de holgura a los muros; tornillos cada 17 cm; juntas al tresbolillo. Los focos solo en el centro del panel; donde se taladre, panel ciego (Renovis Diamant 2000×625).",
+      src:[["Uponor Renovis, información técnica (02/2014)","https://brandportal.uponor.com/m/6e92069e4e052335/original/TI-Renovis-EN-1066436.pdf"],["Uponor, techo radiante y refrescante (10/2023)","https://brandportal.uponor.com/m/366a92c64bd79225/original/TI-Ceiling-Heating-Cooling-DE-1092315.pdf"]]},
+    nic:{name:"Zehnder",line:"NIC (Nestsystems)",
+      models:[{key:"NIC 600",w:120,h:200,series:1},{key:"NIC 300",w:120,h:100,series:1},{key:"NIC 150",w:120,h:50,series:2}],
+      kc:[[10,4.13],[16,4.22],[20,4.25],[28,4.31]],
+      finish:{std:{n:"Placa de yeso (juntas con cinta)",t:40}}, tMin:15, bar:4, mm:42, kg:14, tube:"PE-Xa 8×1 mm, en paralelo a colectores lineales de multicapa 20×2 con tes rápidas", t20:[2,4],
+      cover:[50,65], coverSrc:"guía técnica de techos radiantes (no viene en la ficha de Zehnder)",
+      emis:"ensayo EN 14037 de la ficha: NIC 600 da 99 W a 10 K, 162 W a 16 K y 204 W a 20 K (unos 41–43 W/m² por cada 10 K)",
+      rules:"Cada panel va en paralelo a la línea de 20 mm (se planifica un panel por circuito; dos NIC 150 pueden ir en serie). Máximo 4 bar a 40 °C. Los paneles activos no se cortan; zonas sin panel con la placa de cierre de 2000×1200.",
+      src:[["Zehnder Nestsystems, catálogo (2016)","https://www.zehnder.es/fileadmin/user_upload/ES/Documentaciones/RHC/Z-RHC-_Nestsystems_2016.pdf"],["Zehnder Systems, tarifa 2026","https://www.zehnder.es/fileadmin/user_upload/ES/Documentaciones/CSY/Z-CSY-Tarifa-Zehnder-Systems_2026_v5.pdf"]]},
+    gkc:{name:"Giacomini",line:"GKC Classic",
+      models:[{key:"KS120Y200",w:120,h:200,series:1,dp:20,fl:90},{key:"KS60Y200",w:60,h:200,series:1,dp:20,fl:45},{key:"KS60Y120",w:60,h:120,series:1,dp:20,fl:45}],
+      K:68/Math.pow(15,1.1), n:1.1,
+      finish:{std:{n:"Placa de yeso",t:45}}, tMin:15, mm:45, kg:13.3, tube:"tubo 8×1 mm con barrera antioxígeno, paneles en paralelo con multicapa 20×2", t20:[2,4],
+      cover:[60,75], coverSrc:"guía técnica de techos radiantes (no viene en la ficha de Giacomini)",
+      emis:"EN 14037: 68 W/m² a 15 K (la ficha solo da ese punto; se supone n = 1,1). 45 l/h y unos 20 kPa por circuito interno",
+      rules:"Perfiles con primarios cada 90 cm como máximo y secundarios cada 30 o 40 cm (montaje longitudinal); tornillos de 7 cm en el centro de las pistas marcadas, cada 20 cm; 25–50 cm entre filas de paneles para las conexiones. El de 1200×2000 se puede partir en dos de 1200×1000. Temperatura máxima del panel no publicada: se limita a 45 °C.",
+      src:[["Giacomini GKC, ficha 0353EN (07/2025)","https://dam.giacomini.com/giacomini.com/product_documentations/datasheets/KSU.pdf"]]},
+    gkcs:{name:"Giacomini",line:"GKC Super Classic",
+      models:[{key:"KSS120Y200",w:120,h:200,series:1,dp:20,fl:90},{key:"KSS60Y200",w:60,h:200,series:1,dp:20,fl:45},{key:"KSS60Y120",w:60,h:120,series:1,dp:20,fl:45}],
+      K:77/Math.pow(15,1.1), n:1.1,
+      finish:{std:{n:"Placa de yeso",t:45}}, tMin:15, mm:45, kg:13.3, tube:"tubo 8×1 mm a 30 mm con barrera antioxígeno, paneles en paralelo con multicapa 20×2", t20:[2,4],
+      cover:[60,75], coverSrc:"guía técnica de techos radiantes (no viene en la ficha de Giacomini)",
+      emis:"EN 14037: 77 W/m² a 15 K (la ficha solo da ese punto; se supone n = 1,1). 45 l/h y unos 20 kPa por circuito interno",
+      rules:"Como GKC Classic: primarios cada 90 cm como máximo, secundarios cada 30 o 40 cm; tornillos de 7 cm cada 20 cm en el centro de las pistas; 25–50 cm entre filas para las conexiones. Temperatura máxima del panel no publicada: se limita a 45 °C.",
+      src:[["Giacomini GKC, ficha 0353EN (07/2025)","https://dam.giacomini.com/giacomini.com/product_documentations/datasheets/KSU.pdf"]]}
+  };
+  // a room's own coverage range belongs to the brand it was set for (ovb; before brands, Sunthalpy): with another brand the
+  // room takes that brand's default, and going back brings its own range back
+  function ownCov(r){ return !!r.override && (r.ovb||"sunthalpy")===S.brand; }
+  function brand(){ return BRANDS[S.brand]||BRANDS.sunthalpy; }
+  function brandPanels(b,k){ return b.models.map(function(m){ return {id:"p_"+k+"_"+m.key.replace(/\W/g,""),key:m.key,name:"Panel "+b.line+" "+m.key,w:m.w,h:m.h,on:true}; }); }
+  function modelOf(tw,th){ var ms=brand().models; for(var i=0;i<ms.length;i++){ var m=ms[i]; if((m.w===tw&&m.h===th)||(m.w===th&&m.h===tw)) return m; } return null; }
+  function seriesOf(tw,th){ var m=modelOf(tw,th); return m?m.series:2; }
+  function brandK(dH){ var b=brand(), c=b.kc, x=Math.max(0,dH); if(!c) return b.K*Math.pow(Math.max(0.5,x),b.n-1); for(var i=1;i<c.length;i++) if(x<=c[i][0]) return c[i-1][1]+(c[i][1]-c[i-1][1])*(x-c[i-1][0])/(c[i][0]-c[i-1][0]); return c[c.length-1][1]; }
+  function brandQ(dH){ return dH>0 ? brandK(dH)*dH : 0; }                                   // W per m² of panel
+  function brandDH(q){ if(!(q>0)) return 0; var lo=0, hi=80; for(var i=0;i<50;i++){ var m=(lo+hi)/2; if(brandQ(m)<q) lo=m; else hi=m; } return (lo+hi)/2; }
+  // how two circuits share an outlet with a te, for this brand (collector card, report notes)
+  function teText(){ var b=brand(), t=b.te, n=b.t20; if(t) return "Dos circuitos de la misma estancia ("+n[0]+" o "+n[1]+" paneles) pueden compartir una salida del colector con una te de latón en la ida y otra en el retorno. Del colector a la te va PEX de 16 hasta "+t.p16+" m; si el tramo es más largo, un manguito reducido 16–20 y el resto en PEX de 20. Un colector con tes es como máximo de "+t.maxOut+" salidas: si así no caben todos sus circuitos, se usa una salida por circuito, sin tes.";
+    return "Dos circuitos de la misma estancia ("+n[0]+" a "+n[1]+" paneles) comparten una salida del colector: tubo PEX de 20 hasta una te de latón en la ida y otra en el retorno, de donde salen los tubos de los paneles. Solo si el PEX de 20 no pasa de 20 m sumando ida y retorno y las tes quedan al alcance del tubo de los paneles."; }
+  function brandTmax(){ var b=brand(), f=b.finish[S.finish]||b.finish[Object.keys(b.finish)[0]]; return f.t; }
+  function seriesText(){ var ms=brand().models, same=ms.every(function(m){ return m.series===ms[0].series; }), sh=ms.filter(function(m){ return m.sheet && m.sheet>m.series; });
+    if(same && ms[0].series===1) return "Un panel por circuito (van en paralelo).";
+    return "En serie, como máximo "+(same ? ms[0].series+" paneles" : ms.map(function(m){ return m.series+" del "+m.key; }).join(", ").replace(/, ([^,]*)$/," y $1"))+" por circuito"+
+      (sh.length ? " (la ficha permite "+sh.map(function(m){ return m.sheet+" del "+m.key; }).join(", ")+"; se deja en "+sh[0].series+" por seguridad)." : "."); }
   var S={
-    panels:[{id:nid(),name:"Panel 80×150",w:80,h:150},{id:nid(),name:"Panel 40×150",w:40,h:150},{id:nid(),name:"Panel 80×100",w:80,h:100},{id:nid(),name:"Panel 40×100",w:40,h:100}],
+    brand:"sunthalpy", finish:"yeso", panels:brandPanels(BRANDS.sunthalpy,"sunthalpy"),
     t20:true,gMin:30,gMax:60,clear:10,gap:2,strip:30,vert:1.5,margin:10,tail:1,secCm:40,primCm:90,bar:3,hang:1.2,board:"1.2x2.5",showStruct:false,
     colorByCircuit:false, showPipes:false, prices:{}, ctrl:{},
     floors:[emptyFloor("Planta baja")], fi:0, sel:null, drag:null, frozenVB:null,
@@ -1499,7 +1556,7 @@
   // ---------------- panel layout engine ----------------
   function variants(){
     var out=[];
-    S.panels.forEach(function(t){ var w=t.w/100,h=t.h/100; if(!(w>0&&h>0)) return;
+    S.panels.forEach(function(t){ var w=t.w/100,h=t.h/100; if(!(w>0&&h>0) || t.on===false) return;
       out.push({typeId:t.id,name:t.name,tw:t.w,th:t.h,w:w,h:h,a:w*h,rot:false});
       if(Math.abs(w-h)>EPS) out.push({typeId:t.id,name:t.name,tw:t.w,th:t.h,w:h,h:w,a:w*h,rot:true}); });
     return out;
@@ -1526,8 +1583,8 @@
     else if(Math.max(bx,by)>=0.2){ if(by>=bx){ o.push([V(i,by/2),V(W-i,by/2)],[V(i,L-by/2),V(W-i,L-by/2)]); } else { o.push([V(bx/2,i),V(bx/2,L-i)],[V(W-bx/2,i),V(W-bx/2,L-i)]); } }
     return o;
   }
-  // circuits for a set of panels: same-model panels go in pairs, the odd ones left over share circuits between them
-  function circOf(tc){ var c=0, odd=0; for(var t in tc){ c+=Math.floor(tc[t]/2); odd+=tc[t]%2; } return {c:c+Math.ceil(odd/2), odd:odd}; }
+  // circuits for a set of panels: same-model panels in full series (as many as the maker allows), the ones left over share circuits
+  function circOf(tc){ var c=0, odd=0; for(var t in tc){ var d=t.split("x"), k=seriesOf(+d[0],+d[1]); c+=Math.floor(tc[t]/k); odd+=tc[t]%k; } return {c:c+Math.ceil(odd/2), odd:odd}; }
   // catalogue panels that are exactly m cells of the base variant (side by side in a row, or stacked in a column)
   function mergeOpts(v,vars){
     var o={col:[],row:[]}, tol=0.011;
@@ -1736,10 +1793,10 @@
   }
   function lightKeep(l){ var h=(+l.s||30)/200; return {x0:l.x-h,y0:l.y-h,x1:l.x+h,y1:l.y+h}; }
   function calcRoom(room){
-    var key=JSON.stringify([room.marks||{},room.pts,room.bulge,room.active,room.override,room.minPct,room.maxPct,room.lc,room.lp,room.customL||false,room.customL?room.lights||[]:0,room._cko||[],room.obst||[],S.gMin,S.gMax,S.clear,S.gap,S.strip,S.panels]);
+    var key=JSON.stringify([room.marks||{},room.pts,room.bulge,room.active,room.override,room.minPct,room.maxPct,room.lc,room.lp,room.customL||false,room.customL?room.lights||[]:0,room._cko||[],room.obst||[],room.ovb||"",S.brand,S.gMin,S.gMax,S.clear,S.gap,S.strip,S.panels]);
     if(room._ck===key && room._cr) return room._cr;
     var out=localOutline(room), area=Math.abs(signedArea(out));
-    var minPct=room.override?room.minPct:S.gMin, maxPct=room.override?room.maxPct:S.gMax; if(maxPct<minPct) maxPct=minPct;
+    var own=ownCov(room), minPct=own?room.minPct:S.gMin, maxPct=own?room.maxPct:S.gMax; if(maxPct<minPct) maxPct=minPct;
     var res={area:area,minPct:minPct,maxPct:maxPct,minA:area*minPct/100,maxA:area*maxPct/100,panels:[],lights:[],leds:[],ledLen:0,strips:[],rects:[],groups:[],
       circuits:0,covered:0,pct:0,msgs:[],inactive:!room.active,keep:[],removed:0};
     // panels first next to windows and the entrance door: the sides of the free rectangle that face those walls
@@ -1780,24 +1837,28 @@
       if(CL) (room.lights||[]).forEach(function(l,i){ res.lights.push(V(l.x,l.y)); res.keep.push(KO[i]); if(!pointIn(V(l.x,l.y),out)) res.msgs.push({t:"warn",x:"El punto de luz "+(i+1)+" queda fuera de la estancia: revisa sus distancias."}); });
       res.reg=(room._cko||[]).slice();
       if(res.removed) res.msgs.push({t:"ok",x:"Se han quitado "+res.removed+" panel"+(res.removed>1?"es":"")+" que caían encima de "+[CL&&(room.lights||[]).length?"los puntos de luz":"",res.reg.length?"el registro del colector":"",(room.obst||[]).length?"los obstáculos":""].filter(Boolean).join(", ").replace(/, ([^,]*)$/," o $1")+"."});
-      // pair neighbouring panels. The layout order snakes through the room, so each panel touches the next one: pair consecutive
-      // panels, choosing where the lone one goes (odd count) for the shortest joints. Any two panels can be joined: the model only
-      // changes the area covered. Then swaps between pairs while they shorten it further.
+      // group neighbouring panels in series. The layout order snakes through the room, so each panel touches the next one: the
+      // circuits are runs of consecutive panels, as long as the maker allows for those models (Sunthalpy: 2 of any model;
+      // its sheet allows 3 of the A, kept at 2 to be safe). Fewest circuits first, then the shortest joints. Any panels can be joined: the model only changes the area and the limit.
+      // With runs of at most two, swaps between pairs while they shorten the joints further.
       var pc=res.panels.map(function(p){ return V(p.x+p.w/2,p.y+p.h/2); }), np=pc.length, pairs=[], single=-1;
+      var cap=res.panels.map(function(p){ return seriesOf(p.tw,p.th); }), mxs=Math.max.apply(null,cap.concat([1]));
       var cost=function(i,j){ return manh(pc[i],pc[j]); };
-      var DP=[[0,Infinity]], how=[[null,null]];
-      for(var di=1;di<=np;di++){ DP.push([Infinity,Infinity]); how.push([null,null]);
-        for(var sg=0;sg<2;sg++){
-          if(di>=2 && DP[di-2][sg]+cost(di-2,di-1)<DP[di][sg]){ DP[di][sg]=DP[di-2][sg]+cost(di-2,di-1); how[di][sg]="p"; }
-          if(sg===1 && DP[di-1][0]<DP[di][1]){ DP[di][1]=DP[di-1][0]; how[di][1]="s"; } } }
-      for(var di2=np,sg2=np%2;di2>0;){ if(how[di2][sg2]==="p"){ pairs.push([di2-2,di2-1]); di2-=2; } else { single=di2-1; di2--; sg2=0; } }
-      for(var it=0,ch=true;ch && it<50;it++){ ch=false;
-        for(var x=0;x<pairs.length;x++){ var P=pairs[x];
-          if(single>=0) for(var k=0;k<2;k++){ if(cost(P[1-k],single)<cost(P[0],P[1])-1e-6){ var s0=single; single=P[k]; P[k]=s0; ch=true; } }
-          for(var y=x+1;y<pairs.length;y++){ var Q=pairs[y], c0=cost(P[0],P[1])+cost(Q[0],Q[1]), c1=cost(P[0],Q[0])+cost(P[1],Q[1]), c2=cost(P[0],Q[1])+cost(P[1],Q[0]);
+      var DP=[0], how=[0];
+      for(var di=1;di<=np;di++){ DP.push(Infinity); how.push(1);
+        for(var kk=1,lim=Infinity,jc=0;kk<=Math.min(mxs,di);kk++){ var ix=di-kk; lim=Math.min(lim,cap[ix]); if(kk>lim) break; if(kk>1) jc+=cost(ix,ix+1);
+          var dv=DP[ix]+1000+jc; if(dv<DP[di]-1e-9){ DP[di]=dv; how[di]=kk; } } }
+      var runs=[]; for(var di2=np;di2>0;di2-=how[di2]){ var ru=[]; for(var q=di2-how[di2];q<di2;q++) ru.push(q); runs.unshift(ru); }
+      var lng=runs.some(function(ru){ return ru.length>2; });
+      runs.forEach(function(ru){ if(lng || ru.length===2) pairs.push(ru); else if(single<0) single=ru[0]; else pairs.push(ru); });
+      if(!lng) for(var it=0,ch=true;ch && it<50;it++){ ch=false;
+        for(var x=0;x<pairs.length;x++){ var P=pairs[x]; if(P.length<2) continue;
+          if(single>=0) for(var k=0;k<2;k++){ if(cap[single]>=2 && cost(P[1-k],single)<cost(P[0],P[1])-1e-6){ var s0=single; single=P[k]; P[k]=s0; ch=true; } }
+          for(var y=x+1;y<pairs.length;y++){ var Q=pairs[y]; if(Q.length<2) continue; var c0=cost(P[0],P[1])+cost(Q[0],Q[1]), c1=cost(P[0],Q[0])+cost(P[1],Q[1]), c2=cost(P[0],Q[1])+cost(P[1],Q[0]);
+            var two=function(a,b){ return cap[a]>=2 && cap[b]>=2; }; if(!two(P[0],Q[0]) || !two(P[1],Q[1])) c1=Infinity; if(!two(P[0],Q[1]) || !two(P[1],Q[0])) c2=Infinity;
             if(c1<c0-1e-6 && c1<=c2){ var t=P[1]; P[1]=Q[0]; Q[0]=t; ch=true; } else if(c2<c0-1e-6){ var t2=P[1]; P[1]=Q[1]; Q[1]=t2; ch=true; } } } }
       if(single>=0) pairs.push([single]);
-      pairs.forEach(function(pr){ pr.sort(function(a,b){ return a-b; }); });
+      if(!lng) pairs.forEach(function(pr){ pr.sort(function(a,b){ return a-b; }); });
       pairs.sort(function(a,b){ return a[0]-b[0]; });
       pairs.forEach(function(pr,ci){ pr.forEach(function(ix){ res.panels[ix].circuit=ci; }); });
       res.circuits=pairs.length;
@@ -1938,13 +1999,20 @@
   // the hole: a standard width, wider when more tubes pass than fit (HOLE_W, worked out by pipeLayout), the same margin both sides
   var HOLE_MIN=0.44, HOLE_MARGIN=0.1, HOLE_W={};
   function viaSvg(r){ var g=viaGeom(r); if(!g) return ""; var hw=(HOLE_W[r.id]||HOLE_MIN)/2, a=add(g.P,mul(g.u,-hw)), b=add(g.P,mul(g.u,hw)), o=viaOther(r), ln=function(p,q,c){ return '<line class="'+c+'" x1="'+f3(p.x)+'" y1="'+f3(p.y)+'" x2="'+f3(q.x)+'" y2="'+f3(q.y)+'"/>'; };
-    return '<g><title>Paso de tubos entre '+esc(r.name)+(o?' y '+esc(o.name):'')+'</title>'+ln(a,b,"p-via")+ln(add(a,mul(g.nin,-0.16)),add(a,mul(g.nin,0.16)),"p-via-j")+ln(add(b,mul(g.nin,-0.16)),add(b,mul(g.nin,0.16)),"p-via-j")+'</g>'; }
+    var dir=r.via.dir, to=dir>0?r:o, ar="";
+    if(dir){ var nn=mul(g.nin,dir), tip=add(g.P,mul(nn,0.42)), tail=add(g.P,mul(nn,-0.3)), wg=mul(g.u,0.11);
+      ar=ln(tail,tip,"p-via-ar")+'<polygon class="p-via-ah" points="'+ptsStr([tip,add(add(tip,mul(nn,-0.16)),wg),add(add(tip,mul(nn,-0.16)),mul(wg,-1))])+'"/>'; }
+    return '<g><title>Paso de tubos entre '+esc(r.name)+(o?' y '+esc(o.name):'')+(dir&&to?': los tubos pasan por aquí hacia '+esc(to.name)+', camino del colector':'')+'</title>'+ar+ln(a,b,"p-via")+ln(add(a,mul(g.nin,-0.16)),add(a,mul(g.nin,0.16)),"p-via-j")+ln(add(b,mul(g.nin,-0.16)),add(b,mul(g.nin,0.16)),"p-via-j")+'</g>'; }
   function circsOf(r,res){ var g=[]; res.panels.forEach(function(p){ (g[p.circuit]=g[p.circuit]||[]).push(p); });
-    var o=[], segs=[]; g.forEach(function(ps,i){ if(!ps) return; var pts=ps.map(function(p){ return toW(r,V(p.x+p.w/2,p.y+p.h/2)); }), j=joinOf(ps[0],ps[ps.length-1],segs);
+    var o=[], segs=[]; g.forEach(function(ps,i){ if(!ps) return; var pts=ps.map(function(p){ return toW(r,V(p.x+p.w/2,p.y+p.h/2)); }), j=ps.length>2 ? joinRun(ps,segs) : joinOf(ps[0],ps[ps.length-1],segs);
       o.push({i:i,a:pts[0],b:pts[pts.length-1],n:ps.length,na:toW(r,j.na),nb:toW(r,j.nb),join:j.path.map(function(q){ return toW(r,q); })}); }); return o; }
   // where the tubes meet a circuit (room frame): a single panel, two points near its middle; two panels, a point inside each one
   // next to the side that faces the other, joined square (never across, never through the gap between other panels' joints).
   // segs: the joints already drawn in the room, so one lying on another is moved aside.
+  // three or more panels in series: a joint between each panel and the next, square across the middle ones
+  function joinRun(ps,segs){ var js=[]; for(var k=0;k+1<ps.length;k++) js.push(joinOf(ps[k],ps[k+1],segs));
+    var path=js[0].path.slice(); for(var m=1;m<js.length;m++){ var a=path[path.length-1], b=js[m].na; if(Math.abs(a.x-b.x)>1e-9 && Math.abs(a.y-b.y)>1e-9) path.push(V(b.x,a.y)); path=path.concat(js[m].path); }
+    return {na:js[0].na,nb:js[js.length-1].nb,path:path}; }
   function joinOf(A,B,segs){
     var ca=V(A.x+A.w/2,A.y+A.h/2), cb=V(B.x+B.w/2,B.y+B.h/2);
     if(A===B) return {na:V(ca.x-0.05,ca.y),nb:V(ca.x+0.05,ca.y),path:[]};
@@ -1964,25 +2032,31 @@
     return {na:na,nb:nb,path:path};
   }
   var PF={};   // routing fields of this update, one per collector
-  function runLen(col,a,b,via){ var tail=Math.max(0,Math.min(3,S.tail||0)), F=PF[col.id], d=function(p){ var l=null;
-      if(via && via.F){ var lv=via.F.lenTo(via.out); if(lv!=null) l=lv+len(sub(via.in,via.out))+manh(via.in,p); }
-      else if(!via && F) l=F.lenTo(p);
-      return l!=null?l:(via?manh(col,via.in)+manh(via.in,p):manh(col,p)); }; return Math.max(0,d(a)+S.vert-tail)+Math.max(0,d(b)+S.vert-tail); }
-  function outletsFor(cs,col,via){
-    var outs=[], used={}, near=[];
-    if(S.t20 && col){ var cand=[];
-      for(var x=0;x<cs.length;x++) for(var y=x+1;y<cs.length;y++){ var n=cs[x].n+cs[y].n; if(n<3||n>4) continue;
+  // PEX of one run (ida or retorno) from the collector to p, after the tube that comes on the panel
+  function runSide(col,p,via){ var tail=Math.max(0,Math.min(3,S.tail||0)), F=PF[col.id], l=null;
+    if(via && via.F){ var lv=via.F.lenTo(via.out); if(lv!=null) l=lv+len(sub(via.in,via.out))+manh(via.in,p); }
+    else if(!via && F) l=F.lenTo(p);
+    if(l==null) l=via?manh(col,via.in)+manh(via.in,p):manh(col,p); return Math.max(0,l-tail); }   // the collector sits in the ceiling, in its access panel: no rise
+  function runLen(col,a,b,via){ return runSide(col,a,via)+runSide(col,b,via); }
+  // noTe: one outlet per circuit (a Sunthalpy collector that does not take tes)
+  function outletsFor(cs,col,via,noTe){
+    var outs=[], used={}, near=[], TE=brand().te;
+    if(S.t20 && col && !noTe){ var cand=[];
+      for(var x=0;x<cs.length;x++) for(var y=x+1;y<cs.length;y++){ var n=cs[x].n+cs[y].n, t20=brand().t20; if(n<t20[0]||n>t20[1]) continue;
         // each te is reached by the tube that comes on the panels (up to 3 m each side): the two circuits must be close
         var da=manh(cs[x].a,cs[y].a), db=manh(cs[x].b,cs[y].b); if(da>6 || db>6) continue;
-        var Ta=mul(add(cs[x].na,cs[y].na),0.5), Tb=mul(add(cs[x].nb,cs[y].nb),0.5), L=runLen(col,Ta,Tb,via); cand.push({x:x,y:y,L:L,Ta:Ta,Tb:Tb,sp:da+db}); }
+        var Ta=mul(add(cs[x].na,cs[y].na),0.5), Tb=mul(add(cs[x].nb,cs[y].nb),0.5), la=runSide(col,Ta,via), lb=runSide(col,Tb,via); cand.push({x:x,y:y,L:la+lb,la:la,lb:lb,Ta:Ta,Tb:Tb,sp:da+db}); }
       cand.sort(function(p,q){ return (p.sp-q.sp) || (p.L-q.L); });
-      cand.forEach(function(c){ if(used[c.x]||used[c.y]) return; if(c.L>20+1e-9){ near.push(c.L); return; } used[c.x]=used[c.y]=1;
-        outs.push({ci:[cs[c.x].i,cs[c.y].i],d:20,raw:c.L,a:c.Ta,b:c.Tb,n:cs[c.x].n+cs[c.y].n}); }); }
+      cand.forEach(function(c){ if(used[c.x]||used[c.y]) return; if(!TE && c.L>20+1e-9){ near.push(c.L); return; } used[c.x]=used[c.y]=1;
+        var o={ci:[cs[c.x].i,cs[c.y].i],d:20,raw:c.L,a:c.Ta,b:c.Tb,n:cs[c.x].n+cs[c.y].n};
+        // Sunthalpy: PEX 16 up to p16 m from the collector, then a 16–20 reducer and PEX 20 to the te (each run on its own)
+        if(TE){ o.la=c.la; o.lb=c.lb; o.s16=Math.min(c.la,TE.p16)+Math.min(c.lb,TE.p16); o.s20=Math.max(0,c.la-TE.p16)+Math.max(0,c.lb-TE.p16); o.red=(c.la>TE.p16?1:0)+(c.lb>TE.p16?1:0); }
+        outs.push(o); }); }
     cs.forEach(function(c,k){ if(used[k]) return; outs.push({ci:[c.i],d:16,raw:col?runLen(col,c.a,c.b,via):0,a:c.a,b:c.b,n:c.n}); });
     outs.sort(function(p,q){ return p.ci[0]-q.ci[0]; });
     var rest=outs.filter(function(o){ return o.d===16; }), canPair=false;
     for(var i=0;i<rest.length;i++) for(var j=i+1;j<rest.length;j++){ var nn=rest[i].n+rest[j].n; if(nn>=3&&nn<=4) canPair=true; }
-    outs.tooFar=S.t20 && col && canPair && near.length ? Math.min.apply(null,near) : 0;
+    outs.tooFar=S.t20 && col && !noTe && canPair && near.length ? Math.min.apply(null,near) : 0;
     return outs;
   }
   function computeFloor(fl){
@@ -2002,34 +2076,47 @@
       var res=results[r.id]; if(!res.circuits) return;
       var d=C.map(function(c){ return manh(c,res.ctr); }), ns=C.map(function(c){ return outletsFor(res.cs,c,null).length; });
       var order=C.map(function(c,ci){return ci;}).sort(function(a,b){return d[a]-d[b];});
-      items.push({r:r,n:res.circuits,ns:ns,d:d,order:order,dmin:d.length?Math.min.apply(null,d):0});
+      items.push({r:r,n:res.circuits,ns:ns,nn:res.cs.length,d:d,order:order,dmin:d.length?Math.min.apply(null,d):0});
     });
     items.sort(function(a,b){ return b.n-a.n || a.dmin-b.dmin; });
     var m=items.length, suf=new Array(m+1), lb=new Array(m+1); suf[m]=0; lb[m]=0;
     for(var q=m-1;q>=0;q--){ suf[q]=suf[q+1]+items[q].n; lb[q]=lb[q+1]+items[q].dmin*items[q].n; }
-    var capLeft=C.map(function(c){return c.cap||0;}), cur=new Array(m), best={a:-1,cost:Infinity,map:null}, nodes=0;
-    function rec(i,a,cost){
-      if(++nodes>400000) return;
-      if(a+suf[i]<best.a) return;
-      if(a+suf[i]===best.a && cost+lb[i]>=best.cost) return;
-      if(i===m){ if(a>best.a||(a===best.a&&cost<best.cost)) best={a:a,cost:cost,map:cur.slice()}; return; }
-      var it=items[i];
-      for(var z=0;z<it.order.length;z++){ var ci=it.order[z];
-        var no=it.ns[ci]; if(capLeft[ci]>=no){ capLeft[ci]-=no; cur[i]=ci; rec(i+1,a+it.n,cost+it.d[ci]*no); capLeft[ci]+=no; } }
-      cur[i]=-1; rec(i+1,a,cost);
-    }
-    if(m && C.length) rec(0,0,0);
+    // Sunthalpy with tes: a collector either takes tes (at most te.maxOut outlets in all) or gives one outlet per circuit. Every
+    // combination is tried: most circuits served first, then the most collectors with tes (smaller), then the shortest distances.
+    var TE=S.t20 && brand().te, masks=[0];
+    if(TE){ masks=[]; var nm=C.length<=3 ? 1<<C.length : 0; for(var mk=0;mk<nm;mk++) masks.push(mk); if(!nm) masks.push((1<<C.length)-1,0); }
+    var best={a:-1,cost:Infinity,map:null,te:-1,mask:0};
+    masks.forEach(function(mask){
+      var teOn=function(ci){ return !TE || !!(mask>>ci&1); }, nsOf=function(it,ci){ return teOn(ci) ? it.ns[ci] : it.nn; };
+      var capLeft=C.map(function(c,ci){ return TE && teOn(ci) ? Math.min(c.cap||0,TE.maxOut) : (c.cap||0); }), cur=new Array(m), bm={a:-1,cost:Infinity,map:null}, nodes=0;
+      function rec(i,a,cost){
+        if(++nodes>400000) return;
+        if(a+suf[i]<bm.a) return;
+        if(a+suf[i]===bm.a && cost+lb[i]>=bm.cost) return;
+        if(i===m){ if(a>bm.a||(a===bm.a&&cost<bm.cost)) bm={a:a,cost:cost,map:cur.slice()}; return; }
+        var it=items[i];
+        for(var z=0;z<it.order.length;z++){ var ci=it.order[z];
+          var no=nsOf(it,ci); if(capLeft[ci]>=no){ capLeft[ci]-=no; cur[i]=ci; rec(i+1,a+it.n,cost+it.d[ci]*no); capLeft[ci]+=no; } }
+        cur[i]=-1; rec(i+1,a,cost);
+      }
+      if(m && C.length) rec(0,0,0);
+      // collectors that really join circuits with a te in this combination
+      var te=0; if(TE && bm.map) C.forEach(function(c,ci){ if(teOn(ci) && items.some(function(it,i){ return bm.map[i]===ci && it.ns[ci]<it.nn; })) te++; });
+      if(bm.a>best.a || (bm.a===best.a && (te>best.te || (te===best.te && bm.cost<best.cost)))) best={a:bm.a,cost:bm.cost,map:bm.map,te:te,mask:mask};
+    });
+    C.forEach(function(c,ci){ c._te=!!(TE && (best.mask>>ci&1) && best.map && items.some(function(it,i){ return best.map[i]===ci && it.ns[ci]<it.nn; })); });
     items.forEach(function(it,i){ var ci=best.map?best.map[i]:-1;
-      if(ci!=null && ci>=0){ var c=C[ci], st=collStats[c.id], no=it.ns[ci]; results[it.r.id].col=c; st.n+=no; st.rooms.push({room:it.r,n:no,pex:0,d:it.d[ci]}); } });
+      if(ci!=null && ci>=0){ var c=C[ci], st=collStats[c.id], no=TE && !c._te ? it.nn : it.ns[ci]; results[it.r.id].col=c; st.n+=no; st.rooms.push({room:it.r,n:no,pex:0,d:it.d[ci]}); } });
     C.forEach(function(c){ collStats[c.id].rooms.sort(function(a,b){return a.d-b.d;}); });
     fl.rooms.forEach(function(r){
       var res=results[r.id], col=res.col, mg=1+S.margin/100;
       // each run (ida and retorno) starts with the tube that comes fitted on the panel: that part is not PEX
-      res.cs.forEach(function(c){ res.circ[c.i]={a:c.a,b:c.b,col:col,len:0,n:c.n,d:16}; if(c.n===2) res.mang++; });
-      res.outs=outletsFor(res.cs,col,null); res.outlets=res.outs.length;
+      res.cs.forEach(function(c){ res.circ[c.i]={a:c.a,b:c.b,col:col,len:0,n:c.n,d:16}; res.mang+=Math.max(0,c.n-1); });
+      res.outs=outletsFor(res.cs,col,null,!!(TE && col && !col._te)); res.outlets=res.outs.length; res.red=0; res.te16=0;
       res.outs.forEach(function(o){ var l=col?o.raw*mg:0; o.len=l; res.pex+=l;
         o.ci.forEach(function(i){ var c=res.circ[i]; c.len=l/o.ci.length; c.d=o.d; c.out=o; });
-        if(o.d===20){ res.g20++; res.pex20+=l; } else { res.pex16+=l; res.unions+=2; } });
+        if(o.d===20 && o.s16!=null){ res.g20++; res.pex16+=col?o.s16*mg:0; res.pex20+=col?o.s20*mg:0; res.red+=o.red; res.te16+=2-o.red; }
+        else if(o.d===20){ res.g20++; res.pex20+=l; } else { res.pex16+=l; res.unions+=2; } });
       res.circ=res.circ.filter(function(c){ return c; });
       if(res.circuits && !res.col) unas.push({room:r,n:items.filter(function(it){ return it.r===r; }).map(function(it){ return it.ns.length?Math.min.apply(null,it.ns):it.n; })[0]||res.circuits,res:res,floor:fl});
       if(res.col){ var st=collStats[res.col.id]; st.pex+=res.pex; st.rooms.forEach(function(x){ if(x.room===r) x.pex=res.pex; }); }
@@ -2067,14 +2154,19 @@
     // a passage is a hole in a wall: every tube that crosses that wall, into or out of either room and whatever room is on the
     // other side of each stretch of it, goes through the hole. The wall is the straight side it was marked on, joined with the
     // side of the room behind the hole (so it does not matter from which room it was marked). Elsewhere a hole changes nothing.
-    var pas=[]; rs.forEach(function(r,ri){ var g=viaGeom(r); if(!g) return; var Q=add(g.P,mul(g.nin,-0.12)), other=-1; W.forEach(function(w,wi){ if(wi!==ri && other<0 && pointIn(Q,w)) other=wi; });
+    // with a direction (marked since 2026-10): the arrow says where the tubes go on their way from the panels to the collector, so
+    // routed from the collector (as here) every tube that goes into the room the arrow comes from goes in through the hole; going
+    // in anywhere else costs as much as a long detour, and tubes that do not go into that room do not notice it
+    var pas=[], dpas=[]; rs.forEach(function(r,ri){ var g=viaGeom(r); if(!g) return; var Q=add(g.P,mul(g.nin,-0.12)), other=-1; W.forEach(function(w,wi){ if(wi!==ri && other<0 && pointIn(Q,w)) other=wi; });
+      if(r.via.dir){ var into=r.via.dir>0?other:ri; if(into>=0) dpas.push({P:g.P,R:into,A:g.A,u:g.u,n:g.nin,L:g.L,t:g.t}); return; }
       var lo=0, hi=g.L, segs=[];
       if(other>=0){ var o=rs[other], m=o.pts.length; for(var e=0;e<m;e++){ if(o.bulge[e]) continue; var C=toW(o,o.pts[e]), D=toW(o,o.pts[(e+1)%m]);
         if(Math.abs(dot(sub(C,g.A),g.nin))>0.05 || Math.abs(dot(sub(D,g.A),g.nin))>0.05) continue;
         var tc=dot(sub(C,g.A),g.u), td=dot(sub(D,g.A),g.u); if(Math.min(tc,td)>g.t+1e-6 || Math.max(tc,td)<g.t-1e-6) continue; lo=Math.min(lo,tc,td); hi=Math.max(hi,tc,td); } }
       pas.push({P:g.P,A:add(g.A,mul(g.u,lo)),u:g.u,n:g.nin,len:hi-lo}); });
     var onWall=function(m,w){ var d=sub(m,w.A), t=dot(d,w.u); return Math.abs(dot(d,w.n))<0.13 && t>-0.05 && t<w.len+0.05; };
-    var cross=function(m,ra,rb){ for(var i=0;i<pas.length;i++) if(len(sub(m,pas[i].P))<0.2) return 0.6;
+    var cross=function(m,ra,rb){ for(var di=0;di<dpas.length;di++){ var dp=dpas[di]; if(rb===dp.R && ra!==dp.R) return len(sub(m,dp.P))<0.25 ? 0.6 : 80; }
+      for(var i=0;i<pas.length;i++) if(len(sub(m,pas[i].P))<0.2) return 0.6;
       for(var j=0;j<pas.length;j++) if(onWall(m,pas[j])) return 80;
       return 0.6; };
     var cellOf=function(p){ var i=Math.floor((p.x-x0)/res), j=Math.floor((p.y-y0)/res); if(i<0||j<0||i>=nx||j>=ny) return -1; return j*nx+i; };
@@ -2087,6 +2179,8 @@
     while(hp.k.length){ var key=hp.k[0], st=hp.pop(); if(key>dist[st]) continue; var cc=st>>2, dir=st&3, cx=cc%nx, cy=(cc/nx)|0;
       for(var d2=0;d2<4;d2++){ if(d2===((dir+2)&3)) continue; var bx2=cx+DX[d2], by2=cy+DY[d2]; if(bx2<0||by2<0||bx2>=nx||by2>=ny) continue; var nb=by2*nx+bx2; if(rid[nb]<0 || rid[nb]===banI) continue;
         var dw=dout[nb], cost=res*(1+(dw<0.3?(0.3-dw)*10:0))+(d2!==dir?0.3:0);
+        // keep off the wall of a directed passage except at the hole, as off an outside wall: the lanes beside a route hugging it would go through it
+        for(var dq=0;dq<dpas.length;dq++){ var w0=dpas[dq], cw=sub(ctr(nb),w0.A), tw=dot(cw,w0.u), dn=Math.abs(dot(cw,w0.n)); if(dn<0.6 && tw>-0.2 && tw<w0.L+0.2 && Math.abs(tw-w0.t)>0.45) cost+=res*(0.6-dn)*10; }
         if(rid[nb]!==rid[cc]) cost+=cross(mul(add(ctr(cc),ctr(nb)),0.5),rid[cc],rid[nb]);
         var ns=nb*4+d2, nd=dist[st]+cost; if(nd<dist[ns]-1e-12){ dist[ns]=nd; plen[ns]=plen[st]+res; par[ns]=st; hp.push(nd,ns); } } }
     var bestState=function(p){ var k=inside(p); if(k<0) return -1; var b=-1; for(var d=0;d<4;d++){ var s2=k*4+d; if(dist[s2]<Infinity && (b<0||dist[s2]<dist[b])) b=s2; } return b; };
@@ -2114,7 +2208,7 @@
             if(e.single){ L.ends.push({p:e.na,O:O,cls:"ida"}); L.ends.push({p:e.nb,O:O,cls:"ret"}); } else L.bridges.push(e.path);
             if(o.d===20){ L.branches.push({pts:[o.a,V(e.na.x,o.a.y),e.na],O:O,cls:"ida"}); L.branches.push({pts:[o.b,V(e.nb.x,o.b.y),e.nb],O:O,cls:"ret"}); }
             else { rt.push({O:O,cls:"ida",p:e.na,d:16}); rt.push({O:O,cls:"ret",p:e.nb,d:16}); } });
-          if(o.d===20){ rt.push({O:O,cls:"ida",p:o.a,d:20}); rt.push({O:O,cls:"ret",p:o.b,d:20}); L.tees.push({p:o.a,O:O}); L.tees.push({p:o.b,O:O}); } });
+          if(o.d===20){ rt.push({O:O,cls:"ida",p:o.a,d:20,te:o.s16!=null}); rt.push({O:O,cls:"ret",p:o.b,d:20,te:o.s16!=null}); L.tees.push({p:o.a,O:O}); L.tees.push({p:o.b,O:O}); } });
         rt.forEach(function(tb){ tb.room=r; tubes.push(tb); });
       });
       if(!tubes.length) return;
@@ -2172,9 +2266,15 @@
   }
   function pipesSvg(fl){
     var L=pipeLayout(fl), o="", col=function(O){ return CC[((O.n||1)-1)%CC.length]; };
-    L.tubes.forEach(function(t){ o+='<polyline class="p-tcase'+(t.d===20?' w':'')+'" points="'+ptsStr(t.pts)+'"/>'; });
+    // Sunthalpy outlets with a te: PEX 16 for the first metres (the rise to the ceiling counts), then the reducer and PEX 20
+    var parts=function(t){ if(t.d!==20) return [[t.pts,false]]; if(!t.te) return [[t.pts,true]];
+      var lim=brand().te.p16, acc=0, P=t.pts;
+      for(var i=1;i<P.length;i++){ var dd=len(sub(P[i],P[i-1])); if(acc+dd>=lim && dd>0){ var q=add(P[i-1],mul(sub(P[i],P[i-1]),(lim-acc)/dd)); t.red=q; return [[P.slice(0,i).concat([q]),false],[[q].concat(P.slice(i)),true]]; } acc+=dd; }
+      return [[P,false]]; };
+    L.tubes.forEach(function(t){ t.parts=parts(t); t.parts.forEach(function(pp){ o+='<polyline class="p-tcase'+(pp[1]?' w':'')+'" points="'+ptsStr(pp[0])+'"/>'; }); });
     L.branches.forEach(function(b){ o+='<polyline class="p-tcase br" points="'+ptsStr(b.pts)+'"/>'; });
-    L.tubes.forEach(function(t){ o+='<polyline class="p-tube '+t.cls+(t.d===20?' w':'')+'" style="stroke:'+t.color+'" points="'+ptsStr(t.pts)+'"><title>Salida '+t.O.n+' · '+(t.cls==="ida"?"ida":"retorno")+(t.d===20?' · tubo 20':'')+' · '+esc(t.room.name)+'</title></polyline>'; });
+    L.tubes.forEach(function(t){ t.parts.forEach(function(pp){ o+='<polyline class="p-tube '+t.cls+(pp[1]?' w':'')+'" style="stroke:'+t.color+'" points="'+ptsStr(pp[0])+'"><title>Salida '+t.O.n+' · '+(t.cls==="ida"?"ida":"retorno")+(pp[1]?' · tubo 20':t.te?' · tubo 16 hasta la te':'')+' · '+esc(t.room.name)+'</title></polyline>'; });
+      if(t.red) o+='<circle class="p-red" cx="'+f3(t.red.x)+'" cy="'+f3(t.red.y)+'" r="0.07"><title>Manguito reducido 16–20</title></circle>'; });
     L.branches.forEach(function(b){ o+='<polyline class="p-tbr '+b.cls+'" style="stroke:'+col(b.O)+'" points="'+ptsStr(b.pts)+'"/>'; });
     L.bridges.forEach(function(b){ var e=b[b.length-1]; o+='<polyline class="p-bridge" points="'+ptsStr(b)+'"/><circle class="p-node" cx="'+f3(b[0].x)+'" cy="'+f3(b[0].y)+'" r="0.04"/><circle class="p-node" cx="'+f3(e.x)+'" cy="'+f3(e.y)+'" r="0.04"/>'; });
     L.ends.forEach(function(e){ o+='<circle class="p-node" style="stroke:'+col(e.O)+'" cx="'+f3(e.p.x)+'" cy="'+f3(e.p.y)+'" r="0.03"/>'; });
@@ -3224,7 +3324,7 @@
       if(S.mode==="suelo"){ o+=ufCollSvg(c); return; }
       var st=collStats[c.id]||{n:0};
       o+='<g class="coll-g" data-coll="'+c.id+'"><rect x="'+f3(c.x-0.45)+'" y="'+f3(c.y-0.25)+'" width="0.9" height="0.5" style="fill:transparent"/><rect class="p-coll" x="'+f3(c.x-0.28)+'" y="'+f3(c.y-0.1)+'" width="0.56" height="0.2" rx="0.03"><title>'+esc(c.name)+' · arrastra para mover</title></rect></g>';
-      o+='<text class="p-colltext" x="'+f3(c.x)+'" y="'+f3(c.y+0.33)+'" text-anchor="middle">'+esc(c.name)+' · '+st.n+'/'+(c.cap||0)+'</text>';
+      o+='<text class="p-colltext" x="'+f3(c.x)+'" y="'+f3(c.y+0.33)+'" text-anchor="middle">'+esc(c.name)+' · '+st.n+'/'+(c._te?Math.min(c.cap||0,brand().te.maxOut)+' con tes':(c.cap||0))+'</text>';
     });
     if(S.mode==="suelo" && !forExport) o+=recGhostSvg();
     var sel=rooms.filter(function(r){return r.id===S.sel;})[0];
@@ -3248,12 +3348,12 @@
     var wrap=$("planWrap");
     $("zoomCtl").hidden=!planHas();
     wrap.classList.toggle("picking", !!(S.placing && S.placing.step==="target"));
-    wrap.classList.toggle("marking", !!(S.markTool||S.doorTool||S.obstTool||S.viaTool||S.bgTool==="cal"||S.bgTool==="trace"||S.bgTool==="curve"));
+    wrap.classList.toggle("marking", !!(S.markTool||S.doorTool||S.obstTool||S.viaTool||S.eraseTool||S.bgTool==="cal"||S.bgTool==="trace"||S.bgTool==="curve"));
     wrap.classList.toggle("bgmove", S.bgTool==="move"); bgBar();
     if(!planHas()){
       var anyRooms=allRooms().length>0;
       wrap.innerHTML='<div class="empty-cta">'+(anyRooms||S.floors.length>1
-        ? '<h3>'+esc(curFloor().name)+' está vacía</h3><p>Crea la primera estancia de esta planta dibujando su forma. Las siguientes se pegarán a ella.</p><button class="btn" data-cta="room">+ Estancia</button> <button class="btn ghost" data-cta="bg">Importar plano</button> <button class="btn ghost" data-cta="cat">Buscar en el Catastro</button>'
+        ? '<h3>'+esc(curFloor().name)+' está vacía</h3><p>Crea la primera estancia de esta planta dibujando su forma. Las siguientes se pegarán a ella.</p><button class="btn" data-cta="room">+ Estancia</button> <button class="btn ghost" data-cta="bg">Importar plano</button>'
         : '<h3>Empieza un proyecto</h3><p>Dibuja la primera estancia sobre una cuadrícula de puntos, dale forma (también con paredes curvas) y escribe sus medidas. Las demás estancias se van pegando a las que ya tengas.</p><div class="btn-row" style="justify-content:center"><button class="btn" data-cta="new">Nuevo proyecto</button><button class="btn ghost" data-cta="example">Ver un ejemplo</button></div>')+'</div>';
       return;
     }
@@ -3294,7 +3394,7 @@
       res.panels.forEach(function(p){ if(ou.ci.indexOf(p.circuit)<0) return; x0=Math.min(x0,p.x); y0=Math.min(y0,p.y); x1=Math.max(x1,p.x+p.w); y1=Math.max(y1,p.y+p.h); });
       if(!isFinite(x0)) return; var m=0.04, f=Math.min(0.15,fs*0.6);
       o+='<rect class="p-out20" x="'+f3(x0-m)+'" y="'+f3(y0-m)+'" width="'+f3(x1-x0+2*m)+'" height="'+f3(y1-y0+2*m)+'" rx="0.05"/>';
-      o+='<text class="p-out20t" font-size="'+f3(f)+'" stroke-width="'+f3(f*0.3)+'" x="'+f3(x0+0.02)+'" y="'+f3(y0-m-0.05)+'">S'+(k+1)+' · 20 mm</text>'; });
+      o+='<text class="p-out20t" font-size="'+f3(f)+'" stroke-width="'+f3(f*0.3)+'" x="'+f3(x0+0.02)+'" y="'+f3(y0-m-0.05)+'">S'+(k+1)+(ou.s16!=null?' · te'+(ou.s20>0?' · 16/20 mm':' · 16 mm'):' · 20 mm')+'</text>'; });
     res.leds.forEach(function(ln){ o+='<line class="p-led" x1="'+f3(ln[0].x)+'" y1="'+f3(ln[0].y)+'" x2="'+f3(ln[1].x)+'" y2="'+f3(ln[1].y)+'"/>'; });
     (res.keep||[]).forEach(function(z){ o+='<rect class="p-keep" x="'+f3(z.x0)+'" y="'+f3(z.y0)+'" width="'+f3(z.x1-z.x0)+'" height="'+f3(z.y1-z.y0)+'"/>'; });
     (res.reg||[]).forEach(function(z){ o+='<rect class="p-reg" x="'+f3(z.x0)+'" y="'+f3(z.y0)+'" width="'+f3(z.x1-z.x0)+'" height="'+f3(z.y1-z.y0)+'"/>'; });
@@ -3321,7 +3421,7 @@
     h+='<div class="stats"><div class="stat"><div class="k">Superficie</div><div class="v">'+fmt(res.area,2)+'</div><div class="s">m²</div></div>'+
       '<div class="stat"><div class="k">Cobertura</div><div class="v">'+fmt(res.pct,1)+'%</div><div class="s">rango '+fmt(res.minPct)+'–'+fmt(res.maxPct)+'%</div></div>'+
       '<div class="stat"><div class="k">Paneles</div><div class="v">'+res.panels.length+'</div><div class="s">'+fmt(res.covered,2)+' m²</div></div>'+
-      '<div class="stat"><div class="k">Circuitos</div><div class="v">'+res.circuits+'</div><div class="s">máx. 2 paneles</div></div></div>';
+      '<div class="stat"><div class="k">Circuitos</div><div class="v">'+res.circuits+'</div><div class="s">'+esc(brand().models.map(function(m){ return m.key+" ≤ "+m.series; }).join(" · "))+' en serie</div></div></div>';
     res.groups.forEach(function(g,i){ var k=g.choice; if(!k) return;
       var lt=k.so==="v"?"franja entre columnas":k.so==="h"?"franja entre filas":"sin franja central";
       h+='<p class="layout-line">'+(res.groups.length>1?'Zona '+(i+1)+': ':'Distribución: ')+(k.mp && k.mp.n!==k.c*k.r ? '<b>'+Object.keys(k.mp.tc).map(function(t){ return k.mp.tc[t]+' paneles de '+t.replace('x','×'); }).join(' + ')+'</b>' : '<b>'+k.c+' × '+k.r+' '+esc(k.v.name)+'</b>'+(k.v.rot?' (girados)':''))+', repartidos por igual en toda la zona libre'+(k.pri?' (la primera fila, junto a la ventana o la puerta de acceso)':'')+'; '+lt+'.</p>'; });
@@ -3333,7 +3433,7 @@
     if(il.length) h+='<p class="layout-line">Iluminación: '+il.join(" y ")+' · <b>'+res.lights.length+' puntos</b>'+(res.leds.length?' · <b>'+fmt(res.ledLen,2)+' m de tira LED</b>':'')+'.</p>';
     if(res.st){ var sb=barsFor(res.st.secLens,S.bar), pb=barsFor(res.st.primLens,S.bar), ab=barsFor(res.st.ang,S.bar);
       h+='<p class="layout-line">Estructura'+(res.st.rot?' (rotada)':'')+': <b>'+fmt(sb.total,1)+' m de TC</b> ('+sb.bars+' barras) · <b>'+fmt(pb.total,1)+' m de primario</b> ('+pb.bars+') · <b>'+fmt(ab.total,1)+' m de angular</b> ('+ab.bars+') · <b>'+res.st.boards+' placas</b> para '+fmt(res.st.need,2)+' m² de techo sin paneles.'+(S.showStruct?'':' Activa «Estructura de pladur» para verla dibujada.')+'</p>'; }
-    if(res.outs && res.outs.length && (res.g20 || S.t20)) h+='<p class="layout-line">Salidas del colector: '+res.outs.map(function(o){ return '<b>'+o.ci.map(function(i){ return 'C'+(i+1); }).join('+')+'</b> '+(o.d===20?'tubo 20':'tubo 16')+(res.col?' · '+fmt(o.len,1)+' m':''); }).join(' · ')+'.'+(res.outs.tooFar?' <span style="color:var(--warn)">Los circuitos que quedan no se agrupan: con tubo de 20 pasarían de 20 m ('+fmt(res.outs.tooFar,1)+' m).</span>':'')+'</p>';
+    if(res.outs && res.outs.length && (res.g20 || S.t20)) h+='<p class="layout-line">Salidas del colector: '+res.outs.map(function(o){ return '<b>'+o.ci.map(function(i){ return 'C'+(i+1); }).join('+')+'</b> '+(o.s16!=null?'con te ('+(o.s20>0?fmt(o.s16*(1+S.margin/100),1)+' m de 16 + '+fmt(o.s20*(1+S.margin/100),1)+' m de 20':'todo en 16')+')':o.d===20?'tubo 20':'tubo 16')+(res.col?' · '+fmt(o.len,1)+' m':''); }).join(' · ')+'.'+(res.col && res.col._te===false && brand().te && S.t20 && res.cs.length>1 ? ' <span class="muted">'+esc(res.col.name)+' va sin tes: con tes no le caben todos sus circuitos en '+brand().te.maxOut+' salidas.</span>':'')+(res.outs.tooFar?' <span style="color:var(--warn)">Los circuitos que quedan no se agrupan: con tubo de 20 pasarían de 20 m ('+fmt(res.outs.tooFar,1)+' m).</span>':'')+'</p>';
     if(res.circ.length) h+='<p class="layout-line">Tubería: <b>'+fmt(res.pex,1)+' m de PEX</b>'+(res.g20?' ('+fmt(res.pex20,1)+' de 20 y '+fmt(res.pex16,1)+' de 16)':'')+' · '+res.mang+' manguito'+(res.mang===1?'':'s')+' · '+res.outlets+' salida'+(res.outlets===1?'':'s')+(res.col?' · va a <b>'+esc(res.col.name)+'</b>':' · <span style="color:var(--warn)">sin colector: '+esc(res.why||'')+'</span>')+'.</p>';
     out.innerHTML=h+thDetailHtml(room);
     var oc2=$("obstClear2"); if(oc2) oc2.addEventListener("click",function(){ room.obst=[]; update(false); });
@@ -3381,7 +3481,7 @@
         (S.mode==="suelo"?'':'<span class="section-title" style="margin:2px 0 6px;">Iluminación</span><div class="grid2"><div class="field"><label class="lbl" for="rLc">Centro (entre paneles)</label><select id="rLc"><option value="ninguna">Sin luz</option><option value="puntos">Puntos de luz</option><option value="tira">Tira LED</option></select></div>'+
         '<div class="field"><label class="lbl" for="rLp">Perímetro (junto a paredes)</label><select id="rLp"><option value="ninguna">Sin luz</option><option value="puntos">Puntos de luz</option><option value="tira">Tira LED</option></select></div></div>'+
         '<label class="check"><input type="checkbox" id="rCustL"> Iluminación personalizada</label><div class="light-box" id="lightBox"></div>'+
-        '<label class="check"><input type="checkbox" id="rOver"> Rango de cobertura propio</label>'+
+        '<label class="check"><input type="checkbox" id="rOver"> Rango de cobertura propio</label><p class="note" id="ovNote" hidden style="margin:2px 0 6px;"></p>'+
         '<div class="grid2" id="overFields"><div class="field"><label class="lbl" for="rMin">% mínimo</label><input type="number" id="rMin" min="0" max="100"></div><div class="field"><label class="lbl" for="rMax">% máximo</label><input type="number" id="rMax" min="0" max="100"></div></div>'+
         '<span class="section-title" style="margin:6px 0 6px;">Estructura de techo</span><div class="btn-row" style="margin-bottom:10px;"><button class="btn ghost small" id="rRotate">Rotar estructura</button><span class="note" style="margin:0;" id="rRotInfo"></span></div>')+
         (BETA.th?'':'<div hidden>')+'<span class="section-title" style="margin:6px 0 6px;">Cálculo térmico</span><div class="grid2"><div class="field"><label class="lbl" for="rTi">Temperatura interior (°C)</label><input type="number" id="rTi" step="0.5" min="10" max="30"></div><div class="field"><label class="lbl" for="rWin">Ventanas (m²)</label><input type="number" id="rWin" step="0.1" min="0"></div></div>'+
@@ -3405,7 +3505,8 @@
       $("rSep").value=String(room.sep||0); $("rSep").addEventListener("change",function(e){ room.sep=+e.target.value||null; update(false); });
       return;
     }
-    $("rOver").checked=room.override; $("rMin").value=room.minPct; $("rMax").value=room.maxPct; $("overFields").hidden=!room.override;
+    $("rOver").checked=ownCov(room); $("rMin").value=room.minPct; $("rMax").value=room.maxPct; $("overFields").hidden=!ownCov(room);
+    if(room.override && !ownCov(room)){ var ob=BRANDS[room.ovb||"sunthalpy"]; $("ovNote").hidden=false; $("ovNote").textContent="Su rango propio ("+fmt(room.minPct)+"–"+fmt(room.maxPct)+" %) es para "+(ob?ob.name+" "+ob.line:"otra marca")+": con "+brand().name+" "+brand().line+" se usa la cobertura de la marca ("+fmt(S.gMin)+"–"+fmt(S.gMax)+" %). Márcalo para darle uno propio con esta marca."; }
     $("rRotInfo").textContent=room.structRot?"Secundarios cruzados a los paneles":"Secundarios a lo largo de los paneles";
     $("rRotate").addEventListener("click",function(){ room.structRot=!room.structRot; $("rRotInfo").textContent=room.structRot?"Secundarios cruzados a los paneles":"Secundarios a lo largo de los paneles"; if(!S.showStruct){ S.showStruct=true; $("showStruct").checked=true; syncStructLegend(); } update(false); });
     $("rLc").value=room.lc||"ninguna"; $("rLp").value=room.lp||"ninguna";
@@ -3414,7 +3515,7 @@
       if(room.customL && !room.lights.length) lightAddStart(room); });
     $("rLc").addEventListener("change",function(e){ room.lc=e.target.value; update(false); });
     $("rLp").addEventListener("change",function(e){ room.lp=e.target.value; update(false); });
-    $("rOver").addEventListener("change",function(e){ room.override=e.target.checked; if(room.override){ room.minPct=S.gMin; room.maxPct=S.gMax; $("rMin").value=room.minPct; $("rMax").value=room.maxPct; } $("overFields").hidden=!room.override; update(false); });
+    $("rOver").addEventListener("change",function(e){ room.override=e.target.checked; if(room.override){ room.ovb=S.brand; room.minPct=S.gMin; room.maxPct=S.gMax; $("rMin").value=room.minPct; $("rMax").value=room.maxPct; } $("ovNote").hidden=true; $("overFields").hidden=!room.override; update(false); });
     [["rMin","minPct"],["rMax","maxPct"]].forEach(function(p){ $(p[0]).addEventListener("input",function(e){ var v=parseFloat(e.target.value); if(isFinite(v)){ room[p[1]]=v; update(false);} }); });
   }
   // ---- custom light points: table in the room editor, points placed with a click on the room detail
@@ -3501,7 +3602,7 @@
     $("capSummary").innerHTML=(multi?esc(curFloor().name)+' · ':'')+'Salidas: <b>'+capTot+'</b> · circuitos: <b>'+floorC+'</b>'+(unassigned.length?' · <span style="color:var(--warn)">'+unassigned.length+' estancia'+(unassigned.length>1?'s':'')+' sin colector</span>':'');
     var rc="";
     allColls().forEach(function(c){ var st=collStats[c.id]||{n:0,pex:0,rooms:[]}, fl=floorOfColl(c);
-      st.rooms.forEach(function(x,i){ rc+='<tr><td>'+(i===0?'<b>'+esc(c.name)+'</b>'+(multi&&fl?' · '+esc(fl.name):'')+' <span class="muted">('+st.n+'/'+(c.cap||0)+' salidas)</span>':'')+'</td><td>'+esc(x.room.name)+'</td><td class="num">'+x.n+'</td><td class="num">'+fmt(x.pex,1)+'</td></tr>'; });
+      st.rooms.forEach(function(x,i){ rc+='<tr><td>'+(i===0?'<b>'+esc(c.name)+'</b>'+(multi&&fl?' · '+esc(fl.name):'')+' <span class="muted">('+st.n+'/'+(c._te?Math.min(c.cap||0,6):(c.cap||0))+' salidas'+(c._te?', con tes':'')+')</span>':'')+'</td><td>'+esc(x.room.name)+'</td><td class="num">'+x.n+'</td><td class="num">'+fmt(x.pex,1)+'</td></tr>'; });
       if(!st.rooms.length) rc+='<tr><td><b>'+esc(c.name)+'</b></td><td class="muted">Sin estancias</td><td class="num">0</td><td class="num">0</td></tr>'; });
     allUnassigned.forEach(function(u){ rc+='<tr><td style="color:var(--warn)"><b>Sin asignar</b></td><td>'+esc(u.room.name)+'</td><td class="num">'+u.n+'</td><td></td></tr>'; });
     $("reportColl").innerHTML=rc||'<tr><td colspan="4" class="muted">Sin colectores</td></tr>';
@@ -3524,12 +3625,12 @@
     if(HEAD_T.rooms==null){ HEAD_T.rooms=$("roomsHead").innerHTML; HEAD_T.coll=$("collHead").innerHTML; }
     if(S.mode==="suelo") return renderTablesUF();
     $("roomsHead").innerHTML=HEAD_T.rooms; $("collHead").innerHTML=HEAD_T.coll;
-    var tb="", tot={area:0,cov:0,n:0,c:0,pex:0,mang:0,uni:0,g20:0,pex20:0,pex16:0,out:0}, mat={}, matOrder=[], multi=S.floors.length>1;
+    var tb="", tot={area:0,cov:0,n:0,c:0,pex:0,mang:0,uni:0,g20:0,pex20:0,pex16:0,out:0,red:0,te16:0}, mat={}, matOrder=[], multi=S.floors.length>1;
     S.floors.forEach(function(fl){
       if(multi && fl.rooms.length) tb+='<tr class="floor-row"><td colspan="8">'+esc(fl.name)+'</td></tr>';
       fl.rooms.forEach(function(r){
         var res=results[r.id];
-        tot.area+=res.area; tot.cov+=res.covered; tot.n+=res.panels.length; tot.c+=res.circuits; tot.pex+=res.pex; tot.mang+=res.mang; tot.uni+=res.unions; tot.g20+=res.g20||0; tot.pex20+=res.pex20||0; tot.pex16+=res.pex16||0; tot.out+=res.outlets||0;
+        tot.area+=res.area; tot.cov+=res.covered; tot.n+=res.panels.length; tot.c+=res.circuits; tot.pex+=res.pex; tot.mang+=res.mang; tot.uni+=res.unions; tot.g20+=res.g20||0; tot.pex20+=res.pex20||0; tot.red+=res.red||0; tot.te16+=res.te16||0; tot.pex16+=res.pex16||0; tot.out+=res.outlets||0;
         var warn=res.msgs.some(function(m){return m.t==="warn";});
         tb+='<tr class="clickable'+(r.id===S.sel?' sel':'')+'" data-room="'+r.id+'"><td>'+esc(r.name)+(warn?' <span style="color:var(--warn)" title="Revisar">●</span>':'')+'</td><td class="num">'+fmt(res.area,2)+'</td><td class="num">'+(r.active?fmt(res.pct,1)+'%':'—')+'</td><td class="num">'+res.panels.length+'</td><td class="num"><b>'+res.circuits+'</b>'+(res.g20?'<span class="kit-note">'+res.outlets+' salidas</span>':'')+'</td><td class="num">'+(res.pex?fmt(res.pex,1):'—')+'</td><td class="num">'+res.mang+'</td><td class="num">'+(res.unions+4*(res.g20||0))+'</td></tr>';
         res.panels.forEach(function(p){ if(!mat[p.typeId]){ mat[p.typeId]={name:p.name,tw:p.tw,th:p.th,n:0}; matOrder.push(p.typeId); } mat[p.typeId].n++; });
@@ -3546,7 +3647,7 @@
     $("capSummary").innerHTML=(multi?esc(curFloor().name)+' · ':'')+'Salidas: <b>'+capTot+'</b> · circuitos: <b>'+floorC+'</b>'+(floorO!==floorC&&S.t20?' en <b>'+floorO+'</b> salidas':'')+(unassigned.length?' · <span style="color:var(--warn)">'+unassigned.length+' estancia'+(unassigned.length>1?'s':'')+' sin colector</span>':'');
     var rc="";
     allColls().forEach(function(c){ var st=collStats[c.id]||{n:0,pex:0,rooms:[]}, fl=floorOfColl(c);
-      st.rooms.forEach(function(x,i){ rc+='<tr><td>'+(i===0?'<b>'+esc(c.name)+'</b>'+(multi&&fl?' · '+esc(fl.name):'')+' <span class="muted">('+st.n+'/'+(c.cap||0)+' salidas)</span>':'')+'</td><td>'+esc(x.room.name)+'</td><td class="num">'+x.n+'</td><td class="num">'+fmt(x.pex,1)+'</td></tr>'; });
+      st.rooms.forEach(function(x,i){ rc+='<tr><td>'+(i===0?'<b>'+esc(c.name)+'</b>'+(multi&&fl?' · '+esc(fl.name):'')+' <span class="muted">('+st.n+'/'+(c._te?Math.min(c.cap||0,6):(c.cap||0))+' salidas'+(c._te?', con tes':'')+')</span>':'')+'</td><td>'+esc(x.room.name)+'</td><td class="num">'+x.n+'</td><td class="num">'+fmt(x.pex,1)+'</td></tr>'; });
       if(!st.rooms.length) rc+='<tr><td><b>'+esc(c.name)+'</b></td><td class="muted">Sin estancias</td><td class="num">0</td><td class="num">0</td></tr>'; });
     allUnassigned.forEach(function(u){ rc+='<tr><td style="color:var(--warn)"><b>Sin asignar</b></td><td>'+esc(u.room.name)+'</td><td class="num">'+u.n+'</td><td></td></tr>'; });
     $("reportColl").innerHTML=rc||'<tr><td colspan="4" class="muted">Sin colectores</td></tr>';
@@ -3555,8 +3656,10 @@
     $("chips").innerHTML=(multi?'<span class="chip">Plantas <b>'+S.floors.length+'</b></span>':'')+'<span class="chip">Estancias <b>'+active+'/'+AR.length+'</b></span><span class="chip">Paneles <b>'+tot.n+'</b></span><span class="chip">Circuitos <b>'+tot.c+'</b></span><span class="chip">Colectores <b>'+allColls().length+'</b>'+(allUnassigned.length?' <span class="pill warn">'+allUnassigned.length+' sin asignar</span>':'')+'</span><span class="chip">PEX <b>'+fmt(Math.ceil(tot.pex))+'</b> m</span>';
     reportRows=[];
     matOrder.forEach(function(id){ var m=mat[id]; reportRows.push({key:"panel_"+id,label:m.name,note:fmt(m.tw)+"×"+fmt(m.th)+" cm",qty:m.n,unit:"ud."}); });
-    var bySize={}; allColls().forEach(function(c){ var k=c.cap||0; bySize[k]=(bySize[k]||0)+1; });
+    // a collector with tes (Sunthalpy) is only as big as the outlets it uses, at most 6
+    var bySize={}, teSize={}; allColls().forEach(function(c){ if(c._te){ var u=Math.max(2,(collStats[c.id]||{}).n||0); teSize[u]=(teSize[u]||0)+1; } else { var k=c.cap||0; bySize[k]=(bySize[k]||0)+1; } });
     Object.keys(bySize).map(Number).sort(function(a,b){return a-b;}).forEach(function(k){ reportRows.push({key:"coll_"+k,label:"Colector de "+k+" salidas",note:"Conjunto completo de ida y retorno",qty:bySize[k],unit:"ud."}); });
+    Object.keys(teSize).map(Number).sort(function(a,b){return a-b;}).forEach(function(k){ reportRows.push({key:"collte_"+k,label:"Colector de "+k+" salidas",note:"Con salidas agrupadas con te: como máximo 6 salidas",qty:teSize[k],unit:"ud."}); });
     var nPts=0, ledM=0; allRooms().forEach(function(r){ var res=results[r.id]; nPts+=res.lights.length; ledM+=res.ledLen; });
     if(nPts) reportRows.push({key:"luz",label:"Punto de luz",note:"Posiciones sugeridas en el techo",qty:nPts,unit:"ud."});
     if(ledM) reportRows.push({key:"led",label:"Tira LED",note:"Longitud aproximada en el techo",qty:Math.ceil(ledM*2)/2,unit:"m"});
@@ -3573,20 +3676,31 @@
       reportRows.push({key:"cuelgue",label:"Cuelgue (varilla + pieza)",note:"En los primarios, cada "+fmt(S.hang,1)+" m",qty:hang,unit:"ud."});
       reportRows.push({key:"placa",label:"Placa de pladur "+Math.round(bdm.S*1000)+" × "+Math.round(bdm.L*1000)+" mm",note:fmt(need,1)+" m² de techo sin paneles; con recortes se aprovecha el "+fmt(boards?need/(boards*bdm.L*bdm.S)*100:0,0)+"%",qty:boards,unit:"ud."});
     }
-    if(tot.g20){
+    var TER=brand().te;
+    if(tot.g20 && TER){
+      reportRows.push({key:"pex",label:"Tubo PEX 16 mm",note:"Ida y retorno de las salidas de un circuito y los "+TER.p16+" primeros metros de las salidas con te, descontando "+fmt(S.tail,1)+" m de tubo del panel por tramo, con "+fmt(S.margin)+"% de margen",qty:Math.ceil(tot.pex16),unit:"m"});
+      if(tot.pex20>0) reportRows.push({key:"pex20",label:"Tubo PEX 20 mm",note:"En las salidas con te, de los "+TER.p16+" m a la te cuando el tramo es más largo, con "+fmt(S.margin)+"% de margen",qty:Math.ceil(tot.pex20),unit:"m"});
+      if(tot.red) reportRows.push({key:"red1620",label:"Manguito reducido 16–20",note:"Uno en cada tramo de más de "+TER.p16+" m hasta la te (ida y retorno por separado)",qty:tot.red,unit:"ud."});
+    } else if(tot.g20){
       reportRows.push({key:"pex",label:"Tubo PEX 16 mm",note:"Ida y retorno de los circuitos de una salida, descontando "+fmt(S.tail,1)+" m de tubo del panel por tramo, con "+fmt(S.margin)+"% de margen",qty:Math.ceil(tot.pex16),unit:"m"});
       reportRows.push({key:"pex20",label:"Tubo PEX 20 mm",note:"Del colector a las tes de las salidas agrupadas (ida y retorno), con "+fmt(S.margin)+"% de margen",qty:Math.ceil(tot.pex20),unit:"m"});
     } else reportRows.push({key:"pex",label:"Tubo PEX",note:"Ida y retorno de todos los circuitos, descontando "+fmt(S.tail,1)+" m de tubo del panel por tramo, con "+fmt(S.margin)+"% de margen",qty:Math.ceil(tot.pex),unit:"m"});
-    reportRows.push({key:"mang",label:"Manguito de unión entre paneles",note:"1 por circuito de 2 paneles",qty:tot.mang,unit:"ud."});
-    if(tot.uni) reportRows.push({key:"bicono",label:"Bicono para PEX"+(tot.g20?" 16":""),note:"2 por salida de tubo de 16, en el colector (ida y retorno). Incluye casquillo",qty:tot.uni,unit:"ud."});
-    if(tot.g20){
+    reportRows.push({key:"mang",label:"Manguito de unión entre paneles",note:"1 por cada unión entre dos paneles del mismo circuito",qty:tot.mang,unit:"ud."});
+    if(TER && tot.g20) reportRows.push({key:"bicono",label:"Bicono para PEX 16",note:"2 por salida, en el colector (ida y retorno); las salidas con te también salen en 16. Incluye casquillo",qty:tot.uni+2*tot.g20,unit:"ud."});
+    else if(tot.uni) reportRows.push({key:"bicono",label:"Bicono para PEX"+(tot.g20?" 16":""),note:"2 por salida de tubo de 16, en el colector (ida y retorno). Incluye casquillo",qty:tot.uni,unit:"ud."});
+    if(TER && tot.g20){
+      // each te: brass te 1/2", the two panel-tube fittings at its sides (in "rpanel") and one PEX fitting in the middle, 16 or 20
+      reportRows.push({key:"te20",label:"Te de latón 1/2\"",note:"2 por salida agrupada (ida y retorno); a los lados, los racores del tubo de 10 del panel",qty:2*tot.g20,unit:"ud."});
+      if(tot.red) reportRows.push({key:"rpex20",label:"Racor PEX 20 con rosca 1/2\"",note:"En el centro de cada te a la que llega tubo de 20",qty:tot.red,unit:"ud."});
+    } else if(tot.g20){
       reportRows.push({key:"bicono20",label:"Bicono para PEX 20",note:"2 por salida agrupada, en el colector (ida y retorno)",qty:2*tot.g20,unit:"ud."});
       reportRows.push({key:"te20",label:"Te de latón",note:"2 por salida agrupada (ida y retorno), al final del tubo de 20",qty:2*tot.g20,unit:"ud."});
       reportRows.push({key:"mc20",label:"Racor de multicapa 20 mm",note:"En el centro de cada te, para el PEX de 20",qty:2*tot.g20,unit:"ud."});
     }
     reportRows.push({key:"rpanel",label:"Racor tubo de panel a rosca 1/2\"",note:tot.g20?"2 por circuito de 16 (ida y retorno) y 2 en los extremos de cada te":"2 por circuito (ida y retorno)",qty:tot.uni+4*tot.g20,unit:"ud."});
-    if(tot.uni){ reportRows.push({key:"rpex",label:"Racor PEX con rosca 1/2\"",note:"2 por circuito de tubo de 16 (ida y retorno)",qty:tot.uni,unit:"ud."});
-      reportRows.push({key:"casq",label:"Casquillo PEX",note:"2 por circuito de tubo de 16 (ida y retorno)",qty:tot.uni,unit:"ud."}); }
+    var r16=tot.uni+(TER?tot.te16:0);
+    if(r16) reportRows.push({key:"rpex",label:"Racor PEX"+(TER&&tot.g20?" 16":"")+" con rosca 1/2\"",note:"2 por circuito de tubo de 16 (ida y retorno)"+(TER&&tot.te16?" y 1 en el centro de cada te a la que llega tubo de 16":""),qty:r16,unit:"ud."});
+    if(tot.uni) reportRows.push({key:"casq",label:"Casquillo PEX",note:"2 por circuito de tubo de 16 (ida y retorno)",qty:tot.uni,unit:"ud."});
     ctrlRows(allRooms().reduce(function(t,r){ return t+((results[r.id]||{}).outs||[]).length; },0)); renderReport();
   }
   // zone control: the client decides how many zones, so the quantities are typed in (never worked out); left at 0 they stay out of the report
@@ -3755,9 +3869,9 @@
       T({head:[["Concepto","Cantidad","Precio ud.","Importe"]],body:mb,foot:foot,footStyles:{fillColor:[229,241,235],textColor:INK,fontSize:9.5},columnStyles:{1:{halign:"right",cellWidth:26},2:{halign:"right",cellWidth:26},3:{halign:"right",cellWidth:28}}});
       if(y>255){ doc.addPage(); y=18; }
       doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor.apply(doc,MUT);
-      var note=UFM ? "Notas: separación del tubo en plancha de tetones universal (múltiplos de 5 cm). Junto a ventanas y muros exteriores el tubo va más junto (zona periférica, UNE-EN 1264). Cada circuito tiene como máximo "+fmt(S.uf.maxLen)+" m contando la ida y vuelta al colector con recorrido ortogonal y "+fmt(S.uf.vert,1)+" m de bajada por tramo. Las estancias separadas por una escalera llevan su propio colector. Los metros de tubo incluyen un "+fmt(S.uf.margin)+"% de margen." : "Notas: cada colector incluye ida y retorno. Cada circuito lleva 2 conexiones (ida y retorno): en el colector, 1 bicono completo; en el panel, 1 racor de tubo de panel a rosca 1/2\", 1 racor PEX con rosca 1/2\" y 1 casquillo. Manguito de unión: 1 por circuito de 2 paneles. Los metros de PEX son una estimación con recorrido ortogonal, subida al techo de "+fmt(S.vert,1)+" m por tramo, descontando "+fmt(S.tail,1)+" m de tubo del propio panel por tramo, y "+fmt(S.margin)+"% de margen.";
-      if(BETA.th) note+=" Cálculo térmico orientativo: pérdidas por transmisión (U · superficie · diferencia de temperatura) por los muros exteriores y ventanas marcados, suelo y techo, más ventilación y un "+fmt(S.th.marg)+"% de margen. "+(UFM?"Emisión del suelo según UNE-EN 1264 con tubo "+(TH_TUBE[S.th.tube]||TH_TUBE["16x2"]).n+" y "+fmt(S.th.su)+" mm de mortero.":"Emisión de los paneles: "+fmt(S.th.kp,1)+" W/m² por cada °C entre el agua y el ambiente.")+" No sustituye al proyecto firmado por un técnico.";
-      if(!UFM && S.t20) note+=" Con tubo de 20 mm, dos circuitos de la misma estancia (3 o 4 paneles) comparten una salida: bicono de 20 en el colector y una te de latón en la ida y otra en el retorno, con racores de tubo de panel en los extremos y racor de multicapa de 20 en el centro. El PEX de 20 no pasa de 20 m sumando ida y retorno.";
+      var note=UFM ? "Notas: separación del tubo en plancha de tetones universal (múltiplos de 5 cm). Junto a ventanas y muros exteriores el tubo va más junto (zona periférica, UNE-EN 1264). Cada circuito tiene como máximo "+fmt(S.uf.maxLen)+" m contando la ida y vuelta al colector con recorrido ortogonal y "+fmt(S.uf.vert,1)+" m de bajada por tramo. Las estancias separadas por una escalera llevan su propio colector. Los metros de tubo incluyen un "+fmt(S.uf.margin)+"% de margen." : "Notas: cada colector incluye ida y retorno. Cada circuito lleva 2 conexiones (ida y retorno): en el colector, 1 bicono completo; en el panel, 1 racor de tubo de panel a rosca 1/2\", 1 racor PEX con rosca 1/2\" y 1 casquillo. Manguito de unión: 1 por cada unión entre dos paneles del mismo circuito. Paneles "+brand().name+" "+brand().line+": "+seriesText().toLowerCase()+" Caudal de diseño "+fmt(brand().flow)+" l/min por circuito; acabado "+brand().finish[S.finish].n.toLowerCase()+", agua como máximo a "+brandTmax()+" °C. Los metros de PEX son una estimación con recorrido ortogonal desde el colector, que va en un registro del techo, descontando "+fmt(S.tail,1)+" m de tubo del propio panel por tramo, y "+fmt(S.margin)+"% de margen.";
+      if(BETA.th) note+=" Cálculo térmico orientativo: pérdidas por transmisión (U · superficie · diferencia de temperatura) por los muros exteriores y ventanas marcados, suelo y techo, más ventilación y un "+fmt(S.th.marg)+"% de margen. "+(UFM?"Emisión del suelo según UNE-EN 1264 con tubo "+(TH_TUBE[S.th.tube]||TH_TUBE["16x2"]).n+" y "+fmt(S.th.su)+" mm de mortero.":"Emisión de los paneles "+brand().name+" "+brand().line+" según su ficha: "+brand().emis+".")+" No sustituye al proyecto firmado por un técnico.";
+      if(!UFM && S.t20) note+=" Salidas con te: "+teText();
       var nl=doc.splitTextToSize(note,PW-2*M); doc.text(nl,M,y); y+=nl.length*3.4+3;
       if(company.foot){ var fl2=doc.splitTextToSize(company.foot,PW-2*M); if(y+fl2.length*3.6>283){ doc.addPage(); y=18; } doc.setTextColor.apply(doc,INK); doc.setFontSize(8); doc.text(fl2,M,y); }
       var pages=doc.getNumberOfPages();
@@ -3999,18 +4113,37 @@
 
   // ---------------- catalog & collectors ----------------
   function renderCatalog(){
-    var body=$("catalogBody"); body.innerHTML="";
-    S.panels.forEach(function(t){
-      var tr=document.createElement("tr");
-      tr.innerHTML='<td><input type="text" aria-label="Modelo"></td><td><input type="number" min="1" aria-label="Ancho cm"></td><td><input type="number" min="1" aria-label="Largo cm"></td><td><button class="btn danger small" aria-label="Eliminar modelo">✕</button></td>';
-      var ins=tr.querySelectorAll("input"); ins[0].value=t.name; ins[1].value=t.w; ins[2].value=t.h;
-      ins[0].addEventListener("input",function(){ t.name=ins[0].value; update(false); });
-      ins[1].addEventListener("input",function(){ t.w=parseFloat(ins[1].value)||0; update(false); });
-      ins[2].addEventListener("input",function(){ t.h=parseFloat(ins[2].value)||0; update(false); });
-      tr.querySelector("button").addEventListener("click",function(){ S.panels=S.panels.filter(function(p){return p.id!==t.id;}); renderCatalog(); update(false); });
-      body.appendChild(tr);
-    });
+    var b=brand(), body=$("catalogBody"); body.innerHTML="";
+    S.panels.forEach(function(t){ var m=modelOf(t.w,t.h)||{};
+      var tr=document.createElement("tr"); tr.className=t.on===false?"off":"";
+      tr.innerHTML='<td class="chk"><input type="checkbox" aria-label="Usar el panel '+esc(t.key||t.name)+'"'+(t.on===false?'':' checked')+'></td><td><b>'+esc(t.key||"")+'</b></td><td class="num">'+fmt(t.w,t.w%1?1:0)+' × '+fmt(t.h,t.h%1?1:0)+'</td><td class="num">'+(m.series||"–")+'</td><td class="num">'+(m.dp!=null?fmt(m.dp,1):"–")+'</td>';
+      tr.querySelector("input").addEventListener("change",function(e){
+        if(!e.target.checked && S.panels.filter(function(p){ return p.on!==false; }).length<=1){ e.target.checked=true; hint("Deja al menos un modelo de panel marcado.",true); return; }
+        t.on=e.target.checked; renderCatalog(); update(false); });
+      body.appendChild(tr); });
+    $("catBrand").textContent=b.name+" · "+b.line;
+    $("seriesNote").textContent=seriesText();
   }
+  // the brand card: maker, finish (it limits the water temperature) and the data sheet in short
+  function renderBrand(){ var b=brand();
+    $("sBrand").innerHTML=Object.keys(BRANDS).map(function(k){ return '<option value="'+k+'">'+esc(BRANDS[k].name+" · "+BRANDS[k].line)+'</option>'; }).join(""); $("sBrand").value=S.brand;
+    $("sFinish").innerHTML=Object.keys(b.finish).map(function(k){ return '<option value="'+k+'">'+esc(b.finish[k].n)+' (máx. '+b.finish[k].t+' °C)</option>'; }).join(""); $("sFinish").value=b.finish[S.finish]?S.finish:Object.keys(b.finish)[0];
+    var src=(b.src||[]).map(function(x){ return x[1]?'<a href="'+x[1]+'" target="_blank" rel="noopener">'+esc(x[0])+'</a>':esc(x[0]); }).join(' · ');
+    $("brandInfo").innerHTML=[b.mm?'Placa de <b>'+fmt(b.mm)+' mm</b>'+(b.kg?' y <b>'+fmt(b.kg,b.kg%1?1:0)+' kg/m²</b>':'')+(b.mod?', sobre perfilería cada <b>'+b.mod+' cm</b>':'')+'.':'', b.tube?'Tubo '+esc(b.tube)+'.':'',
+      b.flow?'Caudal de diseño <b>'+fmt(b.flow)+' l/min</b> por circuito.':'', 'Agua entre '+b.tMin+' y '+brandTmax()+' °C'+(b.bar?', máx. '+b.bar+' bar':'')+'.', esc(seriesText()), b.cover?'Cobertura por defecto '+b.cover[0]+'–'+b.cover[1]+' % ('+esc(b.coverSrc)+').':'', b.rules?esc(b.rules):'', src?'Fuente: '+src+'.':''].filter(Boolean).join(' ');
+    $("thBrandNote").innerHTML='Emisión de los paneles '+esc(b.name+' '+b.line)+' según su ficha: '+esc(b.emis)+'. '+(b.flow?'Caudal de '+fmt(b.flow)+' l/min por circuito. ':b.models.some(function(m){ return m.fl; })?'Caudal por panel de la ficha. ':'El caudal sale del salto ida–retorno. ')+'La impulsión no pasa de '+brandTmax()+' °C con el acabado elegido.';
+    $("thVmaxT").max=brandTmax(); $("teNote").textContent=teText();
+    renderCatalog(); }
+  // projects saved before the brands (free panel sizes) or with an unknown brand: the brand's panels
+  function brandFix(){ if(!BRANDS[S.brand]) S.brand="sunthalpy"; var b=brand(); if(!b.finish[S.finish]) S.finish=Object.keys(b.finish)[0];
+    if(!Array.isArray(S.panels) || !S.panels.length || S.panels.some(function(p){ return !p.key || !modelOf(p.w,p.h); })) S.panels=brandPanels(b,S.brand);
+    if(!S.panels.some(function(p){ return p.on!==false; })) S.panels.forEach(function(p){ p.on=true; }); }
+  function setBrand(k){ if(!BRANDS[k]) return; var keep={}; S.panels.forEach(function(p){ keep[p.w+"x"+p.h]=p.on; });
+    S.brand=k; S.panels=brandPanels(BRANDS[k],k);
+    // each maker has its own default coverage; rooms with their own range keep it
+    if(BRANDS[k].cover){ S.gMin=BRANDS[k].cover[0]; S.gMax=BRANDS[k].cover[1]; $("gMin").value=S.gMin; $("gMax").value=S.gMax; } S.panels.forEach(function(p){ if(keep[p.w+"x"+p.h]===false) p.on=false; });
+    if(!BRANDS[k].finish[S.finish]) S.finish=Object.keys(BRANDS[k].finish)[0]; renderBrand(); update(true); }
+
   function renderCollectors(){
     var box=$("collList"); box.innerHTML="";
     S.collectors.forEach(function(c){
@@ -4038,6 +4171,7 @@
     if(e.button!==undefined && e.button!==0) return;
     suppressClick=false;
     if(S.placing || RO()) return;
+    if(S.eraseTool){ var zq=svgPointRaw(e.clientX,e.clientY); e.preventDefault(); e.stopImmediatePropagation(); suppressClick=true; if(zq) eraseAt(V(zq.x,zq.y),e.target); return; }
     if(S.bgTool==="curve" && S.curve.stage==="draw"){ var cq=svgPointRaw(e.clientX,e.clientY); if(!cq) return; e.preventDefault(); e.stopImmediatePropagation(); suppressClick=true;
       S.curve.drawing=true; S.curve.pts=[V(cq.x,cq.y)]; S.curve.sx=e.clientX; S.curve.sy=e.clientY; S.frozenVB=S.lastVB; return; }
     if(S.bgTool==="move" && curFloor().bg){ var bsv=$("planWrap").querySelector("svg"); if(!bsv || !S.lastVB) return; e.preventDefault(); e.stopImmediatePropagation();
@@ -4147,29 +4281,37 @@
     if((prev&&prev.room)!==(hit&&hit.room) || (prev&&prev.edge)!==(hit&&hit.edge) || (prev&&S.markHover&&prev.t!==S.markHover.t)){ if(!raf) raf=requestAnimationFrame(function(){ raf=0; renderPlan(); }); }
   });
   // ---- tool: mark the pipe passage of a room (ceiling)
-  function viaTool(on){
-    if(on){ if(S.markTool) setMarkTool(S.markTool); if(S.obstTool) obstTool(false); }
+  function viaTool(on){ S.viaPend=null;
+    if(on){ if(S.markTool) setMarkTool(S.markTool); if(S.obstTool) obstTool(false); if(S.eraseTool) eraseTool(false); }
     S.viaTool=!!on; S.markHover=null; $("viaBtn").classList.toggle("on",!!on);
-    if(on){ hint('<span><b>Paso de tubos:</b> pulsa en la pared donde está el agujero (desde cualquiera de las dos estancias, da igual). No tiene dirección: los tubos que tengan que cruzar esa pared, vayan hacia donde vayan, la cruzan por ahí y por ningún otro sitio; a los que no la cruzan no les afecta. Si no marcas nada, cruzan por donde el camino es más corto. Pulsa un paso ya marcado para quitarlo.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>');
+    if(on){ hint('<span><b>Paso de tubos:</b> primero pulsa en la pared donde está el agujero y después la estancia <b>hacia la que van los tubos</b>, siguiendo su camino desde los paneles hasta el colector. Todo tubo que vaya de un lado al otro en ese sentido pasará por el agujero; a los demás no les afecta. Si no marcas nada, van por el camino más corto. Pulsa un paso ya marcado para quitarlo.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>');
       $("viaDone").addEventListener("click",function(){ viaTool(false); }); }
     else hint("");
     renderPlan();
   }
   $("viaBtn").addEventListener("click",function(){ viaTool(!S.viaTool); });
+  // marking a passage: first the hole on the wall, then a click on the room the tubes go into through it (its direction)
   function viaClick(q){
+    var done='<button class="btn ghost small" id="viaDone" type="button">Terminar</button>', fin=function(h,w){ hint(h+done,w); $("viaDone").addEventListener("click",function(){ viaTool(false); }); };
+    var pr=S.viaPend && S.rooms.indexOf(S.viaPend)>=0 ? S.viaPend : null;
+    if(pr && pr.via){ var o0=viaOther(pr), g0=viaGeom(pr), inR=pointIn(q,results[pr.id].wout), inO=o0 && pointIn(q,results[o0.id].wout);
+      if(!inR && !inO){ fin('<span>Pulsa dentro de <b>'+esc(pr.name)+'</b> o de <b>'+esc(o0?o0.name:"")+'</b>: la estancia hacia la que van los tubos, camino del colector.</span>',true); return true; }
+      if(g0 && len(sub(q,g0.P))<0.12) return true;
+      pr.via.dir=inR?1:-1; S.viaPend=null; var to=inR?pr:o0, from=inR?o0:pr; update(pr.id===S.sel);
+      fin('<span>Paso de tubos de <b>'+esc(from.name)+'</b> hacia <b>'+esc(to.name)+'</b>: los tubos que vayan de '+esc(from.name)+' hacia el colector por '+esc(to.name)+' pasarán por ahí. Sigue marcando o pulsa Terminar.</span>'); return true; }
     var gone=null; S.rooms.forEach(function(r){ var g=viaGeom(r); if(g && len(sub(q,g.P))<0.3) gone=r; });
-    if(gone){ delete gone.via; update(gone.id===S.sel); return true; }
+    if(gone){ delete gone.via; S.viaPend=null; update(gone.id===S.sel); fin('<span>Paso de tubos quitado.</span>'); return true; }
     var hit=ufHitEdge(q); if(!hit) return false; var r=hit.room, e=hit.edge, n=r.pts.length;
-    if(r.bulge[e]){ hint('<span>El paso de tubos tiene que ir en una pared recta.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>',true); $("viaDone").addEventListener("click",function(){ viaTool(false); }); return true; }
+    if(r.bulge[e]){ fin('<span>El paso de tubos tiene que ir en una pared recta.</span>',true); return true; }
     var A=toW(r,r.pts[e]), B=toW(r,r.pts[(e+1)%n]), L=len(sub(B,A)), t=Math.round(Math.max(0.1,Math.min(L-0.1,dot(sub(q,A),unit(sub(B,A)))))*20)/20;
     var old=r.via; r.via={edge:e,t:t}; var o=viaOther(r);
-    if(!o){ if(old) r.via=old; else delete r.via; hint('<span>Esa pared no da a otra estancia: el paso de tubos va en una pared entre dos estancias.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>',true); $("viaDone").addEventListener("click",function(){ viaTool(false); }); return true; }
-    update(r.id===S.sel);
-    hint('<span>Paso de tubos entre <b>'+esc(r.name)+'</b> y <b>'+esc(o.name)+'</b>: los tubos que crucen esa pared lo harán por ahí. Sigue marcando o pulsa Terminar.</span><button class="btn ghost small" id="viaDone" type="button">Terminar</button>'); $("viaDone").addEventListener("click",function(){ viaTool(false); });
+    if(!o){ if(old) r.via=old; else delete r.via; fin('<span>Esa pared no da a otra estancia: el paso de tubos va en una pared entre dos estancias.</span>',true); return true; }
+    S.viaPend=r; update(r.id===S.sel);
+    fin('<span>Agujero marcado entre <b>'+esc(r.name)+'</b> y <b>'+esc(o.name)+'</b>. Ahora pulsa la estancia <b>hacia la que van los tubos</b>, camino del colector.</span>');
     return true;
   }
   function setMarkTool(t){
-    if(S.viaTool && S.markTool!==t) viaTool(false);
+    if(S.viaTool && S.markTool!==t) viaTool(false); if(S.eraseTool && S.markTool!==t) eraseTool(false);
     S.markTool = S.markTool===t ? null : t; S.markHover=null;
     document.querySelectorAll("#markBar [data-mark]").forEach(function(b){ b.classList.toggle("on",b.getAttribute("data-mark")===S.markTool); });
     if(S.markTool) hint('Marcando <b>'+MARKS[S.markTool].toLowerCase()+'</b>: pulsa una pared del plano. '+(S.mode!=="suelo"?(S.markTool==="acceso"?'Es la puerta de la calle: pulsa la pared justo donde está la puerta y se marca con su ancho. La primera fila de paneles va pegada a esta pared, igual que junto a las ventanas, y el resto se reparte por la estancia. Las puertas entre estancias no cuentan. ':S.markTool==="ventana"?'La primera fila de paneles va pegada a la ventana y el resto se reparte por la estancia. La pared cuenta en el cálculo térmico. ':'Se usa en el cálculo térmico de la estancia. '):S.markTool==="escalera"?'Por esa pared no pasará ningún tubo; lo que quede al otro lado necesita su propio colector. ':S.markTool==="ventana"?'Junto a ella el tubo irá a '+clampSep(S.uf.sepWin)+' cm en una franja de '+fmt(S.uf.winW,1)+' m. ':'Junto a él el tubo irá a '+clampSep(S.uf.sepExt)+' cm en una franja de '+fmt(S.uf.extW,1)+' m. ')+'<button class="btn ghost small" id="markDone">Terminar</button>');
@@ -4201,10 +4343,30 @@
     update(true); hint(n+' puerta'+(n===1?'':'s')+' de '+fmt((T.w)*100)+' cm guardada'+(n===1?'':'s')+'. Los tubos ya solo cruzan los tabiques por las puertas. Pulsa «Marcar puerta» para añadir puertas de otro ancho.');
   }
   function doorCancel(silent){ S.doorTool=null; S.markHover=null; $("doorBtn").classList.remove("on"); if(!silent) hint(""); renderPlan(); }
-  $("doorBtn").addEventListener("click",function(){ if(S.obstTool) obstTool(false); doorMenu(); });
+  $("doorBtn").addEventListener("click",function(){ if(S.obstTool) obstTool(false); if(S.eraseTool) eraseTool(false); doorMenu(); });
+  // ---- eraser: removes what is drawn on the plan (obstacles, wall marks, doors, passages, collectors), never a room
+  function eraseTool(on){
+    if(on){ if(S.markTool) setMarkTool(S.markTool); if(S.doorTool||$("doorBtn").classList.contains("on")) doorCancel(true); if(S.obstTool) obstTool(false); if(S.viaTool) viaTool(false); }
+    S.eraseTool=!!on; $("eraseBtn").classList.toggle("on",!!on);
+    if(on){ hint('<span><b>Borrador:</b> pulsa lo que quieras quitar: un obstáculo, una marca de pared (ventana, muro exterior, acceso'+(S.mode==="suelo"?', escalera':'')+'), '+(S.mode==="suelo"?'una puerta':'un paso de tubos')+' o un colector. Las estancias no se borran con el borrador.</span><button class="btn ghost small" id="eraseDone" type="button">Terminar</button>');
+      $("eraseDone").addEventListener("click",function(){ eraseTool(false); }); }
+    else hint("");
+    renderPlan(); }
+  $("eraseBtn").addEventListener("click",function(){ eraseTool(!S.eraseTool); });
+  function eraseAt(q,target){ var done=null;
+    var cg=target && target.closest && target.closest("[data-coll]");
+    if(cg){ var cid=+cg.getAttribute("data-coll"), c=S.collectors.filter(function(k){ return k.id===cid; })[0];
+      if(c){ S.collectors=S.collectors.filter(function(k){ return k!==c; }); renderCollectors(); done="el "+c.name; } }
+    if(!done) S.rooms.forEach(function(r){ var g=viaGeom(r); if(!done && g && len(sub(q,g.P))<0.3){ delete r.via; done="el paso de tubos"; } });
+    if(!done) S.rooms.forEach(function(r){ (r.doors||[]).forEach(function(d,i){ if(done) return; var g=ufDoorGeom(r,d); if(segDist(q,g.P0,g.P1)<0.25){ r.doors.splice(i,1); done="la puerta"; } }); });
+    if(!done){ var ob=ufObstAt(q); if(ob){ ob.r.obst.splice(ob.i,1); done="el obstáculo"; } }
+    if(!done){ var hit=ufHitEdge(q), mk=hit&&hit.room.marks; if(mk && mk[hit.edge]){ done="la marca de "+MARKS[mk[hit.edge]].toLowerCase(); delete mk[hit.edge]; if(hit.room.accPos) delete hit.room.accPos[hit.edge]; } }
+    if(done){ update(true); hint('<span>Borrado '+esc(done)+'. Sigue pulsando lo que quieras quitar.</span><button class="btn ghost small" id="eraseDone" type="button">Terminar</button>'); }
+    else hint('<span>Ahí no hay nada que borrar. El borrador quita obstáculos, marcas de pared, '+(S.mode==="suelo"?'puertas':'pasos de tubos')+' y colectores; las estancias no.</span><button class="btn ghost small" id="eraseDone" type="button">Terminar</button>',true);
+    $("eraseDone").addEventListener("click",function(){ eraseTool(false); }); return !!done; }
   // obstacles: drag a rectangle (or click one corner and then the other) like in Paint; click an obstacle to remove it
   function obstTool(on){
-    if(on){ if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); }
+    if(on){ if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.eraseTool) eraseTool(false); }
     S.obstTool=!!on; S.obstDraft=null; $("obstBtn").classList.toggle("on",!!on);
     if(on && S.viaTool) viaTool(false);
     if(on){ hint((S.mode==="techo"?'<b>Obstáculo en el techo</b> (muebles hasta el techo, vigas, conductos…): ahí no van paneles. ':'')+'Añadir obstáculo (si dibujas uno pegado o encima de otro, se unen en una sola figura, por ejemplo una L): pincha en una esquina y arrastra hasta la contraria (o pincha una esquina y luego la otra). Verás la medida mientras lo dibujas. Pincha un obstáculo para quitarlo. <button class="btn ghost small" id="obstDone">Terminar</button>'); $("obstDone").addEventListener("click",function(){ obstTool(false); }); }
@@ -4242,7 +4404,7 @@
   }
   $("planWrap").addEventListener("click",function(e){
     var cta=e.target.closest && e.target.closest("[data-cta]");
-    if(cta){ var a=cta.getAttribute("data-cta"); if(a==="new") newProject(); else if(a==="example") loadExample(); else if(a==="bg") $("bgFile").click(); else if(a==="cat") catOpen(); else openShape(); return; }
+    if(cta){ var a=cta.getAttribute("data-cta"); if(a==="new") newProject(); else if(a==="example") loadExample(); else if(a==="bg") $("bgFile").click(); else openShape(); return; }
     if(suppressClick){ suppressClick=false; return; }
     if(S.markTool||S.doorTool||S.obstTool) return;
     if(e.target.closest && e.target.closest("[data-coll]")) return;
@@ -4430,17 +4592,14 @@
     $("bgImportT").textContent=on?"Cambiar plano":"Importar plano (PDF o imagen)";
     if(on){ $("bgOp").value=Math.round((b.op!=null?b.op:0.6)*100); $("bgShow").textContent=b.show===false?"Mostrar":"Ocultar";
       var st=$("bgSt"); st.textContent=b.cal?"Escala calibrada":"Sin calibrar: empieza por «Calibrar escala»"; st.className="bg-st "+(b.cal?"ok":"no"); } }
-  function bgSetImage(cv,name,o){
+  function bgSetImage(cv,name){
     var M=2400, k=Math.min(1,M/Math.max(cv.width,cv.height)), c2=cv;
     if(k<1){ c2=document.createElement("canvas"); c2.width=Math.round(cv.width*k); c2.height=Math.round(cv.height*k); var x2=c2.getContext("2d"); x2.fillStyle="#fff"; x2.fillRect(0,0,c2.width,c2.height); x2.drawImage(cv,0,0,c2.width,c2.height); }
     var src=c2.toDataURL("image/jpeg",0.8), fl=curFloor(), id="bg"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); BGC[id]=src;
     // a first guess of 15 m across, until it is calibrated; over the rooms already drawn, if any
     var s=15/c2.width, x=0, y=0; if(S.rooms.length){ var mn=V(Infinity,Infinity); S.rooms.forEach(function(r){ results[r.id].wout.forEach(function(p){ mn=V(Math.min(mn.x,p.x),Math.min(mn.y,p.y)); }); }); x=mn.x; y=mn.y; }
-    // already to scale (the cadastre map): centred on the rooms drawn, if any
-    if(o && o.s){ s=o.s*cv.width/c2.width; x=0; y=0; if(S.rooms.length){ var a=V(Infinity,Infinity), b=V(-Infinity,-Infinity); S.rooms.forEach(function(r){ results[r.id].wout.forEach(function(p){ a=V(Math.min(a.x,p.x),Math.min(a.y,p.y)); b=V(Math.max(b.x,p.x),Math.max(b.y,p.y)); }); }); x=(a.x+b.x)/2-c2.width*s/2; y=(a.y+b.y)/2-c2.height*s/2; } }
-    fl.bg={id:id,src:src,pw:c2.width,ph:c2.height,x:x,y:y,s:s,op:0.6,show:true,cal:!!(o&&o.s),name:name||""};
-    if(o && o.cat) fl.bg.cat=o.cat;
-    S.zoom=null; if(o && o.s){ bgTool("trace",true); if(o.hint) hint(o.hint); } else bgTool("cal"); update(false);
+    fl.bg={id:id,src:src,pw:c2.width,ph:c2.height,x:x,y:y,s:s,op:0.6,show:true,cal:false,name:name||""};
+    S.zoom=null; bgTool("cal"); update(false);
   }
   function bgLoadScript(u){ return new Promise(function(res,rej){ var sc=document.createElement("script"); sc.src=u; sc.onload=res; sc.onerror=rej; document.head.appendChild(sc); }); }
   function bgPdf(file){
@@ -4464,60 +4623,10 @@
     rd.readAsDataURL(file); }
   $("bgFile").addEventListener("change",function(){ var f=this.files&&this.files[0]; this.value=""; if(!f || RO()) return;
     if(/pdf$/i.test(f.type)||/\.pdf$/i.test(f.name)) bgPdf(f); else if(/^image\//.test(f.type)) bgImage(f); else hint("Ese archivo no es un PDF ni una imagen.",true); });
-  // ---- the parcel from the Spanish cadastre, by address or cadastral reference: addresses from CartoCiudad (IGN), the centre of the
-  // parcel and its data from the Catastro, and its map (WMS) cut W×W metres around it, so it comes in to scale. Both allow any origin.
-  var CAT={geo:"https://www.cartociudad.es/geocoder/api/geocoder/",ovc:"https://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC/",wms:"https://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx",seq:0};
-  function catPx(W){ return Math.round(Math.min(1600,Math.max(800,W/0.06))); }   // 5 to 7,5 cm a pixel: the cadastre draws its labels at a fixed size in pixels
-  function catOpen(){ if(RO()) return; $("catModal").hidden=false; $("catList").innerHTML=""; catMsg(""); if(!$("catQ").value) $("catQ").value=S.project.addr||""; setTimeout(function(){ $("catQ").focus(); $("catQ").select(); },0); }
-  function catClose(){ $("catModal").hidden=true; CAT.seq++; }
-  function catMsg(t,bad){ var m=$("catMsg"); m.textContent=t||""; m.style.color=bad?"var(--warn)":""; }
-  function catTag(d,n){ var e=d.getElementsByTagName(n)[0]; return e?e.textContent.trim():""; }
-  function catGet(u,type){ return fetch(u).then(function(r){ if(!r.ok) throw new Error(r.status); return type==="json"?r.json():type==="blob"?r.blob():r.text(); }); }
-  function catCap(t){ return String(t||"").toLowerCase().replace(/(^|[\s(\/-])([^\s(])/g,function(m,a,b){ return a+b.toUpperCase(); }).replace(/\s(De|Del|La|Las|Los|El|Y)(?=\s)/g,function(w){ return w.toLowerCase(); }); }
-  function catLabel(d){ var a=String(d.address||""); if(a.indexOf(",")<0) a=(d.tip_via?d.tip_via+" ":"")+a+(d.portalNumber?" "+d.portalNumber:"")+", "+(d.muni||""); return catCap(a)+(d.province&&d.province!==d.muni?" ("+d.province+")":""); }
-  function catSearch(q){
-    q=String(q||"").trim(); if(!q) return; var k=++CAT.seq, rc=q.replace(/[\s-]+/g,"").toUpperCase(); $("catList").innerHTML="";
-    if(/^[0-9A-Z]{14}([0-9A-Z]{6})?$/.test(rc) && (rc.match(/[0-9]/g)||[]).length>=5 && /[A-Z]/.test(rc)) return catPick({rc:rc.slice(0,14),label:""},k);
-    catMsg("Buscando…");
-    Promise.all([catGet(CAT.geo+"find?q="+encodeURIComponent(q),"json").catch(function(){ return null; }),catGet(CAT.geo+"candidates?limit=8&q="+encodeURIComponent(q),"json").catch(function(){ return []; })]).then(function(a){
-      if(k!==CAT.seq) return;
-      var L=[], seen={}; [a[0]].concat(a[1]||[]).forEach(function(d){ if(!d || d.lat==null || d.lng==null) return; var key=d.refCatastral||(d.lat.toFixed(5)+","+d.lng.toFixed(5)); if(seen[key]) return; seen[key]=1; L.push({lat:d.lat,lng:d.lng,rc:d.refCatastral||"",label:catLabel(d)}); });
-      if(!L.length){ catMsg("No encuentro esa dirección. Escríbela con el tipo de vía, el número y la localidad («Calle Mayor 5, Toledo») o usa la referencia catastral.",true); return; }
-      catMsg(L.length===1?"":"Elige la dirección:"); CAT.list=L;
-      $("catList").innerHTML=L.map(function(it,i){ return '<li><button type="button" data-cat="'+i+'">'+esc(it.label)+(it.rc?'<small>Ref. catastral '+esc(it.rc)+'</small>':'')+'</button></li>'; }).join("");
-      if(L.length===1) catPick(L[0],k);
-    }).catch(function(){ if(k===CAT.seq) catMsg("No se ha podido buscar la dirección. Comprueba la conexión e inténtalo de nuevo.",true); });
-  }
-  function catMap(it,W){
-    var R=6378137, la=it.lat*Math.PI/180, x=it.lng*Math.PI/180*R, y=Math.log(Math.tan(Math.PI/4+la/2))*R, h=W/2/Math.cos(la), P=catPx(W);   // web mercator: W m on the ground are W/cos(lat) map units
-    return catGet(CAT.wms+"?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Catastro&STYLES=&SRS=EPSG:3857&BBOX="+[x-h,y-h,x+h,y+h].map(function(v){ return v.toFixed(2); }).join(",")+"&WIDTH="+P+"&HEIGHT="+P+"&FORMAT=image/png&TRANSPARENT=FALSE","blob").then(function(b){
-      return new Promise(function(res,rej){ var u=URL.createObjectURL(b), im=new Image(); im.onload=function(){ var cv=document.createElement("canvas"); cv.width=P; cv.height=P; var cx=cv.getContext("2d"); cx.fillStyle="#fff"; cx.fillRect(0,0,P,P); cx.drawImage(im,0,0,P,P); URL.revokeObjectURL(u); res(cv); };
-        im.onerror=function(){ URL.revokeObjectURL(u); rej(new Error("img")); }; im.src=u; }); }); }
-  function catData(rc){ return catGet(CAT.ovc+"OVCCallejero.asmx/Consulta_DNPRC?Provincia=&Municipio=&RC="+rc).then(function(t){ var d=new DOMParser().parseFromString(t,"text/xml"), n=d.getElementsByTagName("rcdnp").length;
-      return {rc:rc,uso:catTag(d,"luso"),sfc:+catTag(d,"sfc")||0,ant:+catTag(d,"ant")||0,n:n,ldt:catTag(d,"ldt")}; }).catch(function(){ return {rc:rc}; }); }
-  function catPick(it,k){
-    k=k||++CAT.seq; var W=+$("catSize").value||60; catMsg("Descargando el plano de la parcela…"); $("catList").innerHTML="";
-    // the centre of the parcel (better than the door of the address), and its address when only the reference was given
-    var c=it.rc ? catGet(CAT.ovc+"OVCCoordenadas.asmx/Consulta_CPMRC?Provincia=&Municipio=&SRS=EPSG:4326&RC="+it.rc).then(function(t){ var d=new DOMParser().parseFromString(t,"text/xml"), x=parseFloat(catTag(d,"xcen")), y=parseFloat(catTag(d,"ycen"));
-      if(isFinite(x)&&isFinite(y)){ it.lng=x; it.lat=y; } if(!it.label) it.label=catCap(catTag(d,"ldt")); }).catch(function(){}) : Promise.resolve();
-    c.then(function(){ if(it.lat==null) throw new Error("nf"); return Promise.all([catMap(it,W),it.rc?catData(it.rc):null]); }).then(function(a){
-      if(k!==CAT.seq) return; var D=a[1]||{}, lab=it.label||catCap(D.ldt)||"";
-      var info=D.n>1 ? D.n+" inmuebles en la parcela" : [D.uso,D.sfc?fmt(D.sfc)+" m² construidos":"",D.ant?"construido en "+D.ant:""].filter(Boolean).join(", ");
-      catClose(); if(!S.project.addr && lab){ S.project.addr=lab; $("pAddr").value=lab; }
-      bgSetImage(a[0],"Catastro "+(it.rc||lab),{s:W/catPx(W),cat:{rc:it.rc||"",label:lab,uso:D.uso||"",sfc:D.sfc||0,ant:D.ant||0},
-        hint:'<span><b>Plano del Catastro</b> a escala: '+W+' × '+W+' m alrededor de '+esc(lab)+'.'+(it.rc?' Referencia catastral <b>'+esc(it.rc)+'</b>'+(info?' ('+esc(info)+')':'')+'.':'')+' No trae la distribución interior: calca las estancias pinchando sus esquinas por el centro de las paredes. Es cartografía de la Dirección General del Catastro, no válida para certificados.</span>'});
-    }).catch(function(){ if(k===CAT.seq) catMsg("No se ha podido descargar el plano del Catastro. Inténtalo de nuevo en un momento o importa el plano como PDF o imagen.",true); });
-  }
-  $("catBtn").addEventListener("click",function(){ if(S.bgTool) bgTool(null,true); catOpen(); });
-  $("catClose").addEventListener("click",catClose);
-  $("catModal").addEventListener("click",function(e){ if(e.target===this) catClose(); });
-  document.addEventListener("keydown",function(e){ if(e.key==="Escape" && !$("catModal").hidden) catClose(); });
-  $("catForm").addEventListener("submit",function(e){ e.preventDefault(); catSearch($("catQ").value); });
-  $("catList").addEventListener("click",function(e){ var b=e.target.closest("[data-cat]"); if(b && CAT.list) catPick(CAT.list[+b.getAttribute("data-cat")]); });
   // tools: "cal" two points and their real distance, "trace" the corners of a room, "move" drag the picture
   function bgTool(t,quiet){
     if(t && RO()) return;
-    if(t){ if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); if(S.viaTool) viaTool(false); }
+    if(t){ if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); if(S.viaTool) viaTool(false); if(S.eraseTool) eraseTool(false); }
     S.bgTool=t||null; S.bgCal=null; S.trace={pts:[],hover:null}; S.bgDrag=null; S.curve={stage:"pick",hover:null,room:null,edge:-1,pts:[],drawing:false};
     var b=curFloor().bg; if(t && b && b.show===false) b.show=true;
     if(!quiet){
@@ -4682,7 +4791,7 @@
   }
   function setMode(m){
     if(m===S.mode) return;
-    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); if(S.viaTool) viaTool(false); S.moveId=null;
+    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); if(S.viaTool) viaTool(false); if(S.eraseTool) eraseTool(false); S.moveId=null;
     S.store[S.mode]={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title,final:S.final||null,ctrl:S.ctrl};
     var d=S.store[m]||{floors:[emptyFloor("Planta baja")],fi:0,sel:null,title:"Nuevo proyecto"};
     S.floors=d.floors; S.fi=d.fi; S.sel=d.sel; S.title=d.title; S.final=d.final||null; S.ctrl=d.ctrl||{}; S.zoom=null; S.mode=m;
@@ -4710,13 +4819,14 @@
   $("uPlate").innerHTML=Object.keys(PLATES).map(function(k){ return '<option value="'+k+'">'+PLATES[k]+'</option>'; }).join("");
   $("uPlate").value=S.uf.plate; $("uPlate").addEventListener("change",function(e){ S.uf.plate=e.target.value; renderTables(); });
   function bindNum(id,key){ var el=$(id); el.value=S[key]; el.addEventListener("input",function(){ var v=parseFloat(el.value); if(isFinite(v)){ S[key]=v; update(false);} }); }
-  bindNum("gMin","gMin"); bindNum("gMax","gMax"); bindNum("sClear","clear"); bindNum("sGap","gap"); bindNum("sStrip","strip"); bindNum("sVert","vert"); bindNum("sMargin","margin"); bindNum("sTail","tail"); bindNum("sSec","secCm"); bindNum("sPrim","primCm"); bindNum("sBar","bar"); bindNum("sHang","hang");
+  bindNum("gMin","gMin"); bindNum("gMax","gMax"); bindNum("sClear","clear"); bindNum("sGap","gap"); bindNum("sStrip","strip"); bindNum("sMargin","margin"); bindNum("sTail","tail"); bindNum("sSec","secCm"); bindNum("sPrim","primCm"); bindNum("sBar","bar"); bindNum("sHang","hang");
   $("sBoard").value=S.board; $("sBoard").addEventListener("change",function(e){ S.board=e.target.value; update(false); });
   function syncStructLegend(){ document.querySelectorAll(".struct-lg").forEach(function(x){ x.hidden=!S.showStruct; }); }
   $("showStruct").addEventListener("change",function(e){ S.showStruct=e.target.checked; syncStructLegend(); update(false); });
   $("colorByCircuit").addEventListener("change",function(e){ S.colorByCircuit=e.target.checked; renderPlan(); });
   $("showPipes").addEventListener("change",function(e){ S.showPipes=e.target.checked; document.querySelectorAll(".pipe-lg").forEach(function(x){ x.hidden=!S.showPipes; }); renderPlan(); });
-  $("addPanel").addEventListener("click",function(){ S.panels.push({id:nid(),name:"Modelo nuevo",w:60,h:120}); renderCatalog(); update(false); });
+  $("sBrand").addEventListener("change",function(e){ setBrand(e.target.value); });
+  $("sFinish").addEventListener("change",function(e){ S.finish=e.target.value; renderBrand(); update(false); });
 
   // ---------------- thermal calculation ----------------
   // Heat loss per room (transmission through marked exterior walls and windows, floor, roof, ventilation) and,
@@ -4762,18 +4872,23 @@
   function thVfor(dH,sig){ return sig/(1-Math.exp(-sig/dH)); }                             // supply–room difference that gives dH with spread sig
   function thSigma(dH,dV){ if(dH>=dV) return 0; var lo=0, hi=dV*(1-1e-9);                 // spread that gives dH with supply dV
     for(var i=0;i<60;i++){ var m=(lo+hi)/2; if(thLM(m,dV)>dH) lo=m; else hi=m; } return (lo+hi)/2; }
-  function thDp(lh,L){ var tb=TH_TUBE[S.th.tube]||TH_TUBE["16x2"], di=tb.d-2*tb.e, v=lh/3.6e6/(Math.PI*di*di/4); if(!(v>0)) return 0;
+  function thDp(lh,L,tk){ var tb=TH_TUBE[tk||S.th.tube]||TH_TUBE["16x2"], di=tb.d-2*tb.e, v=lh/3.6e6/(Math.PI*di*di/4); if(!(v>0)) return 0;
     var Re=v*di/0.66e-6, f=Re<2300?64/Re:0.316*Math.pow(Re,-0.25); return f*(L/di)*992*v*v/2/1000*1.15; }   // kPa, +15 % for bends
+  // l/h of a ceiling circuit: the maker's fixed flow per circuit, or its flow per panel (in series: that of the panels), or else
+  // the share (dflt) of the flow the room needs
+  function circFlow(res,i,dflt){ var B=brand(); if(B.flow) return B.flow*60; var f=0;
+    res.panels.forEach(function(p){ if(p.circuit!==i) return; var m=modelOf(p.tw,p.th); if(m && m.fl) f=Math.max(f,m.fl); }); return f||dflt; }
   function computeThermal(){
-    var T=S.th, UF=S.mode==="suelo", rows=[], vmax=UF?T.vmaxS:T.vmaxT, sig=Math.max(1,+T.sig||5), anyExt=false;
+    var T=S.th, UF=S.mode==="suelo", rows=[], vmax=UF?T.vmaxS:Math.min(T.vmaxT,brandTmax()), sig=Math.max(1,+T.sig||5), anyExt=false, B=brand();
     S.floors.forEach(function(fl){ fl.rooms.forEach(function(r){ var res=results[r.id]; if(!res) return;
       var L=thLoad(r,fl), o={room:r,fl:fl,res:res,L:L,Q:L.Q,ti:L.ti,bath:thBath(r),circ:[],flow:0,out:0,short:0,warn:[]};
       if(L.ext) anyExt=true;
       if(UF){ var pav=TH_PAV[r.pav]||TH_PAV[T.pav]||TH_PAV.cer;
         o.A=r.active?Math.max(0,res.area-(res.obArea||0)):0; o.pav=pav; o.K=thKH((r.active?res.sep:clampSep(S.uf.sep))/100,pav.r);
         o.qmax=thQmaxFloor(o.ti,o.bath); o.dHmax=o.qmax/o.K; }
-      else { o.A=r.active?res.covered:0; o.K=+T.kp||12; o.dHmax=Infinity; }
-      o.q=o.A>0?o.Q/o.A:0; o.dHreq=o.A>0?o.Q/(o.A*o.K):0;
+      else { o.A=r.active?res.covered:0; o.dHmax=Infinity; }
+      o.q=o.A>0?o.Q/o.A:0; o.dHreq=o.A>0?(UF?o.Q/(o.A*o.K):brandDH(o.q)):0;   // ceiling: the maker's curve (its W/m²K changes with the difference)
+      if(!UF) o.K=brandK(o.dHreq||5);
       res.th=o; rows.push(o); }); });
     // the room that needs the warmest water (within its surface limit) sets the supply temperature
     var need=0, des=null;
@@ -4788,12 +4903,15 @@
         return; }
       var dV=tv-o.ti, dHs=dV>sig ? thLM(sig,dV) : dV/2, dH=Math.min(o.dHreq,o.dHmax,dHs), s=dH>0 ? Math.min(thSigma(dH,dV),2*sig,dV*0.9) : 0;   // rooms that need less get at most twice the design spread; the thermostat does the rest
       if(s<sig && dH>=dHs-1e-9) s=sig;
-      o.dH=dH=s>0?thLM(s,dV):0; o.sig=s; o.out=o.K*o.A*dH; o.short=Math.max(0,o.Q-o.out); o.qo=o.out/o.A; o.tr=tv-s; o.tm=o.ti+dH;
+      o.dH=dH=s>0?thLM(s,dV):0; o.sig=s; o.out=UF?o.K*o.A*dH:o.A*brandQ(dH); o.short=Math.max(0,o.Q-o.out); o.qo=o.out/o.A; o.tr=tv-s; o.tm=o.ti+dH;
       var fd=1;
       if(UF){ o.surf=thSurf(o.ti,o.qo);
         var Ro=1/10.8+o.pav.r+Math.max(0.015,(T.su||45)/1000)/1.2, b=o.L.ft.below, Ru=b==="cal"?0.75:b==="ext"?2:1.25, tu=b==="cal"?o.ti:b==="terreno"?10:b==="ext"?T.te:(o.ti+T.te)/2;
         fd=1+Ro/Ru+(o.ti-tu)/(Math.max(1,o.qo)*Ru); o.down=o.out*(fd-1); }
-      o.flow=s>0 ? o.out*fd/(s*1.163) : 0; totOut+=o.out; totFlow+=o.flow;
+      o.flow=s>0 ? o.out*fd/(s*1.163) : 0;
+      // ceiling: each circuit at the maker's design flow (panels in series), so the spread is what comes out of it
+      if(!UF && res.circuits && (B.flow || B.models.some(function(m){ return m.fl; }))){ o.flow=0; for(var cf=0;cf<res.circuits;cf++) o.flow+=circFlow(res,cf,0); o.sig=o.flow>0?o.out/(o.flow*1.163):0; o.tr=tv-o.sig; }
+      totOut+=o.out; totFlow+=o.flow;
       if(o.short>Math.max(15,o.Q*0.03)){
         if(UF && o.dHreq>o.dHmax+1e-9) o.warn.push("Necesita "+fmt(o.q)+" W/m² y el suelo da como máximo "+fmt(o.qmax)+" W/m² sin pasar de "+(o.bath?33:29)+" °C en la superficie. Faltan "+fmt(o.short)+" W: mejora el aislamiento, junta más el tubo, usa un pavimento que transmita mejor o añade un apoyo (toallero o radiador).");
         else if(UF) o.warn.push(tv>=vmax ? "Con la impulsión limitada a "+fmt(vmax)+" °C faltan "+fmt(o.short)+" W. Sube la impulsión máxima, mejora el aislamiento o junta más el tubo."
@@ -4806,16 +4924,20 @@
         res.circ.forEach(function(c,i){ var f=o.flow*(tl?(c.inLen||0)/tl:1/res.circ.length), dp=thDp(f,c.inst||0);
           o.circ.push({name:"C"+(i+1),col:res.col,len:c.inst||0,flow:f,dp:dp,color:c.color});
           if(dp>dpMax){ dpMax=dp; dpO={o:o,name:"C"+(i+1)}; } }); }
-      else { var ga=[], ta=0; res.panels.forEach(function(p){ ga[p.circuit]=(ga[p.circuit]||0)+p.w*p.h; ta+=p.w*p.h; });
-        if(res.outs && res.outs.length) res.outs.forEach(function(ou){ var a=ou.ci.reduce(function(t,i){ return t+(ga[i]||0); },0);
-            o.circ.push({name:ou.ci.map(function(i){ return "C"+(i+1); }).join("+")+(ou.d===20?" (tubo 20)":""),col:res.col,len:ou.len||0,flow:ta?o.flow*a/ta:0,n:ou.n}); });
-        else ga.forEach(function(a,i){ o.circ.push({name:"C"+(i+1),col:res.col,len:res.circ[i]?res.circ[i].len:0,flow:ta?o.flow*a/ta:0,n:res.circ[i]?res.circ[i].n:0}); }); }
+      else { var pd=[], ga=[], ta=0, fc=function(i){ return circFlow(res,i,ta?o.flow*(ga[i]||0)/ta:0); };   // pressure drop of the panels of each circuit at the design flow (data sheet), plus the PEX
+        res.panels.forEach(function(p){ var m=modelOf(p.tw,p.th); pd[p.circuit]=(pd[p.circuit]||0)+(m&&m.dp?m.dp:0); ga[p.circuit]=(ga[p.circuit]||0)+p.w*p.h; ta+=p.w*p.h; });
+        var cdp=function(i){ return pd[i]||0; };
+        if(res.outs && res.outs.length) res.outs.forEach(function(ou){ var f=ou.ci.reduce(function(t,i){ return t+fc(i); },0), dp=(ou.s16!=null ? thDp(f,ou.s16*(1+S.margin/100),"16x2")+thDp(f,ou.s20*(1+S.margin/100),"20x2") : thDp(f,ou.len||0,ou.d===20?"20x2":"16x2"))+Math.max.apply(null,ou.ci.map(cdp));
+            o.circ.push({name:ou.ci.map(function(i){ return "C"+(i+1); }).join("+")+(ou.d===20?" (tubo 20)":""),col:res.col,len:ou.len||0,flow:f,n:ou.n,dp:dp});
+            if(dp>dpMax){ dpMax=dp; dpO={o:o,name:ou.ci.map(function(i){ return "C"+(i+1); }).join("+")}; } });
+        else for(var ci2=0;ci2<res.circuits;ci2++){ var dp2=thDp(fc(ci2),res.circ[ci2]?res.circ[ci2].len:0,"16x2")+cdp(ci2); o.circ.push({name:"C"+(ci2+1),col:res.col,len:res.circ[ci2]?res.circ[ci2].len:0,flow:fc(ci2),n:res.circ[ci2]?res.circ[ci2].n:0,dp:dp2}); } }
       o.circ.forEach(function(c){ var lm=c.flow/60;
         if(c.flow>0 && UF && lm>4) o.warn.push("El circuito "+c.name+" pide "+fmt(lm,1)+" l/min: es mucho para un caudalímetro normal; divide la estancia en más circuitos.");
         if(UF && c.dp>25) o.warn.push("El circuito "+c.name+" pierde "+fmt(c.dp,1)+" kPa: es largo para su caudal; acorta el circuito o divídelo.");
         if(c.col){ var k=colls[c.col.id]=colls[c.col.id]||{c:c.col,flow:0,n:0,dp:0}; k.flow+=c.flow; k.n++; k.dp=Math.max(k.dp,c.dp||0); } });
     });
-    TH={tv:tv,tr:tv!=null?tv-sig:null,sig:sig,rows:rows,des:des,need:need,capped:des&&need>vmax+1e-9,vmax:vmax,totQ:totQ,totOut:totOut,totFlow:totFlow,dpMax:dpMax,dpO:dpO,colls:colls,anyExt:anyExt,UF:UF};
+    if(!UF && tv!=null && totFlow>0) sig=totOut/(totFlow*1.163);   // ceiling: fixed design flow, so the overall spread is a result
+    TH={tv:tv,tr:tv!=null?tv-sig:null,sig:sig,rows:rows,des:des,need:need,capped:des&&need>vmax+1e-9,vmax:vmax,fin:!UF&&T.vmaxT>vmax,totQ:totQ,totOut:totOut,totFlow:totFlow,dpMax:dpMax,dpO:dpO,colls:colls,anyExt:anyExt,UF:UF};
     return TH;
   }
   // ---- rendering ----
@@ -4831,7 +4953,7 @@
       '<div class="stat"><div class="k">Caudal</div><div class="v">'+fmt(o.flow)+'</div><div class="s">l/h'+(o.sig?' · salto '+fmt(o.sig,1)+' K':'')+'</div></div></div>';
     h+='<p class="layout-line">Pérdidas: muros '+fmt(p.muros)+' W · ventanas '+fmt(p.ventanas)+' W ('+fmt(o.L.Aw,1)+' m²) · suelo '+fmt(p.suelo)+' W · techo '+fmt(p.techo)+' W · ventilación '+fmt(p.vent)+' W · margen '+fmt(S.th.marg)+'%.'+
       (o.L.ext?'':' <span style="color:var(--warn)">No tiene ventanas ni muros exteriores marcados.</span>')+(UF&&o.down?' Además, '+fmt(o.down)+' W se van hacia abajo.':'')+'</p>';
-    if(o.circ.length) h+='<p class="layout-line">Caudal por circuito: '+o.circ.map(function(c){ return '<b'+(c.color?' style="color:'+c.color+'"':'')+'>'+c.name+'</b> '+fmt(c.flow)+' l/h ('+fmt(c.flow/60,2)+' l/min)'+(UF?' · '+fmt(c.dp,1)+' kPa':''); }).join(' · ')+'.</p>';
+    if(o.circ.length) h+='<p class="layout-line">Caudal por circuito: '+o.circ.map(function(c){ return '<b'+(c.color?' style="color:'+c.color+'"':'')+'>'+c.name+'</b> '+fmt(c.flow)+' l/h ('+fmt(c.flow/60,2)+' l/min)'+(c.dp!=null?' · '+fmt(c.dp,1)+' kPa':''); }).join(' · ')+'.</p>';
     return h;
   }
   var thFloorsKey="";
@@ -4846,6 +4968,7 @@
     if(!T.rows.length){ sum.innerHTML='<p class="muted" style="margin:0;">Añade estancias para ver el cálculo.</p>'; $("thBody").innerHTML=""; $("thFoot").innerHTML=""; $("thcBody").innerHTML=""; return; }
     var h="";
     if(!T.anyExt) h+='<div class="msg warn">No hay ventanas ni muros exteriores marcados: la carga solo cuenta la ventilación, el suelo y el techo. Usa «Marcar ventana» y «Marcar muro exterior» en el plano.</div>';
+    if(T.fin) h+='<div class="msg warn">Con el acabado «'+esc(brand().finish[S.finish].n.toLowerCase())+'» los paneles de '+esc(brand().name)+' admiten el agua como máximo a '+fmt(T.vmax)+' °C: se calcula con ese límite y no con los '+fmt(S.th.vmaxT)+' °C indicados.</div>';
     if(T.capped) h+='<div class="msg warn">Para cubrir '+esc(T.des.room.name)+' haría falta impulsar a '+fmt(T.need,1)+' °C, por encima del máximo indicado ('+fmt(T.vmax)+' °C). Se calcula con '+fmt(T.vmax)+' °C y esa estancia se queda corta.</div>';
     var short=T.rows.filter(function(o){ return o.room.active && o.short>Math.max(15,o.Q*0.03); }).length;
     if(short) h+='<div class="msg warn">'+short+(short>1?' estancias no llegan':' estancia no llega')+' a la potencia que necesita'+(short>1?'n':'')+'. Mira el detalle en la tabla.</div>';
@@ -4853,7 +4976,7 @@
       '<div class="stat"><div class="k">Retorno</div><div class="v">'+(T.tr!=null?fmt(T.tr,1):'–')+'</div><div class="s">°C (salto '+fmt(T.sig,1)+' K)</div></div>'+
       '<div class="stat"><div class="k">Potencia</div><div class="v">'+fmt(T.totQ/1000,2)+'</div><div class="s">kW necesarios</div></div>'+
       '<div class="stat"><div class="k">Caudal</div><div class="v">'+fmt(T.totFlow)+'</div><div class="s">l/h en total</div></div></div>';
-    if(T.des) h+='<p class="layout-line">La impulsión la marca <b>'+esc(T.des.room.name)+'</b>, que es la que más potencia pide por m² ('+fmt(T.des.q)+' W/m²). Exterior '+fmt(S.th.te)+' °C.'+(UF&&T.dpO?' Circuito más desfavorable: <b>'+esc(T.dpO.o.room.name)+' '+T.dpO.name+'</b>, '+fmt(T.dpMax,1)+' kPa sin contar el colector.':'')+'</p>';
+    if(T.des) h+='<p class="layout-line">La impulsión la marca <b>'+esc(T.des.room.name)+'</b>, que es la que más potencia pide por m² ('+fmt(T.des.q)+' W/m²). Exterior '+fmt(S.th.te)+' °C.'+(T.dpO?' Circuito más desfavorable: <b>'+esc(T.dpO.o.room.name)+' '+T.dpO.name+'</b>, '+fmt(T.dpMax,1)+' kPa sin contar el colector.':'')+'</p>';
     sum.innerHTML=h;
     $("thHead").innerHTML='<tr><th>Estancia</th><th class="num">°C</th><th class="num">Necesita W</th><th class="num">W/m²</th><th class="num">Da W</th><th class="num">'+(UF?'Suelo °C':'Agua °C')+'</th><th class="num">Salto K</th><th class="num">Caudal l/h</th></tr>';
     var tb="";
@@ -4863,19 +4986,19 @@
         tb+='<tr class="clickable'+(o.room.id===S.sel?' sel':'')+'" data-room="'+o.room.id+'"><td>'+esc(o.room.name)+(bad?' <span style="color:var(--warn)" title="Revisar">●</span>':'')+'</td><td class="num">'+fmt(o.ti)+'</td><td class="num">'+fmt(o.Q)+'</td><td class="num">'+(o.A>0?fmt(o.q):'—')+'</td><td class="num">'+(o.out?(o.short>Math.max(15,o.Q*0.03)?'<span style="color:var(--warn)">'+fmt(o.out)+'</span>':fmt(o.out)):'—')+'</td><td class="num">'+(UF?(o.surf?fmt(o.surf,1):'—'):(o.tm?fmt(o.tm,1):'—'))+'</td><td class="num">'+(o.sig?fmt(o.sig,1):'—')+'</td><td class="num">'+(o.flow?fmt(o.flow):'—')+'</td></tr>'; }); });
     $("thBody").innerHTML=tb;
     $("thFoot").innerHTML='<tr><td>Total</td><td></td><td class="num">'+fmt(T.totQ)+'</td><td></td><td class="num">'+fmt(T.totOut)+'</td><td></td><td></td><td class="num">'+fmt(T.totFlow)+'</td></tr>';
-    $("thcHead").innerHTML='<tr><th>Colector</th><th>Estancia</th><th>Circuito</th><th class="num">'+(UF?'Tubo m':'PEX m')+'</th><th class="num">Caudal l/h</th><th class="num">l/min</th>'+(UF?'<th class="num">Pérdida kPa</th>':'')+'</tr>';
+    $("thcHead").innerHTML='<tr><th>Colector</th><th>Estancia</th><th>Circuito</th><th class="num">'+(UF?'Tubo m':'PEX m')+'</th><th class="num">Caudal l/h</th><th class="num">l/min</th>'+'<th class="num">Pérdida kPa</th>'+'</tr>';
     var cb="";
     allColls().forEach(function(c){ var k=T.colls[c.id]; if(!k) return; var first=true;
       T.rows.forEach(function(o){ o.circ.forEach(function(x){ if(x.col!==c) return;
-        cb+='<tr><td>'+(first?'<b>'+esc(c.name)+'</b>':'')+'</td><td>'+esc(o.room.name)+'</td><td>'+(x.color?'<b style="color:'+x.color+'">■</b> ':'')+x.name+(x.n?' · '+x.n+' panel'+(x.n>1?'es':''):'')+'</td><td class="num">'+fmt(x.len,1)+'</td><td class="num">'+fmt(x.flow)+'</td><td class="num"><b>'+fmt(x.flow/60,2)+'</b></td>'+(UF?'<td class="num">'+fmt(x.dp,1)+'</td>':'')+'</tr>'; first=false; }); });
-      cb+='<tr class="floor-row"><td colspan="4">Total '+esc(c.name)+' · '+k.n+' circuitos</td><td class="num">'+fmt(k.flow)+'</td><td class="num">'+fmt(k.flow/60,2)+'</td>'+(UF?'<td class="num">'+fmt(k.dp,1)+'</td>':'')+'</tr>'; });
+        cb+='<tr><td>'+(first?'<b>'+esc(c.name)+'</b>':'')+'</td><td>'+esc(o.room.name)+'</td><td>'+(x.color?'<b style="color:'+x.color+'">■</b> ':'')+x.name+(x.n?' · '+x.n+' panel'+(x.n>1?'es':''):'')+'</td><td class="num">'+fmt(x.len,1)+'</td><td class="num">'+fmt(x.flow)+'</td><td class="num"><b>'+fmt(x.flow/60,2)+'</b></td>'+'<td class="num">'+fmt(x.dp||0,1)+'</td>'+'</tr>'; first=false; }); });
+      cb+='<tr class="floor-row"><td colspan="4">Total '+esc(c.name)+' · '+k.n+' circuitos</td><td class="num">'+fmt(k.flow)+'</td><td class="num">'+fmt(k.flow/60,2)+'</td>'+'<td class="num">'+fmt(k.dp,1)+'</td>'+'</tr>'; });
     $("thcBody").innerHTML=cb||'<tr><td colspan="7" class="muted">Asigna las estancias a un colector para ver el caudal de cada circuito.</td></tr>';
   }
   function syncTh(){ var T=S.th;
     $("thZone").value=T.zone; $("thBuild").value=TH_BUILD[T.build]?T.build:"custom"; $("thPav").value=T.pav; $("thTube").value=T.tube;
     Object.keys(TH_NUM).forEach(function(id){ $(id).value=T[TH_NUM[id]]; }); }
   function thUpdate(){ computeThermal(); renderDetailOutput(); renderThermal(); }
-  var TH_NUM={thTe:"te",thTi:"ti",thH:"h",thUw:"uw",thUv:"uv",thUs:"us",thUc:"uc",thN:"ach",thWin:"win",thSig:"sig",thMarg:"marg",thSu:"su",thVmaxS:"vmaxS",thKp:"kp",thVmaxT:"vmaxT"};
+  var TH_NUM={thTe:"te",thTi:"ti",thH:"h",thUw:"uw",thUv:"uv",thUs:"us",thUc:"uc",thN:"ach",thWin:"win",thSig:"sig",thMarg:"marg",thSu:"su",thVmaxS:"vmaxS",thVmaxT:"vmaxT"};
   (function(){
     var opt=function(o,f){ return Object.keys(o).map(function(k){ return '<option value="'+k+'">'+(f?f(o[k]):o[k])+'</option>'; }).join(""); };
     $("thZone").innerHTML=opt(TH_ZONES,function(z){ return z.n; });
@@ -5165,7 +5288,7 @@
   function histGo(back){
     if(histOff()) return; if(HIST.timer){ clearTimeout(HIST.timer); histTake(); }
     var from=back?HIST.past:HIST.future, to=back?HIST.future:HIST.past; if(!from.length) return;
-    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); if(S.viaTool) viaTool(false); if(SH) closeShape(); if(S.bgTool) bgTool(null,true);
+    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool) doorCancel(true); if(S.obstTool) obstTool(false); if(S.viaTool) viaTool(false); if(S.eraseTool) eraseTool(false); if(SH) closeShape(); if(S.bgTool) bgTool(null,true);
     to.push(HIST.cur); HIST.cur=from.pop();
     projApply(JSON.parse(HIST.cur),true); clearTimeout(HIST.timer); HIST.timer=0; HIST.cur=projSnapshot(true);
     hint(back?"Deshecho el último cambio.":"Rehecho el cambio."); histUI(); }
@@ -5185,6 +5308,7 @@
     else if(k==="y" || (k==="z" && e.shiftKey)){ e.preventDefault(); histGo(false); }
   });
 
+  renderBrand();
   renderCatalog(); renderCollectors(); renderFloorBar(); syncProjectInputs(); update(true);
 
   // ---------------- product site ----------------
@@ -5208,7 +5332,7 @@
     renderTables();
     var t={n:0,area:sum("area"),c:sum("circuits"),pex:sum("pex")}; S.rooms.forEach(function(r){ t.n+=results[r.id].panels.length; });
     HP.techo={svg:tv,tags:cell("Superficie",fmt(t.area,0),"m²")+cell("Paneles",t.n)+cell("Circuitos",t.c)+cell("Tubo PEX",fmt(Math.ceil(t.pex)),"m")};
-    var pick=["Panel 80×150","Colector de 16 salidas","Tubo PEX","Bicono para PEX","Perfil TC secundario","Placa de pladur","Tira LED"], h='<div class="grp">Vivienda de ejemplo de '+fmt(t.area,0)+' m², techo radiante</div>';
+    var pick=["Panel sunthaldress C","Panel "+brand().line,"Colector de 16 salidas","Tubo PEX","Bicono para PEX","Perfil TC secundario","Placa de pladur","Tira LED"], h='<div class="grp">Vivienda de ejemplo de '+fmt(t.area,0)+' m², techo radiante</div>';
     reportRows.forEach(function(r){ if(pick.some(function(k){ return r.label.indexOf(k)===0; })) h+='<div><span>'+esc(r.label)+'</span><b>'+fmt(r.qty,r.qty%1?1:0)+' '+r.unit+'</b></div>'; });
     $("heroMats").innerHTML=h;
     var sv=draw("suelo");
@@ -5332,7 +5456,7 @@
   $("companySave").addEventListener("click",function(){ saveCompanyToCloud(); });
 
   // ---- projects: what is saved, and putting it back
-  var CFG_TECHO=["panels","gMin","gMax","clear","gap","strip","vert","margin","tail","secCm","primCm","bar","hang","board"];
+  var CFG_TECHO=["brand","finish","panels","gMin","gMax","clear","gap","strip","margin","tail","secCm","primCm","bar","hang","board"];
   // lite: without the background images (the undo history keeps them once, in BGC, instead of in every step)
   function projSnapshot(lite){
     var cfg={th:S.th}; if(S.mode==="suelo") cfg.uf=S.uf; else CFG_TECHO.forEach(function(k){ cfg[k]=S[k]; });
@@ -5347,9 +5471,11 @@
     if(c.th){ Object.assign(S.th,c.th); syncTh(); }
     if(S.mode==="suelo" && c.uf){ Object.assign(S.uf,c.uf);
       [["uSep","sep"],["uMax","maxLen"],["uSepWin","sepWin"],["uWinW","winW"],["uSepExt","sepExt"],["uExtW","extW"],["uWall","wallCm"],["uVert","vert"],["uMargin","margin"],["uPlate","plate"]].forEach(function(p){ var el=$(p[0]); if(el) el.value=S.uf[p[1]]; }); }
-    if(S.mode==="techo"){ CFG_TECHO.forEach(function(k){ if(c[k]!=null) S[k]=c[k]; });
-      [["gMin","gMin"],["gMax","gMax"],["sClear","clear"],["sGap","gap"],["sStrip","strip"],["sVert","vert"],["sMargin","margin"],["sTail","tail"],["sSec","secCm"],["sPrim","primCm"],["sBar","bar"],["sHang","hang"],["sBoard","board"]].forEach(function(p){ var el=$(p[0]); if(el) el.value=S[p[1]]; });
-      renderCatalog(); }
+    if(S.mode==="techo"){ if(!c.brand){ S.brand="sunthalpy"; S.finish="yeso"; }
+      CFG_TECHO.forEach(function(k){ if(c[k]!=null) S[k]=c[k]; });
+      brandFix();
+      [["gMin","gMin"],["gMax","gMax"],["sClear","clear"],["sGap","gap"],["sStrip","strip"],["sMargin","margin"],["sTail","tail"],["sSec","secCm"],["sPrim","primCm"],["sBar","bar"],["sHang","hang"],["sBoard","board"]].forEach(function(p){ var el=$(p[0]); if(el) el.value=S[p[1]]; });
+      renderBrand(); }
     var r0=S.rooms[0]; if(!keep || !S.rooms.some(function(r){ return r.id===S.sel; })) S.sel=r0?r0.id:null; S.moveId=null; S.placing=null; if(!keep) S.zoom=null;
     syncProjectInputs(); renderFloorBar(); renderCollectors(); hint(""); update(true);
     if(!keep) histReset();
@@ -5443,7 +5569,8 @@
       (TOUR.hadOwn?"<p style='color:var(--muted)'>Practicarás en un proyecto aparte: el tuyo se guarda y podrás volver a él al terminar.</p>":""),btn:"Empezar"});
     // 1. first room
     P.push({info:true,anim:"nombre",el:"#projName",t:"El nombre del proyecto",x:"<p>Pulsa el título de arriba (✎) para ponerle nombre al proyecto, por ejemplo <b>Casa García</b>. Con ese nombre se guarda en «Mis proyectos» y sale en el informe.</p>"});
-    P.push({info:true,anim:"plano",el:"#bgImport",t:"¿Tienes un plano de la vivienda?",x:"<p>Con <b>Importar plano</b> subes un PDF o una foto del plano (también uno simple, sin cotas) y queda de fondo en la planta. Con <b>Buscar en el Catastro</b> escribes la dirección y llega el contorno de la parcela ya a escala, sin calibrar (el Catastro no tiene los tabiques de dentro). Después:</p><ol><li><b>Calibrar escala</b>: pinchas los dos extremos de una pared y escribes su medida real, la que mides en obra.</li><li><b>Calcar estancias</b>: pinchas las esquinas de cada estancia por el centro de las paredes. Se ajustan solas a ángulos rectos y se pegan a las ya calcadas.</li></ol><p>Del plano solo se usan las estancias: armarios, textos o m² escritos se quedan en la imagen. En este tutorial dibujaremos las estancias a mano.</p>"});
+    if(!suelo) P.push({info:true,anim:"marca",el:"#brandCard",t:"Marca de los paneles",x:"<p>Lo primero es elegir el <b>fabricante</b> de los paneles: cada marca tiene sus medidas y sus normas de instalación. Con la marca cambian los modelos, cuántos paneles van en serie, el caudal, la pérdida de carga y la emisión del cálculo térmico.</p><p>Elige también el <b>acabado</b> del techo: limita la temperatura máxima del agua.</p>"});
+    P.push({info:true,anim:"plano",el:"#bgImport",t:"¿Tienes un plano de la vivienda?",x:"<p>Con <b>Importar plano</b> subes un PDF o una foto del plano (también uno simple, sin cotas) y queda de fondo en la planta. Después:</p><ol><li><b>Calibrar escala</b>: pinchas los dos extremos de una pared y escribes su medida real, la que mides en obra.</li><li><b>Calcar estancias</b>: pinchas las esquinas de cada estancia por el centro de las paredes. Se ajustan solas a ángulos rectos y se pegan a las ya calcadas.</li></ol><p>Del plano solo se usan las estancias: armarios, textos o m² escritos se quedan en la imagen. En este tutorial dibujaremos las estancias a mano.</p>"});
     P.push({mission:true,anim:"estancia",t:"Crea tu primera estancia",badge:"Primera estancia",
       start:function(T){ T.base=S.rooms.length; },
       done:function(T){ return S.rooms.length>T.base && !S.placing && $("shapeModal").hidden; },
@@ -5477,6 +5604,7 @@
       ]});
     P.push({info:true,anim:"mover",el:".plan-stage",t:"Muévete por el plano",x:"<ul><li><b>Arrastra</b> el fondo para desplazarte y usa la <b>rueda</b> o <b>+ / −</b> para el zoom.</li><li><b>Doble clic</b> en una estancia la coge para moverla; se pega sola al muro más cercano.</li><li><b>Un clic</b> abre su ficha (lo probaremos al final).</li></ul>"});
     P.push({info:true,anim:"deshacer",el:["#undoBtn","#redoBtn"],t:"Deshacer y rehacer",x:"<p>Si te equivocas, <b>↶ Deshacer</b> vuelve atrás (también con <b>Ctrl+Z</b>) y <b>↷ Rehacer</b> vuelve adelante (<b>Ctrl+Y</b>): estancias, marcas, colectores, ajustes, precios… En el tutorial están desactivados; en tus proyectos los tienes siempre.</p>"});
+    P.push({info:true,anim:"borrador",el:"#eraseBtn",t:"Borrador",x:"<p>Si te equivocas con algo de lo dibujado, pulsa <b>Borrador</b> y luego lo que quieras quitar: un obstáculo, una marca de pared, "+(suelo?"una puerta":"un paso de tubos")+" o un colector. Se borra solo eso, sin deshacer lo demás.</p><p>Las estancias nunca se borran con el borrador, para que no quites una sin querer.</p>"});
     P.push({info:true,anim:"curvo",el:'#bgBar [data-bg="curve"]',t:"Paredes curvas",x:"<p>Dibuja o calca siempre las paredes rectas. Si alguna es curva (un mirador, una esquina redondeada), pulsa <b>Marcar borde curvo</b>, pincha esa pared y dibuja su forma a mano alzada de un extremo al otro: se alisa sola y la pared pasa a ser curva. Si la comparte otra estancia, también se curva en ella.</p>"});
     P.push({mission:true,anim:"ventana",t:"Marca una ventana",badge:"Ventana marcada",
         done:function(){ return S.rooms.some(function(r){ return Object.keys(r.marks||{}).some(function(k){ return r.marks[k]==="ventana"; }); }); },
@@ -5508,7 +5636,7 @@
           {when:function(){ return true; },el:"#obstBtn",x:"<p>Los muebles que llegan al techo, las vigas o los conductos ocupan sitio donde no puede ir ningún panel. Pulsa <b>Añadir obstáculo</b>.</p>"}
         ]});
       P.push({info:true,anim:"acceso",el:'#markBar [data-mark="acceso"]',t:"Puerta de acceso",x:"<p>Pulsa la pared de la <b>puerta de la calle</b> justo donde está la puerta: se marca con el ancho de una puerta. Igual que con las ventanas, la primera fila de paneles de esa estancia va pegada a ella, que es por donde más frío entra, y el resto se reparte por igual por la estancia para que se note lo mismo en toda ella. Las puertas entre estancias no cuentan.</p>"});
-      P.push({info:true,anim:"paso",el:"#viaBtn",t:"Paso de tubos",x:"<p>Si por el camino más corto hay una viga o algo que no se puede atravesar, pulsa <b>Marcar paso de tubos</b> y luego la pared donde está el agujero, desde cualquiera de las dos estancias. Es un agujero en la pared, sin dirección: los tubos que tengan que cruzar esa pared la cruzan por ahí, vayan hacia donde vayan, y a los demás no les afecta. Los metros de tubo se calculan por ese recorrido. Si no marcas nada, se toma el camino más corto.</p>"});
+      P.push({info:true,anim:"paso",el:"#viaBtn",t:"Paso de tubos",x:"<p>Si los tubos tienen que pasar por un agujero concreto (por ejemplo, porque por el camino más corto hay una viga), pulsa <b>Marcar paso de tubos</b>, luego la pared donde está el agujero y después la estancia <b>hacia la que van</b> los tubos, siguiendo su camino desde los paneles hasta el colector: se dibuja una flecha.</p><p>Todo tubo que vaya en ese sentido pasará por el agujero; a los demás no les afecta. Los metros de tubo se calculan por ese recorrido.</p>"});
       P.push({mission:true,anim:"tuberia",t:"Muestra la tubería",badge:"Tubería a la vista",
         done:function(){ return !!S.showPipes; },
         skip:function(){ var c=$("showPipes"); if(c && !c.checked){ c.checked=true; c.dispatchEvent(new Event("change")); } },
@@ -5528,7 +5656,7 @@
           : (suelo?"<p>Mantén pulsado el <b>Colector</b> y arrástralo hasta una pared del <b>Salón</b>. Suéltalo cerca de la pared y se pegará solo.</p><p>En cuanto lo sueltes, verás aparecer los circuitos. Si solo lo pulsas, se coloca solo en la pared recomendada.</p>"
                   :"<p>Arrastra el <b>Colector</b> dentro del <b>Salón</b> (o simplemente púlsalo). Las estancias se asignan solas al colector más cercano con salidas libres.</p><p>Alrededor del colector se reserva su <b>registro</b>: ahí no se ponen paneles.</p>"); }}]});
     if(suelo) P.push({info:true,anim:"recomendada",el:".coll-bar",t:"Ubicación recomendada",x:"<p>Al pulsar el colector, se coloca solo en la pared donde menos tubo hace falta. Si después cambias estancias o puertas y hay un sitio mejor, aquí aparece el aviso <b>Ubicación recomendada</b>: lo ves en el plano y decides <b>Colocar aquí</b> o <b>Descartar</b>.</p>"});
-    else P.push({info:true,el:"#planWrap",t:"Salidas con tubo de 20",x:"<p>Dos circuitos de la misma estancia (3 o 4 paneles) comparten una salida del colector con <b>tubo de 20</b> hasta una te de latón, siempre que el PEX de 20 no pase de 20 m (ida + retorno). Se hace solo.</p><p>Con «Colorear por circuito» los paneles de una misma salida salen del mismo color; en la ficha llevan el contorno <b>S1 · 20 mm</b>. Lo que no se puede agrupar va con tubo de 16.</p>"});
+    else P.push({info:true,el:"#planWrap",t:"Salidas con te",x:"<p>Dos circuitos de la misma estancia pueden compartir una salida del colector con una <b>te</b>. Con Sunthalpy, hasta la te va PEX de 16 si el tramo no pasa de 7 m; si es más largo, un manguito reducido y el resto en PEX de 20. Un colector con tes es como máximo de <b>6 salidas</b>: si así no caben todos los circuitos, se usa una salida por circuito. Se hace solo.</p><p>Con «Colorear por circuito» los paneles de una misma salida salen del mismo color; en la ficha llevan el contorno <b>S1 · te</b>.</p>"});
     P.push({mission:true,anim:"ficha",t:"Abre la ficha de una estancia",badge:"Ficha consultada",
       done:function(T){ return S.sel===T.salon && !S.moveId; },
       skip:function(T){ if(T.salon) select(T.salon); },
@@ -5550,10 +5678,10 @@
       P.push({info:true,anim:"reglas",el:"#ufRulesCard",t:"Reglas del suelo",x:"<p>Separación del tubo, longitud máxima por circuito, franjas junto a ventanas y muros… Cambia cualquier valor y el plano se recalcula al momento.</p>"});
       P.push({info:true,anim:"salidas",el:"#collCard",t:"Salidas de los colectores",x:"<p>Indica cuántas salidas tiene cada colector. El programa reparte las estancias sin que ningún circuito se cruce.</p>"});
     } else {
-      P.push({info:true,anim:"paneles",el:"#catalogCard",t:"Tus paneles",x:"<p>Medidas de los paneles que uses, de cualquier fabricante. Se coloca siempre el más grande que quepa, con máximo 2 paneles por circuito (y hasta 4 por salida con tubo de 20).</p>"});
-      P.push({info:true,anim:"cobertura",el:"#coverCard",t:"Cobertura",x:"<p>Qué porcentaje del techo quieres cubrir con paneles.</p>"});
+      P.push({info:true,anim:"paneles",el:"#catalogCard",t:"Tus paneles",x:"<p>Los modelos del fabricante elegido, con su medida, cuántos van como máximo <b>en serie</b> en un circuito y su pérdida de carga. Desmarca los que no vayas a usar: se coloca siempre el más grande que quepa.</p>"});
+      P.push({info:true,anim:"cobertura",el:"#coverCard",t:"Cobertura",x:"<p>Qué porcentaje del techo quieres cubrir con paneles. Cada marca trae el suyo por defecto (Sunthalpy, 30–60 %) y se pone solo al elegirla; puedes cambiarlo.</p>"});
       P.push({info:true,anim:"pladur",el:"#pladurCard",t:"Techo de pladur",x:"<p>Placa, perfiles y cuelgues para calcular la estructura completa.</p>"});
-      P.push({info:true,anim:"salidas",el:"#collCard",t:"Colectores y tubería",x:"<p>Salidas de cada colector, subida al techo y margen de tubo. Aquí también se explica la regla del tubo de 20.</p>"});
+      P.push({info:true,anim:"salidas",el:"#collCard",t:"Colectores y tubería",x:"<p>Salidas de cada colector y margen de tubo. Aquí también se explica la regla del tubo de 20.</p>"});
     }
     P.push({info:true,anim:"termico",el:"#thermCard",t:"Cálculo térmico",x:"<p>Zona climática, aislamiento de la vivienda, temperatura y qué hay encima y debajo de cada planta. Con eso y las ventanas y muros exteriores marcados, se calculan las pérdidas de cada estancia.</p><p>Está en <b>beta</b> (triángulo amarillo): de momento es solo informativo. Con la casilla <b>Activar</b> lo muestras u ocultas.</p>"});
     P.push({info:true,el:"#thermRes",top:true,t:"Potencias y caudales",x:"<p>Potencia que necesita cada estancia y la que da "+(suelo?"el suelo":"el techo")+", la <b>temperatura de impulsión</b> de diseño (para elegir la aerotermia) y el <b>caudal de cada salida</b> en l/min para ajustar el caudalímetro del colector.</p><p>Si una estancia no llega, te dice por qué.</p>"});
@@ -5568,7 +5696,7 @@
   function tourStart(){
     if(TOUR) tourEnd(true,"keep");
     $("tourAsk").hidden=true;
-    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool||$("doorBtn").classList.contains("on")) doorCancel(true); if(S.obstTool) obstTool(false); if(SH) closeShape();
+    if(S.placing) cancelPlacing(); if(S.markTool) setMarkTool(S.markTool); if(S.doorTool||$("doorBtn").classList.contains("on")) doorCancel(true); if(S.obstTool) obstTool(false); if(S.eraseTool) eraseTool(false); if(SH) closeShape();
     var hadOwn=allRooms().length>0; cloudSave();
     var snap={floors:S.floors,fi:S.fi,sel:S.sel,title:S.title,final:S.final||null,ctrl:S.ctrl,project:JSON.parse(JSON.stringify(S.project||{}))}; S.final=null; S.ctrl={};
     S.floors=[emptyFloor("Planta baja")]; S.fi=0; S.sel=null; S.moveId=null; S.zoom=null; S.title="Práctica del tutorial";
