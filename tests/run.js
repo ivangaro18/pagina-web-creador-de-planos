@@ -340,6 +340,42 @@ function ok(name, cond, detail) { out.push((cond ? "  ✔ " : "  ✘ ") + name +
     ok("pellizcar con dos dedos amplía lo que se separan los dedos (×4)", Math.abs(p0 / p1 - 4) < 0.05, (p0 / p1).toFixed(3));
     await ctx.close(); }
 
+  // 6d. paneles a mano en la ficha de la estancia: el reparto automático pasa a ser el de partida, se añade un panel en un
+  // hueco (vertical u horizontal), no deja montarlo sobre otro, se quita pulsándolo, se puede deshacer y volver al automático
+  out.push("Paneles a mano");
+  p = await open("#planificador");
+  await p.evaluate(() => { const D = window.__dbg, S = D.S; const r = D.rectRoom("Salón", 0, 0, 6, 4); S.floors = [{ id: D.nid(), name: "P", rooms: [r], collectors: [] }]; S.fi = 0; S.sel = r.id; D.update(true); });
+  const pan = () => p.evaluate(() => { const D = window.__dbg, r = D.S.rooms[0], res = D.results[r.id]; return { n: res.panels.length, c: res.circuits, man: !!r.manP, mp: (r.mp || []).length, cov: res.covered }; });
+  const a0 = await pan();
+  await p.click("#mpAdd"); await p.waitForTimeout(300);
+  const a1 = await pan();
+  ok("al pasar a mano se quedan los paneles que había", a1.man && a1.mp === a0.n && a1.n === a0.n && a0.n > 0, JSON.stringify([a0, a1]));
+  const d2s = (x, y) => p.evaluate(([x, y]) => { const s = document.querySelector("#detailSvg svg"), q = new DOMPoint(x, y).matrixTransform(s.getScreenCTM()); return [q.x, q.y]; }, [x, y]);
+  // a free spot: take every panel away first, then put one back with a click in the middle, lying down
+  await p.evaluate(() => { const D = window.__dbg, r = D.S.rooms[0]; r.mp = []; D.update(false); });
+  await p.click('[data-mpv="0"]');
+  let [mx, my] = await d2s(3, 2); await p.mouse.move(mx, my); await p.waitForTimeout(100); await p.mouse.click(mx, my); await p.waitForTimeout(300);
+  const b1 = await p.evaluate(() => { const D = window.__dbg, r = D.S.rooms[0], ps = D.results[r.id].panels; return ps.map(q => ({ w: Math.round(q.w * 100), h: Math.round(q.h * 100), cx: Math.round((q.x + q.w / 2) * 100), cy: Math.round((q.y + q.h / 2) * 100) })); });
+  ok("un clic pone el panel elegido, en horizontal y centrado donde se pulsa", b1.length === 1 && b1[0].w > b1[0].h && Math.abs(b1[0].cx - 300) <= 1 && Math.abs(b1[0].cy - 200) <= 1, JSON.stringify(b1));
+  [mx, my] = await d2s(3.04, 2.45); await p.mouse.click(mx, my); await p.waitForTimeout(300);
+  const b2 = await p.evaluate(() => window.__dbg.S.rooms[0].mp.length);
+  ok("el segundo panel se pega al primero", b2 === 2, String(b2));
+  const b3 = await p.evaluate(() => { const D = window.__dbg, r = D.S.rooms[0], ps = D.results[r.id].panels.slice().sort((a, b) => a.y - b.y); return ps.length === 2 ? Math.round((ps[1].y - ps[0].y - ps[0].h) * 1000) : -1; });
+  ok("  con la junta entre los dos (" + b3 + " mm) y en circuito con él", b3 === Math.round(await p.evaluate(() => window.__dbg.S.gap || 0)) && (await pan()).c === 1, String(b3));
+  await p.click('[data-mpv="1"]'); [mx, my] = await d2s(3, 3); await p.mouse.move(mx, my); await p.waitForTimeout(100);
+  const ghost = await p.evaluate(() => { const g = document.getElementById("mpGhost"); return g ? g.getAttribute("class") : ""; });
+  await p.mouse.click(mx, my); await p.waitForTimeout(300);
+  ok("encima de otro panel no deja ponerlo (y la vista previa lo marca en rojo)", /bad/.test(ghost) && (await pan()).n === 2, ghost);
+  [mx, my] = await d2s(3, 2); await p.mouse.click(mx, my); await p.waitForTimeout(300);
+  ok("pulsar un panel puesto lo quita", (await pan()).n === 1);
+  await p.click("#mpDone"); await p.waitForTimeout(200);
+  await p.click("#undoBtn"); await p.waitForTimeout(500);
+  ok("deshacer recupera el panel quitado", (await pan()).n === 2, JSON.stringify(await pan()));
+  await p.click("#mpAuto"); await p.waitForTimeout(400);
+  const a4 = await pan();
+  ok("«Volver al reparto automático» deja el reparto de antes", !a4.man && a4.n === a0.n, JSON.stringify(a4));
+  await p.close();
+
   // 7a. puerta de acceso: se dibuja con el ancho de una puerta donde se pulsa, no a lo largo de toda la pared
   out.push("Puerta de acceso");
   p = await open("#planificador");

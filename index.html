@@ -695,6 +695,14 @@
   .auth-or{color:var(--s-muted);}
   .auth-or::before,.auth-or::after{background:var(--rule);}
   .auth-note{color:var(--s-muted);font-size:.82rem;}
+  /* ---------- panels placed by hand ---------- */
+  .pan-box .lbl{display:block;font-size:.8rem;color:var(--muted);margin-bottom:4px;}
+  .mp-dir{display:flex;width:max-content;max-width:100%;border:1px solid var(--ink);border-radius:4px;overflow:hidden;}
+  .mp-dir button{background:#fff;border:0;padding:7px 12px;font:600 .84rem "Archivo",system-ui,sans-serif;color:var(--ink);cursor:pointer;}
+  .mp-dir button+button{border-left:1px solid var(--ink);}
+  .mp-dir button[aria-pressed="true"]{background:var(--ink);color:#fff;}
+  .p-mpg{fill:rgba(37,99,201,.22);stroke:#2563C9;stroke-width:.02;stroke-dasharray:.06 .04;pointer-events:none;}
+  .p-mpg.bad{fill:rgba(217,69,47,.18);stroke:#D9452F;}
   /* ---------- planner on the project-sheet look (same as the site): ink frames, square sheets, sentence-case labels ---------- */
   .app-back{max-width:1240px;margin:0 auto;padding:0;height:56px;border-bottom:1.5px solid var(--ink);font-size:.9rem;color:var(--muted);}
   .app-brand{display:flex;align-items:center;gap:10px;min-width:0;font-weight:700;font-stretch:118%;color:var(--ink);font-size:1rem;}
@@ -827,7 +835,7 @@
       <div class="s-head"><h2>Lo que el planificador calcula por ti</h2><p>Cada imagen es un trozo del mismo plano de ejemplo, tal como lo dibuja la herramienta.</p></div>
       <div class="feat">
         <div class="feat-row"><figure class="feat-fig" data-crop="forma"></figure><div><h3>Estancias de cualquier forma</h3><p>Dibuja sobre una cuadrícula de puntos, curva las paredes que quieras y escribe las medidas. Cada estancia nueva se pega a un lado de otra. También puedes calcar encima de un PDF o una foto del plano.</p></div></div>
-        <div class="feat-row"><figure class="feat-fig" data-crop="paneles"></figure><div><h3>Paneles colocados solos</h3><p>Eliges qué parte del techo cubrir y el planificador pone el panel más grande que cabe, centrado, a 10 cm de las paredes y con hueco para la iluminación. Eliges la marca de los paneles y se aplican sus medidas y sus normas: cuántos paneles van en serie, caudal, pérdida de carga y emisión.</p></div></div>
+        <div class="feat-row"><figure class="feat-fig" data-crop="paneles"></figure><div><h3>Paneles colocados solos</h3><p>Eliges qué parte del techo cubrir y el planificador pone el panel más grande que cabe, centrado, a 10 cm de las paredes y con hueco para la iluminación. Eliges la marca de los paneles y se aplican sus medidas y sus normas: cuántos paneles van en serie, caudal, pérdida de carga y emisión. Si quieres, añades o quitas paneles a mano en cada estancia.</p></div></div>
         <div class="feat-row"><figure class="feat-fig" data-crop="tubos"></figure><div><h3>Colectores y metros de PEX</h3><p>Arrastras los colectores al plano y cada estancia va entera al más cercano con salidas libres. Los metros de tubo cuentan la ida, el retorno y el tubo que ya traen los paneles.</p></div></div>
         <div class="feat-row"><figure class="feat-fig" data-crop="pladur"></figure><div><h3>Estructura de pladur</h3><p>Angular, perfiles primarios y TC secundarios alineados con los paneles, con sus cuelgues. Puedes girar la estructura y comparar cuántas barras y placas salen.</p></div></div>
         <div class="feat-row"><figure class="feat-fig" data-crop="suelo"></figure><div><h3>Suelo radiante por circuitos</h3><p>En suelo, el tubo se reparte por estancias en circuitos de 120 m como máximo, más cerrado junto a ventanas y muros exteriores. El planificador también te dice en qué pared conviene el colector.</p></div></div>
@@ -1792,8 +1800,12 @@
     l.x=Math.round((l.x+mv.x)*1000)/1000; l.y=Math.round((l.y+mv.y)*1000)/1000;
   }
   function lightKeep(l){ var h=(+l.s||30)/200; return {x0:l.x-h,y0:l.y-h,x1:l.x+h,y1:l.y+h}; }
+  // panels placed by hand in a room: r.mp=[{x,y,id,v}] (local metres, top left corner; v: long side along y). A model the
+  // brand does not have is left out (and said so).
+  function mpPanels(room){ var o=[]; (room.mp||[]).forEach(function(m){ var t=S.panels.filter(function(k){ return k.id===m.id; })[0]; if(!t || !(t.w>0 && t.h>0)) return;
+      var a=Math.min(t.w,t.h)/100, b=Math.max(t.w,t.h)/100; o.push({x:m.x,y:m.y,w:m.v?a:b,h:m.v?b:a,typeId:t.id,name:t.name,tw:t.w,th:t.h,man:true}); }); return o; }
   function calcRoom(room){
-    var key=JSON.stringify([room.marks||{},room.pts,room.bulge,room.active,room.override,room.minPct,room.maxPct,room.lc,room.lp,room.customL||false,room.customL?room.lights||[]:0,room._cko||[],room.obst||[],room.ovb||"",S.brand,S.gMin,S.gMax,S.clear,S.gap,S.strip,S.panels]);
+    var key=JSON.stringify([room.marks||{},room.pts,room.bulge,room.active,room.override,room.minPct,room.maxPct,room.lc,room.lp,room.customL||false,room.customL?room.lights||[]:0,room.manP?room.mp||[]:0,room._cko||[],room.obst||[],room.ovb||"",S.brand,S.gMin,S.gMax,S.clear,S.gap,S.strip,S.panels]);
     if(room._ck===key && room._cr) return room._cr;
     var out=localOutline(room), area=Math.abs(signedArea(out));
     var own=ownCov(room), minPct=own?room.minPct:S.gMin, maxPct=own?room.maxPct:S.gMax; if(maxPct<minPct) maxPct=minPct;
@@ -1808,6 +1820,12 @@
     var CL=!!room.customL, KO=(CL?(room.lights||[]).map(lightKeep):[]).concat(room._cko||[]).concat((room.obst||[]).map(function(b){ return {x0:b.x0-0.07,y0:b.y0-0.07,x1:b.x1+0.07,y1:b.y1+0.07}; }));   // 7 cm free round obstacles for the joint
     var koIn=function(rect){ return KO.map(function(z){ return {x0:z.x0-rect.x,y0:z.y0-rect.y,x1:z.x1-rect.x,y1:z.y1-rect.y}; }); };
     if(room.active && area>0.2){
+      if(room.manP){   // panels placed by hand (r.mp): taken as they are, in a snake order so the circuits join neighbours
+        mpPanels(room).sort(function(a,b){ var ra=Math.round((a.y+a.h/2)/0.4), rb=Math.round((b.y+b.h/2)/0.4); return ra!==rb?ra-rb:(ra%2?-1:1)*((a.x+a.w/2)-(b.x+b.w/2)); })
+          .forEach(function(p){ res.panels.push(p); res.covered+=p.w*p.h; });
+        if((room.mp||[]).length>res.panels.length) res.msgs.push({t:"warn",x:"Algún panel colocado a mano no es de la marca elegida y no se cuenta. Quítalo y ponlo con un modelo de "+esc(brand().name)+"."});
+        if(!CL && ((room.lc&&room.lc!=="ninguna")||(room.lp&&room.lp!=="ninguna"))) res.msgs.push({t:"ok",x:"Con los paneles a mano no se calcula la luz automática: márcala con «Iluminación personalizada»."});
+      } else {
       var R=rasterRoom(out,S.clear/100), r1=maxRect(R), lc=CL?"ninguna":(room.lc||"ninguna"), lp=CL?"ninguna":(room.lp||"ninguna"), seen={};
       var push=function(rect,gl){
         gl.panels.forEach(function(p){ p.x+=rect.x; p.y+=rect.y; res.panels.push(p); });
@@ -1833,6 +1851,7 @@
           remW-=w; if(!gl.fail && gl.area>0){ gz[i]=gl; remMin-=gl.area; remMax-=gl.area; } });
         zones.forEach(function(z,i){ if(gz[i]) push(z,gz[i]); });
         if(!res.panels.length) res.msgs.push({t:"warn",x:"Ningún panel del catálogo cabe dentro del máximo indicado ("+fmt(maxPct)+"%) respetando la distancia a pared. Sube el % máximo o añade un modelo más pequeño."});
+      }
       }
       if(CL) (room.lights||[]).forEach(function(l,i){ res.lights.push(V(l.x,l.y)); res.keep.push(KO[i]); if(!pointIn(V(l.x,l.y),out)) res.msgs.push({t:"warn",x:"El punto de luz "+(i+1)+" queda fuera de la estancia: revisa sus distancias."}); });
       res.reg=(room._cko||[]).slice();
@@ -1863,7 +1882,7 @@
       pairs.forEach(function(pr,ci){ pr.forEach(function(ix){ res.panels[ix].circuit=ci; }); });
       res.circuits=pairs.length;
       res.pct=area?res.covered/area*100:0;
-      if(res.panels.length && res.covered<res.minA-EPS) res.msgs.unshift({t:"warn",x:"No se alcanza el "+fmt(minPct)+"% mínimo: la mejor distribución posible cubre un "+fmt(res.pct,1)+"%. Prueba con otro modelo de panel o revisa las medidas."});
+      if(!room.manP && res.panels.length && res.covered<res.minA-EPS) res.msgs.unshift({t:"warn",x:"No se alcanza el "+fmt(minPct)+"% mínimo: la mejor distribución posible cubre un "+fmt(res.pct,1)+"%. Prueba con otro modelo de panel o revisa las medidas."});
     }
     room._ck=key; room._cr=res; return res;
   }
@@ -3413,7 +3432,7 @@
     var room=S.rooms.filter(function(r){return r.id===S.sel;})[0];
     var out=$("detailOut"), box=$("detailSvg"); if(!room||!out) return;
     var res=results[room.id];
-    box.innerHTML=renderDetailSvg(room,res); box.classList.toggle("adding",LADD===room.id);
+    box.innerHTML=renderDetailSvg(room,res); box.classList.toggle("adding",LADD===room.id||MPA===room.id);
     var h="";
     if(S.mode==="suelo"){ out.innerHTML=ufDetailHtml(room,res)+thDetailHtml(room); var oc=$("obstClear"); if(oc) oc.addEventListener("click",function(){ room.obst=[]; update(false); }); return; }
     if(!room.active) h+='<div class="msg ok">Estancia marcada sin paneles. No suma circuitos.</div>';
@@ -3422,11 +3441,12 @@
       '<div class="stat"><div class="k">Cobertura</div><div class="v">'+fmt(res.pct,1)+'%</div><div class="s">rango '+fmt(res.minPct)+'–'+fmt(res.maxPct)+'%</div></div>'+
       '<div class="stat"><div class="k">Paneles</div><div class="v">'+res.panels.length+'</div><div class="s">'+fmt(res.covered,2)+' m²</div></div>'+
       '<div class="stat"><div class="k">Circuitos</div><div class="v">'+res.circuits+'</div><div class="s">'+esc(brand().models.map(function(m){ return m.key+" ≤ "+m.series; }).join(" · "))+' en serie</div></div></div>';
+    if(room.manP && S.mode!=="suelo") h+='<p class="layout-line">Distribución: <b>'+res.panels.length+' paneles colocados a mano</b>'+(res.panels.length?': '+esc(roomTypeCounts(res)):'')+'.</p>';
     res.groups.forEach(function(g,i){ var k=g.choice; if(!k) return;
       var lt=k.so==="v"?"franja entre columnas":k.so==="h"?"franja entre filas":"sin franja central";
       h+='<p class="layout-line">'+(res.groups.length>1?'Zona '+(i+1)+': ':'Distribución: ')+(k.mp && k.mp.n!==k.c*k.r ? '<b>'+Object.keys(k.mp.tc).map(function(t){ return k.mp.tc[t]+' paneles de '+t.replace('x','×'); }).join(' + ')+'</b>' : '<b>'+k.c+' × '+k.r+' '+esc(k.v.name)+'</b>'+(k.v.rot?' (girados)':''))+', repartidos por igual en toda la zona libre'+(k.pri?' (la primera fila, junto a la ventana o la puerta de acceso)':'')+'; '+lt+'.</p>'; });
     var il=[], nm={puntos:"puntos de luz",tira:"tira LED"};
-    if(room.lc&&room.lc!=="ninguna") il.push("centro con "+nm[room.lc]); if(room.lp&&room.lp!=="ninguna") il.push("perímetro con "+nm[room.lp]);
+    if(!room.manP){ if(room.lc&&room.lc!=="ninguna") il.push("centro con "+nm[room.lc]); if(room.lp&&room.lp!=="ninguna") il.push("perímetro con "+nm[room.lp]); }
     if(room.obst&&room.obst.length) h+='<p class="layout-line">Obstáculos: <b>'+obstGroups(room).length+'</b> ('+fmt(obstArea(room),2)+' m² sin paneles) · <button class="btn ghost small" id="obstClear2" type="button">Quitar todos</button></p>';
     if(room.via){ var vo=viaOther(room); h+='<p class="layout-line">Paso de tubos en la pared <b>'+LETTER(room.via.edge)+'</b>'+(vo?' (hacia '+esc(vo.name)+')':'')+': los tubos que tengan que cruzar esa pared, en un sentido o en otro, la cruzan por ahí. <button class="btn ghost small" id="viaClear" type="button">Quitar paso</button></p>'; }
     if(room.customL) il=["personalizada"];
@@ -3460,6 +3480,7 @@
   function buildEditor(){
     var card=$("detailCard"), room=S.rooms.filter(function(r){return r.id===S.sel;})[0];
     if(LADD!=null && (!room || room.id!==LADD || S.mode!=="techo")) lightAddStop();
+    if(MPA!=null && (!room || room.id!==MPA || S.mode!=="techo")) mpStop();
     if(!room){ card.innerHTML='<p class="muted" style="margin:0;">'+(S.rooms.length?'Pulsa una estancia del plano para ver su detalle y editarla.':'Aquí verás el detalle de cada estancia.')+'</p>'; return; }
     var n=room.pts.length, rows="";
     for(var i=0;i<n;i++){
@@ -3478,7 +3499,7 @@
         '<div class="field"><label class="lbl" for="rName">Nombre</label><input type="text" id="rName"></div>'+
         '<label class="check"><input type="checkbox" id="rActive"> '+(S.mode==="suelo"?'Instalar suelo radiante en esta estancia':'Instalar paneles en esta estancia')+'</label>'+
         (S.mode==="suelo" ? '<div class="field"><label class="lbl" for="rSep">Separación del tubo</label><select id="rSep"><option value="0">General ('+clampSep(S.uf.sep)+' cm)</option>'+[5,10,15,20,25,30].map(function(v){ return '<option value="'+v+'">'+v+' cm</option>'; }).join("")+'</select></div>' : '')+
-        (S.mode==="suelo"?'':'<span class="section-title" style="margin:2px 0 6px;">Iluminación</span><div class="grid2"><div class="field"><label class="lbl" for="rLc">Centro (entre paneles)</label><select id="rLc"><option value="ninguna">Sin luz</option><option value="puntos">Puntos de luz</option><option value="tira">Tira LED</option></select></div>'+
+        (S.mode==="suelo"?'':'<span class="section-title" style="margin:2px 0 6px;">Paneles</span><div class="pan-box" id="panBox"></div><span class="section-title" style="margin:8px 0 6px;">Iluminación</span><div class="grid2"><div class="field"><label class="lbl" for="rLc">Centro (entre paneles)</label><select id="rLc"><option value="ninguna">Sin luz</option><option value="puntos">Puntos de luz</option><option value="tira">Tira LED</option></select></div>'+
         '<div class="field"><label class="lbl" for="rLp">Perímetro (junto a paredes)</label><select id="rLp"><option value="ninguna">Sin luz</option><option value="puntos">Puntos de luz</option><option value="tira">Tira LED</option></select></div></div>'+
         '<label class="check"><input type="checkbox" id="rCustL"> Iluminación personalizada</label><div class="light-box" id="lightBox"></div>'+
         '<label class="check"><input type="checkbox" id="rOver"> Rango de cobertura propio</label><p class="note" id="ovNote" hidden style="margin:2px 0 6px;"></p>'+
@@ -3509,9 +3530,10 @@
     if(room.override && !ownCov(room)){ var ob=BRANDS[room.ovb||"sunthalpy"]; $("ovNote").hidden=false; $("ovNote").textContent="Su rango propio ("+fmt(room.minPct)+"–"+fmt(room.maxPct)+" %) es para "+(ob?ob.name+" "+ob.line:"otra marca")+": con "+brand().name+" "+brand().line+" se usa la cobertura de la marca ("+fmt(S.gMin)+"–"+fmt(S.gMax)+" %). Márcalo para darle uno propio con esta marca."; }
     $("rRotInfo").textContent=room.structRot?"Secundarios cruzados a los paneles":"Secundarios a lo largo de los paneles";
     $("rRotate").addEventListener("click",function(){ room.structRot=!room.structRot; $("rRotInfo").textContent=room.structRot?"Secundarios cruzados a los paneles":"Secundarios a lo largo de los paneles"; if(!S.showStruct){ S.showStruct=true; $("showStruct").checked=true; syncStructLegend(); } update(false); });
+    renderPanBox(room); $("rOver").closest(".check").hidden=!!room.manP; if(room.manP){ $("overFields").hidden=true; $("ovNote").hidden=true; }
     $("rLc").value=room.lc||"ninguna"; $("rLp").value=room.lp||"ninguna";
-    var lgrid=$("rLc").closest(".grid2"); lgrid.hidden=!!room.customL; $("rCustL").checked=!!room.customL; renderLightBox(room);
-    $("rCustL").addEventListener("change",function(e){ room.customL=e.target.checked; room.lights=room.lights||[]; lgrid.hidden=room.customL; if(!room.customL) lightAddStop(); renderLightBox(room); update(false);
+    var lgrid=$("rLc").closest(".grid2"); lgrid.hidden=!!room.customL||!!room.manP; $("rCustL").checked=!!room.customL; renderLightBox(room);
+    $("rCustL").addEventListener("change",function(e){ room.customL=e.target.checked; room.lights=room.lights||[]; lgrid.hidden=room.customL||!!room.manP; if(!room.customL) lightAddStop(); renderLightBox(room); update(false);
       if(room.customL && !room.lights.length) lightAddStart(room); });
     $("rLc").addEventListener("change",function(e){ room.lc=e.target.value; update(false); });
     $("rLp").addEventListener("change",function(e){ room.lp=e.target.value; update(false); });
@@ -3539,7 +3561,7 @@
       if(!l || !isFinite(v) || v<5) return; l.s=Math.round(v); update(false); renderLightBox(room); }); });
     box.querySelectorAll("[data-ldel]").forEach(function(b){ b.addEventListener("click",function(){ L.splice(+b.getAttribute("data-ldel"),1); update(false); renderLightBox(room); }); });
   }
-  function lightAddStart(room){ LADD=room.id; var dp=$("detailSvg"); if(dp) dp.classList.add("adding"); renderLightBox(room);
+  function lightAddStart(room){ if(MPA!=null) mpStop(); LADD=room.id; var dp=$("detailSvg"); if(dp) dp.classList.add("adding"); renderLightBox(room);
     hint('<span>Pulsa en el <b>plano de '+esc(room.name)+'</b> (el dibujo grande de la estancia) donde va el punto de luz. Luego ajusta las distancias en la tabla.</span><button class="btn ghost small" id="lightDone" type="button">Terminar</button>');
     $("lightDone").addEventListener("click",lightAddStop);
     var dpl=$("detailSvg"); if(dpl && dpl.scrollIntoView) dpl.scrollIntoView({behavior:"smooth",block:"nearest"}); }
@@ -3554,6 +3576,75 @@
     hint('<span>Punto de luz '+room.lights.length+' añadido. Pulsa otro sitio para añadir más, o ajusta las distancias en la tabla.</span><button class="btn ghost small" id="lightDone" type="button">Terminar</button>'); $("lightDone").addEventListener("click",lightAddStop);
   });
   document.addEventListener("keydown",function(e){ if(e.key==="Escape" && LADD!=null) lightAddStop(); });
+  // ---- panels placed by hand: pick a model and its direction, then each click on the room detail puts one there (its centre
+  // under the pointer, snapped to the panels around it with the joint); a click on a hand-placed panel takes it away. The first
+  // time, the automatic layout becomes the starting point, so it can be completed or corrected instead of started again.
+  var MPA=null, MPC={id:null,v:true};
+  function mpModels(){ return S.panels.filter(function(t){ return t.w>0 && t.h>0 && t.on!==false; }); }
+  function renderPanBox(room){
+    var box=$("panBox"); if(!box) return; var on=MPA===room.id, n=(results[room.id]||{panels:[]}).panels.length, h;
+    if(on){ var ms=mpModels(); if(!ms.some(function(t){ return String(t.id)===String(MPC.id); })) MPC.id=ms.length?ms[0].id:null;
+      h='<div class="field"><label class="lbl" for="mpModel">Panel</label><select id="mpModel">'+ms.map(function(t,i){ return '<option value="'+i+'"'+(String(t.id)===String(MPC.id)?' selected':'')+'>'+esc(t.name)+' ('+fmt(Math.min(t.w,t.h))+' × '+fmt(Math.max(t.w,t.h))+')</option>'; }).join("")+'</select></div>'+
+        '<div class="field"><span class="lbl">Colocación del lado largo</span><span class="mp-dir" role="group" aria-label="Colocación del panel"><button type="button" data-mpv="1" aria-pressed="'+MPC.v+'">Vertical</button><button type="button" data-mpv="0" aria-pressed="'+!MPC.v+'">Horizontal</button></span></div>'+
+        '<p class="note" style="margin:0 0 8px;">Pulsa en el plano de la estancia donde va el centro del panel: se ajusta solo a los paneles de al lado. Pulsa un panel para quitarlo.</p>'+
+        '<div class="btn-row"><button class="btn small" type="button" id="mpDone">Terminar</button></div>'; }
+    else if(room.manP) h='<p class="note" style="margin:0 0 6px;">Reparto a mano: <b>'+n+' panel'+(n===1?'':'es')+'</b>.</p><div class="btn-row"><button class="btn small ghost" type="button" id="mpAdd">+ Añadir paneles a mano</button><button class="btn small ghost" type="button" id="mpAuto">Volver al reparto automático</button></div>';
+    else h='<p class="note" style="margin:0 0 6px;">Reparto automático según la cobertura.</p><div class="btn-row"><button class="btn small ghost" type="button" id="mpAdd">+ Añadir paneles a mano</button></div>';
+    box.innerHTML=h;
+    if(on){ $("mpModel").addEventListener("change",function(){ var t=mpModels()[+this.value]; if(t) MPC.id=t.id; });
+      box.querySelectorAll("[data-mpv]").forEach(function(b){ b.addEventListener("click",function(){ MPC.v=b.getAttribute("data-mpv")==="1"; box.querySelectorAll("[data-mpv]").forEach(function(x){ x.setAttribute("aria-pressed",String(x===b)); }); }); });
+      $("mpDone").addEventListener("click",mpStop); }
+    else { $("mpAdd").addEventListener("click",function(){ mpStart(room); });
+      if($("mpAuto")) $("mpAuto").addEventListener("click",function(){ room.manP=false; update(true); histNote(); hint("<span><b>"+esc(room.name)+"</b> vuelve al reparto automático. Los paneles puestos a mano se guardan por si vuelves a ellos.</span>"); }); }
+  }
+  function mpStart(room){ if(RO() || S.mode!=="techo") return; if(LADD!=null) lightAddStop();
+    if(!room.manP){ var res=results[room.id], keep=(room.mp||[]).length>0;
+      if(!keep) room.mp=(res?res.panels:[]).map(function(p){ return {x:Math.round(p.x*1000)/1000,y:Math.round(p.y*1000)/1000,id:p.typeId,v:p.h>=p.w}; }); room.manP=true; }
+    MPA=room.id; update(true); histNote(); renderPanBox(room); var dp=$("detailSvg"); if(dp) dp.classList.add("adding");
+    hint('<span>Paneles a mano en <b>'+esc(room.name)+'</b>: elige el panel y su colocación en la ficha y pulsa en el plano de la estancia. Los paneles que ya tenía se quedan; púlsalos para quitarlos.</span><button class="btn ghost small" id="mpDone2" type="button">Terminar</button>');
+    $("mpDone2").addEventListener("click",mpStop);
+    if(dp && dp.scrollIntoView) dp.scrollIntoView({behavior:"smooth",block:"nearest"}); }
+  function mpStop(){ if(MPA==null) return; var r=roomById(MPA); MPA=null; var dp=$("detailSvg"); if(dp) dp.classList.remove("adding"); var g=document.getElementById("mpGhost"); if(g) g.remove(); hint(""); if(r && r.id===S.sel) renderPanBox(r); }
+  // where a new panel goes (centre at q), lined up with the panels around it
+  function mpRect(room,q){ var t=mpModels().filter(function(k){ return String(k.id)===String(MPC.id); })[0]; if(!t) return null;
+    var a=Math.min(t.w,t.h)/100, b=Math.max(t.w,t.h)/100, w=MPC.v?a:b, hh=MPC.v?b:a, x=q.x-w/2, y=q.y-hh/2, gp=(S.gap||0)/1000, sn=0.12, bx=null, by=null;
+    mpPanels(room).forEach(function(p){
+      [p.x+p.w+gp,p.x-gp-w,p.x,p.x+p.w-w].forEach(function(c){ if(Math.abs(c-x)<sn && (bx==null || Math.abs(c-x)<Math.abs(bx-x))) bx=c; });
+      [p.y+p.h+gp,p.y-gp-hh,p.y,p.y+p.h-hh].forEach(function(c){ if(Math.abs(c-y)<sn && (by==null || Math.abs(c-y)<Math.abs(by-y))) by=c; }); });
+    x=bx!=null?bx:Math.round(x*100)/100; y=by!=null?by:Math.round(y*100)/100;
+    return {x:x,y:y,w:w,h:hh,id:t.id,v:MPC.v}; }
+  // why a panel cannot go there ("" when it can): out of the room or too near a wall, over a panel, an obstacle or a light's gap
+  function mpWhy(room,R){
+    var out=localOutline(room), ring=out.concat([out[0]]), cl=Math.max(0,(S.clear||0)/100-0.005), bad="";
+    for(var i=0;i<=10 && !bad;i++) for(var j=0;j<=10 && !bad;j++){ if(i>0&&i<10&&j>0&&j<10) continue; var p=V(R.x+R.w*i/10,R.y+R.h*j/10);
+      if(!pointIn(p,out) || polyDist(p,ring)<cl) bad="Se sale de la estancia o queda a menos de "+fmt(S.clear||0)+" cm de la pared."; }
+    if(bad) return bad;
+    var ov=function(o){ return R.x<o.x1-0.002 && R.x+R.w>o.x0+0.002 && R.y<o.y1-0.002 && R.y+R.h>o.y0+0.002; };
+    if(mpPanels(room).some(function(p){ return ov({x0:p.x,y0:p.y,x1:p.x+p.w,y1:p.y+p.h}); })) return "Se monta sobre otro panel.";
+    if((room.obst||[]).some(ov)) return "Cae encima de un obstáculo.";
+    if(room.customL && (room.lights||[]).map(lightKeep).some(ov)) return "Cae encima del hueco de un punto de luz.";
+    return ""; }
+  function mpAt(e){ var svg=e.target.closest && e.target.closest("#detailSvg svg"); if(!svg) return null; var pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY; var q=pt.matrixTransform(svg.getScreenCTM().inverse()); return {svg:svg,q:V(q.x,q.y)}; }
+  function mpHit(room,q){ var P=mpPanels(room), k=-1; P.forEach(function(p,i){ if(q.x>=p.x && q.x<=p.x+p.w && q.y>=p.y && q.y<=p.y+p.h) k=i; }); return k<0?null:P[k]; }
+  $("detailCard").addEventListener("pointermove",function(e){
+    if(MPA==null || S.mode!=="techo") return; var room=roomById(MPA), a=mpAt(e), g=document.getElementById("mpGhost");
+    var R=room&&a&&!mpHit(room,a.q)?mpRect(room,a.q):null;
+    if(!R){ if(g) g.remove(); return; }
+    if(!g || g.ownerSVGElement!==a.svg){ if(g) g.remove(); g=document.createElementNS("http://www.w3.org/2000/svg","rect"); g.id="mpGhost"; a.svg.appendChild(g); }
+    g.setAttribute("x",f3(R.x)); g.setAttribute("y",f3(R.y)); g.setAttribute("width",f3(R.w)); g.setAttribute("height",f3(R.h)); g.setAttribute("class","p-mpg"+(mpWhy(room,R)?" bad":""));
+  });
+  $("detailCard").addEventListener("click",function(e){
+    if(MPA==null || S.mode!=="techo") return; var a=mpAt(e); if(!a) return;
+    var room=roomById(MPA); if(!room || room.id!==S.sel){ mpStop(); return; }
+    var pk=mpHit(room,a.q), msg;
+    if(pk){ var ix=-1; room.mp.forEach(function(m,i){ if(ix<0 && Math.abs(m.x-pk.x)<1e-6 && Math.abs(m.y-pk.y)<1e-6) ix=i; }); if(ix>=0) room.mp.splice(ix,1); msg='Panel quitado. Quedan <b>'+room.mp.length+'</b>.'; }
+    else { var R=mpRect(room,a.q); if(!R) return; var why=mpWhy(room,R);
+      if(why){ hint('<span>'+why+' Prueba en otro sitio o con el panel en la otra colocación.</span><button class="btn ghost small" id="mpDone2" type="button">Terminar</button>',true); $("mpDone2").addEventListener("click",mpStop); return; }
+      room.mp.push({x:Math.round(R.x*1000)/1000,y:Math.round(R.y*1000)/1000,id:R.id,v:R.v}); msg='Panel añadido. La estancia tiene <b>'+room.mp.length+'</b>.'; }
+    update(false); histNote(); renderPanBox(room); var dp=$("detailSvg"); if(dp) dp.classList.add("adding");
+    hint('<span>'+msg+' Pulsa otro sitio para seguir, o un panel para quitarlo.</span><button class="btn ghost small" id="mpDone2" type="button">Terminar</button>'); $("mpDone2").addEventListener("click",mpStop);
+  });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape" && MPA!=null) mpStop(); });
   function bindSideCommon(card,room){
     card.querySelectorAll("[data-side]").forEach(function(inp){ inp.addEventListener("change",function(){ editSide(room,parseInt(inp.getAttribute("data-side"),10),parseFloat(String(inp.value).replace(",","."))); }); });
     card.querySelectorAll("[data-flecha]").forEach(function(inp){ inp.addEventListener("change",function(){ var i=parseInt(inp.getAttribute("data-flecha"),10), v=parseFloat(String(inp.value).replace(",",".")), cv=room.bulge[i], c=len(sub(room.pts[(i+1)%room.pts.length],room.pts[i])); if(isFinite(v)&&Math.abs(v)>=1&&cv&&c>0){ room.bulge[i]={u:cv.u, v:v/100/c}; update(true); } }); });
@@ -5661,7 +5752,7 @@
       done:function(T){ return S.sel===T.salon && !S.moveId; },
       skip:function(T){ if(T.salon) select(T.salon); },
       steps:[{when:function(){ return true; },el:function(T){ return roomSel(T.salon); },x:"<p>Haz <b>un clic</b> sobre el <b>Salón</b> para abrir su ficha.</p>"}]});
-    P.push({info:true,el:"#detailCard",t:"La ficha de la estancia",x:suelo?"<p>Aquí cambias el nombre, la medida y el tipo de cada pared (normal, exterior, ventana), la separación del tubo y el pavimento de esta estancia.</p><p>Si una estancia se queda sin circuito, aquí te explica el motivo y qué cambiar. Más abajo tienes su cálculo térmico.</p>":"<p>Medidas y tipo de cada lado, iluminación, cobertura propia, giro de la estructura y la temperatura de la estancia. Más abajo, sus salidas del colector y su cálculo térmico.</p>"});
+    P.push({info:true,el:"#detailCard",t:"La ficha de la estancia",x:suelo?"<p>Aquí cambias el nombre, la medida y el tipo de cada pared (normal, exterior, ventana), la separación del tubo y el pavimento de esta estancia.</p><p>Si una estancia se queda sin circuito, aquí te explica el motivo y qué cambiar. Más abajo tienes su cálculo térmico.</p>":"<p>Medidas y tipo de cada lado, iluminación, cobertura propia, giro de la estructura y la temperatura de la estancia. Más abajo, sus salidas del colector y su cálculo térmico.</p><p>Con <b>+ Añadir paneles a mano</b> eliges un panel y si va vertical u horizontal, y lo pones pulsando en el plano de la estancia; los paneles que ya tenía se quedan y se quitan pulsándolos.</p>"});
     if(!suelo){
       P.push({mission:true,anim:"luz",t:"Añade un punto de luz a medida",badge:"Luz a medida",
         done:function(T){ var r=roomById(T.salon); return !!(r && r.customL && (r.lights||[]).length); },
